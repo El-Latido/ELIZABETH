@@ -2,53 +2,54 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZONA-CERO</title>
     <style>
-        body { background: #050505; color: #33ff33; font-family: 'Courier New', monospace; margin: 0; padding: 10px; display: flex; justify-content: center; }
-        #zona-contenedor { width: 100%; max-width: 600px; border: 1px solid #33ff33; padding: 15px; box-sizing: border-box; }
-        #chat-window { height: 60vh; overflow-y: auto; margin-bottom: 15px; border-bottom: 1px solid #222; font-size: 14px; }
-        input { width: 100%; background: #000; border: 1px solid #33ff33; color: #fff; padding: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
-        h1 { text-align: center; font-size: 1.5rem; margin-top: 0; }
+        body { background: #1a1a1e; color: #d0d0d0; font-family: Tahoma, Arial, sans-serif; margin: 0; font-size: 12px; }
+        #foro-contenedor { width: 100%; max-width: 800px; margin: 0 auto; background: #2c2c34; border: 1px solid #444; }
+        
+        /* Bloque de Post */
+        .post { display: flex; border-bottom: 1px solid #444; padding: 10px; }
+        .user-info { width: 150px; text-align: center; border-right: 1px solid #444; padding-right: 10px; }
+        .avatar { width: 80px; height: 80px; background: #000; border: 1px solid #666; margin: 0 auto 5px; }
+        .username { color: #ffcc00; font-weight: bold; display: block; }
+        .rank { color: #aaa; font-size: 10px; }
+        
+        .message-content { flex: 1; padding-left: 15px; position: relative; }
+        .signature { margin-top: 20px; padding-top: 5px; border-top: 1px dotted #666; font-size: 10px; color: #888; }
+        
+        #editor { padding: 15px; background: #222; }
+        textarea { width: 100%; background: #000; color: #fff; border: 1px solid #444; height: 60px; }
     </style>
 </head>
 <body>
 
-<div id="zona-contenedor">
-    <h1>ZONA-CERO</h1>
-    <div id="chat-window"></div>
-    <input type="text" id="input" placeholder="> ESCRIBE..." autofocus>
+<div id="foro-contenedor">
+    <div class="post">
+        <div class="user-info">
+            <div class="avatar"></div>
+            <span class="username">HELIZABETH</span>
+            <span class="rank">Admin 😍✨</span>
+        </div>
+        <div class="message-content">
+            Bienvenido a Zona-Cero. Aquí las reglas son claras: respeta, cita y mantén la calma. 🔥
+            <div class="signature">-- El destino es solo una opción --</div>
+        </div>
+    </div>
+
+    <div class="post">
+        <div class="user-info">
+            <div class="avatar"></div>
+            <span class="username">AXISS</span>
+            <span class="rank">Usuario</span>
+        </div>
+        <div class="message-content">
+            Entendido, ya tengo el control del formato. 😍✨
+        </div>
+    </div>
+
+    <div id="editor">
+        <textarea placeholder="Escribe tu mensaje..."></textarea>
+    </div>
 </div>
 
-<script>
-    const chat = document.getElementById('chat-window');
-    const input = document.getElementById('input');
-
-    const protocolo = "> [SISTEMA]: BIENVENIDO A ZONA-CERO.\n\n> HELIZABETH: \"He tomado el control. Protocolo:\n1. Respeta el tiempo y espacio.\n2. Sé claro y conciso.\n3. Evita las mayúsculas.\n4. Revisa antes de enviar.\n5. Protege la privacidad.\n6. Lenguaje inclusivo.\n7. Cero spam.\n8. Cita fuentes.\n\nAcepta estos términos. ¿Listo?\"\n\n";
-
-    function escribir(texto) {
-        chat.innerText += texto;
-        chat.scrollTop = chat.scrollHeight;
-    }
-
-    // Bienvenida
-    let i = 0;
-    function inicio() {
-        if (i < protocolo.length) {
-            escribir(protocolo.charAt(i));
-            i++;
-            setTimeout(inicio, 10);
-        }
-    }
-    window.onload = inicio;
-
-    // Enviar mensajes
-    input.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-            escribir("\n> USUARIO: " + input.value + "\n");
-            input.value = '';
-        }
-    };
-</script>
 </body>
 </html>
