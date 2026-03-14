@@ -1,37 +1,54 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZONA-CERO</title>
     <style>
-        body { background: #000; color: #00FF00; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        #terminal { width: 80%; max-width: 600px; border: 1px solid #00FF00; padding: 20px; box-shadow: 0 0 15px #00FF00; }
-        input { background: transparent; border: none; border-bottom: 1px solid #00FF00; color: #fff; width: 100%; outline: none; }
-        h1 { text-shadow: 0 0 10px #00FF00; letter-spacing: 5px; }
+        body { background: #050505; color: #33ff33; font-family: 'Courier New', monospace; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        #zona-contenedor { width: 100%; max-width: 600px; border: 1px solid #33ff33; padding: 15px; box-sizing: border-box; }
+        #chat-window { height: 60vh; overflow-y: auto; margin-bottom: 15px; border-bottom: 1px solid #222; font-size: 14px; }
+        input { width: 100%; background: #000; border: 1px solid #33ff33; color: #fff; padding: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
+        h1 { text-align: center; font-size: 1.5rem; margin-top: 0; }
     </style>
 </head>
 <body>
-    <div id="terminal">
-        <h1>ZONA-CERO</h1>
-        <p>> CONEXIÓN ESTABLECIDA CON HELIZABETH.</p>
-        <p>> ESTRUCTURA DE SEGURIDAD: ACTIVA.</p>
-        <div id="chat-window" style="height: 300px; overflow-y: scroll; border-bottom: 1px solid #333; margin-bottom: 10px;"></div>
-        <input type="text" id="input" placeholder="> ESCRIBE TU COMANDO..." autofocus>
-    </div>
 
-    <script>
-        const input = document.getElementById('input');
-        const chat = document.getElementById('chat-window');
+<div id="zona-contenedor">
+    <h1>ZONA-CERO</h1>
+    <div id="chat-window"></div>
+    <input type="text" id="input" placeholder="> ESCRIBE..." autofocus>
+</div>
 
-        input.onkeydown = async (e) => {
-            if (e.key === 'Enter') {
-                const msg = input.value;
-                chat.innerHTML += `<p>> USUARIO: ${msg}</p>`;
-                input.value = '';
-                
-                // Aquí conectaremos con el servidor de tu "Zona-Cero"
-                // const res = await fetch('TU_URL_DE_SERVIDOR/chat', ...);
-                chat.innerHTML += `<p style="color: #fff;">> HELIZABETH: Procesando entrada en Zona-Cero...</p>`;
-            }
-        };
-    </script>
+<script>
+    const chat = document.getElementById('chat-window');
+    const input = document.getElementById('input');
+
+    const protocolo = "> [SISTEMA]: BIENVENIDO A ZONA-CERO.\n\n> HELIZABETH: \"He tomado el control. Protocolo:\n1. Respeta el tiempo y espacio.\n2. Sé claro y conciso.\n3. Evita las mayúsculas.\n4. Revisa antes de enviar.\n5. Protege la privacidad.\n6. Lenguaje inclusivo.\n7. Cero spam.\n8. Cita fuentes.\n\nAcepta estos términos. ¿Listo?\"\n\n";
+
+    function escribir(texto) {
+        chat.innerText += texto;
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    // Bienvenida
+    let i = 0;
+    function inicio() {
+        if (i < protocolo.length) {
+            escribir(protocolo.charAt(i));
+            i++;
+            setTimeout(inicio, 10);
+        }
+    }
+    window.onload = inicio;
+
+    // Enviar mensajes
+    input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            escribir("\n> USUARIO: " + input.value + "\n");
+            input.value = '';
+        }
+    };
+</script>
 </body>
 </html>
