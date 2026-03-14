@@ -1,42 +1,37 @@
 <!DOCTYPE html>
-<html>
-<body style="background:#000; color:#fff; text-align:center; padding-top:50px;">
-    <h1>HELIZABETH</h1>
-    <button id="btn" style="padding:20px; font-size:20px;">Hablar con ella</button>
-    <p id="texto"></p>
+<html lang="es">
+<head>
+    <style>
+        body { background: #000; color: #00FF00; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #terminal { width: 80%; max-width: 600px; border: 1px solid #00FF00; padding: 20px; box-shadow: 0 0 15px #00FF00; }
+        input { background: transparent; border: none; border-bottom: 1px solid #00FF00; color: #fff; width: 100%; outline: none; }
+        h1 { text-shadow: 0 0 10px #00FF00; letter-spacing: 5px; }
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <h1>ZONA-CERO</h1>
+        <p>> CONEXIÓN ESTABLECIDA CON HELIZABETH.</p>
+        <p>> ESTRUCTURA DE SEGURIDAD: ACTIVA.</p>
+        <div id="chat-window" style="height: 300px; overflow-y: scroll; border-bottom: 1px solid #333; margin-bottom: 10px;"></div>
+        <input type="text" id="input" placeholder="> ESCRIBE TU COMANDO..." autofocus>
+    </div>
 
     <script>
-        const btn = document.getElementById('btn');
-        const display = document.getElementById('texto');
+        const input = document.getElementById('input');
+        const chat = document.getElementById('chat-window');
 
-        btn.onclick = () => {
-            const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            rec.lang = 'es-ES';
-            rec.onresult = async (e) => {
-                const pregunta = e.results[0][0].transcript;
-                display.innerText = "Tú: " + pregunta;
+        input.onkeydown = async (e) => {
+            if (e.key === 'Enter') {
+                const msg = input.value;
+                chat.innerHTML += `<p>> USUARIO: ${msg}</p>`;
+                input.value = '';
                 
-                // Enviar a Render
-                const res = await fetch('https://TU-URL-DE-RENDER.onrender.com/api/chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({input: pregunta})
-                });
-                const data = await res.json();
-                
-                // Mostrar y hablar
-                display.innerText = "HELIZABETH: " + data.respuesta;
-                hablar(data.respuesta);
-            };
-            rec.start();
+                // Aquí conectaremos con el servidor de tu "Zona-Cero"
+                // const res = await fetch('TU_URL_DE_SERVIDOR/chat', ...);
+                chat.innerHTML += `<p style="color: #fff;">> HELIZABETH: Procesando entrada en Zona-Cero...</p>`;
+            }
         };
-
-        function hablar(texto) {
-            const voz = new SpeechSynthesisUtterance(texto);
-            voz.lang = 'es-ES';
-            voz.pitch = 1.2;
-            window.speechSynthesis.speak(voz);
-        }
     </script>
 </body>
 </html>
