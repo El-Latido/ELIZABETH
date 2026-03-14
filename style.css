@@ -1,0 +1,33 @@
+body {
+    background-color: #050505;
+    color: #33ff33; /* Verde fósforo */
+    font-family: 'Courier New', monospace;
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+}
+
+#zona-contenedor {
+    width: 90%;
+    max-width: 700px;
+    border: 2px solid #33ff33;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(51, 255, 51, 0.2);
+}
+
+#chat-window {
+    height: 400px;
+    overflow-y: auto;
+    border-bottom: 1px solid #222;
+    margin-bottom: 20px;
+    padding-right: 10px;
+}
+
+input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #33ff33;
+    color: #fff;
+    padding: 10px;
+    box-sizing: border-box;
+  }
