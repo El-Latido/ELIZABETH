@@ -1,16 +1,42 @@
-// Esta función lee el texto que viene de la IA
-function hablar(texto) {
-    const voz = new SpeechSynthesisUtterance(texto);
-    
-    // Configuramos los parámetros para darle personalidad
-    voz.lang = 'es-ES';
-    voz.pitch = 1.2; // Un poco más agudo, más humano
-    voz.rate = 1.05; // Velocidad ligeramente más natural
-    voz.volume = 1;
-    
-    // Ejecutamos la voz
-    window.speechSynthesis.speak(voz);
-}
+<!DOCTYPE html>
+<html>
+<body style="background:#000; color:#fff; text-align:center; padding-top:50px;">
+    <h1>HELIZABETH</h1>
+    <button id="btn" style="padding:20px; font-size:20px;">Hablar con ella</button>
+    <p id="texto"></p>
 
-// Ejemplo de cómo llamar a la función tras recibir respuesta de Gemini:
-// hablar(data.respuesta);
+    <script>
+        const btn = document.getElementById('btn');
+        const display = document.getElementById('texto');
+
+        btn.onclick = () => {
+            const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            rec.lang = 'es-ES';
+            rec.onresult = async (e) => {
+                const pregunta = e.results[0][0].transcript;
+                display.innerText = "Tú: " + pregunta;
+                
+                // Enviar a Render
+                const res = await fetch('https://TU-URL-DE-RENDER.onrender.com/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({input: pregunta})
+                });
+                const data = await res.json();
+                
+                // Mostrar y hablar
+                display.innerText = "HELIZABETH: " + data.respuesta;
+                hablar(data.respuesta);
+            };
+            rec.start();
+        };
+
+        function hablar(texto) {
+            const voz = new SpeechSynthesisUtterance(texto);
+            voz.lang = 'es-ES';
+            voz.pitch = 1.2;
+            window.speechSynthesis.speak(voz);
+        }
+    </script>
+</body>
+</html>
