@@ -1,0 +1,16 @@
+// Esta función lee el texto que viene de la IA
+function hablar(texto) {
+    const voz = new SpeechSynthesisUtterance(texto);
+    
+    // Configuramos los parámetros para darle personalidad
+    voz.lang = 'es-ES';
+    voz.pitch = 1.2; // Un poco más agudo, más humano
+    voz.rate = 1.05; // Velocidad ligeramente más natural
+    voz.volume = 1;
+    
+    // Ejecutamos la voz
+    window.speechSynthesis.speak(voz);
+}
+
+// Ejemplo de cómo llamar a la función tras recibir respuesta de Gemini:
+// hablar(data.respuesta);
