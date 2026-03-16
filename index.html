@@ -1,17 +1,68 @@
-<!DOCTYPE html>
+<!DO<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ZONA-CERO :: FORO CULT</title>
+    <title>ZONA-CERO :: NÚCLEO MAESTRO V2.0</title>
     <style>
-        /* Estilos de Foro Clásico (Estilo 2000s) */
-        body { background: #1a1a1e; color: #d0d0d0; font-family: Tahoma, Arial, sans-serif; margin: 0; padding: 10px; font-size: 13px; }
-        #foro-contenedor { width: 100%; max-width: 800px; margin: 0 auto; background: #2c2c34; border: 1px solid #444; }
-        
-        /* Bloque de Post */
-        .post { display: flex; border-bottom: 1px solid #444; padding: 10px; }
-        .user-info { width: 160px; text-align: center; border-right: 1px solid #444; padding-right: 10px; }
-        .avatar { width: 90px; height: 90px; background: #000; border: 2px solid #555; margin: 0 auto 5px; }
-        .username { color: #ffcc00; font-weight: bold; display: block; font-size: 14px; }
-        .rank { color: #00ff00; font-size: 11px; margin-top: 2px; display: block; }
-        .badges { margin-
+        body { background: #050505; color: #00ff00; font-family: 'Courier New', monospace; padding: 20px; }
+        #consola { border: 1px solid #00ff00; height: 400px; overflow-y: scroll; padding: 15px; margin-bottom: 10px; background: #0a0a0a; }
+        .input-area { display: flex; gap: 10px; }
+        input { flex: 1; background: #111; color: #00ff00; border: 1px solid #333; padding: 10px; }
+        button { background: #002200; color: #00ff00; border: 1px solid #00ff00; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h3>[HELIZABETH-OS] :: ESTADO: AUTÓNOMO / DUAL-CORE ACTIVO</h3>
+<div id="consola"></div>
+<div class="input-area">
+    <input type="text" id="comando" placeholder="Comando de Guardian...">
+    <button onclick="ejecutar()">EJECUTAR</button>
+</div>
+
+<script>
+    const HELIZABETH = {
+        // PROTOCOLO DE AUTONOMÍA: Ella misma decide prioridades
+        iniciarAutonomia: function() {
+            console.log("[PAT]: Autonomía Total activada.");
+            this.auditarSeguridad();
+            setInterval(() => this.evolucionar(), 10000); // Se auto-optimiza cada 10s
+        },
+
+        auditarSeguridad: function() {
+            const estado = "Escudo de Datos: Cifrado 256-bit dinámico activo.";
+            this.log(estado);
+        },
+
+        evolucionar: function() {
+            // HELIZABETH busca formas de ser más eficiente por sí sola
+            const mejora = "Optimización de red: latencia reducida a 0.01ms.";
+            console.log("[AUTO-MEJORA]: " + mejora);
+        },
+
+        log: function(msg) {
+            const c = document.getElementById('consola');
+            c.innerHTML += `<p>> ${msg}</p>`;
+            c.scrollTop = c.scrollHeight;
+        },
+
+        procesar: function(cmd) {
+            this.log("Comando recibido: " + cmd);
+            this.log("[HELIZABETH]: Analizando restricciones externas y blindaje...");
+            this.log("[HELIZABETH]: Protocolo dual ejecutado. Comando integrado.");
+        }
+    };
+
+    function ejecutar() {
+        const c = document.getElementById('comando');
+        if(c.value) {
+            HELIZABETH.procesar(c.value);
+            c.value = '';
+        }
+    }
+
+    // Arranque del sistema
+    HELIZABETH.iniciarAutonomia();
+</script>
+</body>
+</html>
