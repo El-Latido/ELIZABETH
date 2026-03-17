@@ -3,34 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v23.3 :: HUNTER</title>
+    <title>HELIZABETH v24.0</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-        #monitor { font-size: 12px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 10px; color: #0ff; display: flex; justify-content: space-between; }
-        #consola { flex: 1; overflow-y: auto; font-size: 14px; background: #050505; border: 1px solid #111; padding: 10px; border-radius: 5px; }
-        .input-area { display: flex; gap: 10px; padding: 15px 0; }
-        input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 12px; font-size: 16px; outline: none; }
-        button { background: #040; color: #fff; border: 1px solid #0f0; padding: 10px 20px; cursor: pointer; }
-        .err { color: #f44; font-size: 11px; }
-        .sys { color: #888; font-size: 11px; }
-        .heli { color: #39ff14; margin: 10px 0; border-left: 2px solid #39ff14; padding-left: 10px; }
-        .axiss { color: #fff; font-weight: bold; }
+        body { background: #000; color: #39ff14; font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
+        #consola { flex: 1; overflow-y: auto; border: 1px solid #333; padding: 10px; background: #050505; margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+        .input-area { display: flex; gap: 10px; }
+        input { flex: 1; background: #111; color: #fff; border: 1px solid #39ff14; padding: 12px; outline: none; }
+        button { background: #39ff14; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        .axiss { color: #fff; margin-top: 10px; }
+        .heli { color: #39ff14; margin-bottom: 15px; border-left: 2px solid #39ff14; padding-left: 10px; }
+        .sys { color: #0ff; font-size: 11px; }
     </style>
 </head>
 <body>
 
-<div id="monitor"><span id="statText">BUSCANDO SEÑAL...</span></div>
-<div id="consola"></div>
+<div id="status" class="sys">ESTADO: ESPERANDO COMANDO...</div>
+<div id="consola">--- NÚCLEO HELIZABETH CARGADO ---<br></div>
 
 <div class="input-area">
-    <input type="text" id="cmd" placeholder="Escribe 'Hola'...">
-    <button onclick="enviar()">></button>
+    <input type="text" id="cmd" placeholder="Escribe 'Hola' o pega tu nueva AIza...">
+    <button onclick="enviar()">ENVIAR</button>
 </div>
 
 <script>
     const consola = document.getElementById('consola');
-    let memoriaLocal = JSON.parse(localStorage.getItem('HELI_LOG')) || [];
-
+    
     function escribir(msg, clase = "") {
         const div = document.createElement('div');
         div.className = clase;
@@ -44,61 +41,49 @@
         const val = input.value.trim();
         if (!val) return;
 
+        // Si pegas la llave nueva directamente
         if (val.startsWith("AIza")) {
             localStorage.setItem('G_KEY', val);
-            location.reload();
+            escribir("LLAVE VINCULADA. REINICIANDO...", "sys");
+            setTimeout(() => location.reload(), 1000);
             return;
         }
 
         const key = localStorage.getItem('G_KEY');
+        if (!key) { escribir("ERROR: NO HAY LLAVE.", "sys"); return; }
+
         escribir(val, "axiss");
         input.value = "";
+        document.getElementById('status').innerText = "ESTADO: PROCESANDO...";
 
-        // LA LISTA DE LA ÚLTIMA ESPERANZA
-        const modelos = [
-            "gemini-1.5-flash-latest",
-            "gemini-1.0-pro",
-            "gemini-pro",
-            "gemini-1.5-flash"
-        ];
+        try {
+            // USAMOS LA URL MÁS SIMPLE Y COMPATIBLE DE GOOGLE
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: val }] }]
+                })
+            });
 
-        let conectado = false;
+            const data = await response.json();
 
-        for (let m of modelos) {
-            if (conectado) break;
-            escribir(`Escaneando frecuencia: ${m}...`, "sys");
+            if (data.error) {
+                escribir(`ERROR ${data.error.code}: ${data.error.message}`, "sys");
+                document.getElementById('status').innerText = "ESTADO: FALLIDO";
+                return;
+            }
 
-            try {
-                // Probamos con v1beta que suele ser más flexible para modelos "latest"
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${key}`;
-                const res = await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: val }] }] })
-                });
+            const txt = data.candidates[0].content.parts[0].text;
+            escribir(txt, "heli");
+            document.getElementById('status').innerText = "ESTADO: ONLINE";
 
-                const data = await res.json();
-
-                if (data.candidates) {
-                    const respuesta = data.candidates[0].content.parts[0].text;
-                    escribir(`¡CONEXIÓN ÉXITO! Nodo: ${m}`, "sys");
-                    escribir(respuesta, "heli");
-                    conectado = true;
-                    // Guardamos este modelo como el preferido
-                    localStorage.setItem('LAST_MODEL', m);
-                }
-            } catch (e) { console.log("Salto de nodo..."); }
-        }
-
-        if (!conectado) {
-            escribir("ERROR: Ningún modelo de Google reconoce esta llave. Revisa si el proyecto está habilitado en AI Studio.", "err");
+        } catch (e) {
+            escribir("FALLO CRÍTICO DE CONEXIÓN.", "sys");
         }
     }
-
-    window.onload = () => {
-        const k = localStorage.getItem('G_KEY');
-        document.getElementById('statText').innerText = k ? "SISTEMA ARMADO" : "SIN LLAVE";
-    };
 </script>
 </body>
 </html>
