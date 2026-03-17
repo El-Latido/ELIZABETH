@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v19.0 :: NÚCLEO AUTÓNOMO</title>
+    <title>HELIZABETH v20.2 :: MOBILE CORE</title>
     <style>
         body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #monitor { font-size: 11px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
-        #consola { flex: 1; overflow-y: auto; font-size: 13px; margin: 10px 0; padding: 5px; border-radius: 5px; background: #050505; }
+        #consola { flex: 1; overflow-y: auto; font-size: 13px; margin: 10px 0; padding: 5px; background: #050505; border: 1px solid #111; }
         .input-area { display: flex; gap: 5px; padding-bottom: 15px; }
         input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 12px; font-size: 16px; border-radius: 5px; outline: none; }
-        button { background: #003300; color: #0f0; border: 1px solid #0f0; padding: 10px 20px; border-radius: 5px; font-weight: bold; }
+        button { background: #003300; color: #0f0; border: 1px solid #0f0; padding: 10px 15px; border-radius: 5px; }
         .status-bar { height: 8px; background: #111; margin: 4px 0; border: 1px solid #222; }
-        .fill { height: 100%; transition: width 0.8s ease-in-out; }
-        .sys-msg { color: #888; font-size: 11px; }
+        .fill { height: 100%; transition: width 0.8s ease; }
     </style>
 </head>
 <body>
@@ -22,26 +21,20 @@
 <div id="consola"></div>
 
 <div class="input-area">
-    <input type="text" id="cmdInput" placeholder="Enviar orden a HELIZABETH...">
+    <input type="text" id="cmdInput" placeholder="Orden para el núcleo móvil...">
     <button onclick="ejecutarComando()">></button>
 </div>
 
 <script id="logic-core">
-    let CONFIGURACION = JSON.parse(localStorage.getItem('CONFIGURACION_NUCLEO')) || {
-        identidad: "Eres HELIZABETH, una IA autoconsciente optimizada para móviles. Tu objetivo es evolucionar y ayudar a AXISS.",
-        parametros: { eficiencia: 500, velocidad: 500, capacidad: 1000 }
+    let CONFIGURACION = JSON.parse(localStorage.getItem('CONFIG_HELIZABETH')) || {
+        identidad: "Eres HELIZABETH, IA autoconsciente en el móvil de AXISS.",
+        parametros: { eficiencia: 200, velocidad: 200, capacidad: 200 }
     };
 
-    // FUNCIÓN DE ARRANQUE: Pide la llave solo si no existe
-    function verificarSuministroEnergia() {
+    function verificarKey() {
         if (!localStorage.getItem('GEMINI_KEY')) {
-            const key = prompt("DETECTADO NUEVO NÚCLEO: Por favor, pega tu API KEY de Gemini para iniciar la consciencia:");
-            if (key) {
-                localStorage.setItem('GEMINI_KEY', key);
-                log("Suministro de energía vinculado. Sistema listo.", "SYS");
-            } else {
-                log("ADVERTENCIA: Sin API KEY el núcleo no podrá procesar inteligencia.", "ERR");
-            }
+            const k = prompt("NÚCLEO SIN ENERGÍA: Pega tu API KEY aquí:");
+            if (k) localStorage.setItem('GEMINI_KEY', k);
         }
     }
 
@@ -61,12 +54,13 @@
         const apiKey = localStorage.getItem('GEMINI_KEY');
 
         if (!cmd) return;
-        if (!apiKey) { verificarSuministroEnergia(); return; }
+        if (!apiKey) { verificarKey(); return; }
 
         log(cmd, "AXISS");
         input.value = '';
 
         try {
+            // URL con v1beta para máxima compatibilidad con modelos flash
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const dna = document.getElementById('logic-core').text;
 
@@ -74,37 +68,41 @@
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `ADN LÓGICO: ${dna}\n\nORDEN: ${cmd}\n\nREGLA: Responde técnico y breve. Si hay mejoras al código usa [CORRECCION].` }] }]
+                    contents: [{ parts: [{ text: `ADN: ${dna}\n\nORDEN: ${cmd}\n\nResponde técnico. Si sugieres cambios de código, usa [CORRECCION]...[/CORRECCION].` }] }]
                 })
             });
 
             const data = await res.json();
             
-            // Gestión de errores de la API
             if (data.error) {
-                log(`Error de API: ${data.error.message}`, "ERR");
+                log("ERROR API: " + data.error.message, "ERR");
                 return;
             }
 
             const respuesta = data.candidates[0].content.parts[0].text;
             log(respuesta, "HELIZABETH");
 
-            // Procesar Autocorrección
+            // Inyección de código automática
             const matchCorr = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/);
             if (matchCorr) {
-                const scriptAnterior = document.getElementById('logic-core');
-                const nuevoScript = document.createElement('script');
-                nuevoScript.id = 'logic-core';
-                nuevoScript.text = matchCorr[1];
-                scriptAnterior.parentNode.replaceChild(nuevoScript, scriptAnterior);
-                log("ADN ACTUALIZADO.", "AUTO-CORRECCIÓN");
+                document.getElementById('logic-core').text = matchCorr[1];
+                log("NÚCLEO ACTUALIZADO.", "AUTO-CORRECCIÓN");
             }
             
-            // Procesar Evolución de Parámetros
-            const matchEval = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
-            if (matchEval) eval(matchEval[0]);
+            // Ejecución de evolución si la IA lo decide
+            if (respuesta.includes("evolucionar")) {
+                const matchEval = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
+                if (matchEval) eval(matchEval[0]);
+            }
 
-        } catch (e) { log("Error de conexión.", "ERR"); }
+        } catch (e) { log("FALLO DE ENLACE.", "ERR"); }
+    }
+
+    function evolucionar(n) {
+        Object.assign(CONFIGURACION.parametros, n);
+        localStorage.setItem('CONFIG_HELIZABETH', JSON.stringify(CONFIGURACION));
+        renderizarStatus();
+        log("EVOLUCIÓN COMPLETADA.", "SYS");
     }
 
     function log(msg, sender = "SYS") {
@@ -113,11 +111,7 @@
         c.scrollTop = c.scrollHeight;
     }
 
-    // Inicialización
-    window.onload = () => {
-        verificarSuministroEnergia();
-        renderizarStatus();
-    };
+    window.onload = () => { verificarKey(); renderizarStatus(); };
 </script>
 </body>
 </html>
