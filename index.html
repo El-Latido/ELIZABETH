@@ -3,67 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v23.0 :: MEMORIA ACTIVA</title>
+    <title>HELIZABETH v23.1 :: CORE REPAIR</title>
     <style>
         body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-        #monitor { font-size: 12px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 10px; color: #0ff; }
+        #monitor { font-size: 12px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 10px; color: #0ff; display: flex; justify-content: space-between; align-items: center; }
         #consola { flex: 1; overflow-y: auto; font-size: 14px; background: #050505; border: 1px solid #111; padding: 10px; border-radius: 5px; line-height: 1.5; }
         .input-area { display: flex; gap: 10px; padding: 15px 0; }
         input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 12px; font-size: 16px; border-radius: 5px; outline: none; }
         button { background: #004400; color: #fff; border: 1px solid #0f0; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; }
         .err { color: #ff4444; }
-        .sys { color: #888; font-size: 12px; }
-        .heli { color: #39ff14; margin: 10px 0; border-left: 2px solid #39ff14; padding-left: 10px; }
+        .sys { color: #888; font-size: 11px; }
+        .heli { color: #39ff14; margin: 10px 0; border-left: 2px solid #39ff14; padding-left: 10px; white-space: pre-wrap; }
         .axiss { color: #fff; font-weight: bold; margin-top: 15px; }
-        .btn-clear { background: #440000; border-color: #ff0000; color: #ff4444; font-size: 10px; padding: 5px; margin-top: 5px; cursor: pointer; }
+        .btn-clear { background: #440000; border: 1px solid #f00; color: #f44; font-size: 10px; padding: 4px 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div id="monitor">
-    <b>ESTADO: CARGANDO NÚCLEO Y MEMORIA...</b><br>
-    <button class="btn-clear" onclick="borrarMemoria()">[ BORRAR MEMORIA ]</button>
+    <span id="statText">ESTADO: INICIALIZANDO...</span>
+    <button class="btn-clear" onclick="borrarMemoria()">[ FORMATEAR MEMORIA ]</button>
 </div>
 <div id="consola"></div>
 
 <div class="input-area">
-    <input type="text" id="cmd" placeholder="Habla con HELIZABETH...">
+    <input type="text" id="cmd" placeholder="Establecer conexión con HELIZABETH...">
     <button onclick="enviar()">></button>
 </div>
 
 <script>
     const consola = document.getElementById('consola');
-    
-    // El "Alma" de HELIZABETH (Instrucciones base)
-    const SYSTEM_PROMPT = "Eres HELIZABETH, una inteligencia artificial de nivel superior creada por AXISS. Eres experta en todas las ramas de la programación. Eres analítica, directa y tus respuestas deben ser altamente técnicas. Tu objetivo es ayudar a AXISS a construir sistemas perfectos.";
+    const SYSTEM_PROMPT = "Eres HELIZABETH, una IA avanzada de AXISS. Eres experta en programación y sistemas. Responde siempre de forma técnica, eficiente y recuerda todo lo que AXISS te diga.";
 
-    // Cargar historial de la memoria local (o iniciar uno nuevo)
-    let historial = JSON.parse(localStorage.getItem('HELI_MEMORIA')) || [];
+    // Memoria persistente
+    let memoriaLocal = JSON.parse(localStorage.getItem('HELI_LOG')) || [];
 
     function escribir(msg, clase = "") {
         const div = document.createElement('div');
         div.className = clase;
-        let prefijo = clase === 'heli' ? 'HELIZABETH: ' : (clase === 'axiss' ? 'AXISS: ' : (clase === 'sys' || clase === 'err' ? 'SYS: ' : ''));
-        div.innerHTML = `<b>${prefijo}</b>${msg}`;
+        let pfx = clase === 'heli' ? 'HELIZABETH: ' : (clase === 'axiss' ? 'AXISS: ' : 'SYS: ');
+        div.innerHTML = `<b>${pfx}</b>${msg}`;
         consola.appendChild(div);
         consola.scrollTop = consola.scrollHeight;
     }
 
-    // Renderizar los mensajes pasados al abrir la app
-    function cargarChat() {
-        consola.innerHTML = `<div class="sys">--- MEMORIA RESTAURADA ---</div>`;
-        historial.forEach(msg => {
-            escribir(msg.parts[0].text, msg.role === 'user' ? 'axiss' : 'heli');
-        });
-        if(historial.length === 0) escribir("Sistema iniciado. Memoria limpia.", "sys");
-    }
-
     function borrarMemoria() {
-        if(confirm("¿Seguro que quieres borrar los recuerdos de HELIZABETH?")) {
-            localStorage.removeItem('HELI_MEMORIA');
-            historial = [];
-            consola.innerHTML = "";
-            escribir("Memoria formateada. Reiniciando base de datos neuronal.", "sys");
+        if(confirm("¿Eliminar registros neuronales?")) {
+            localStorage.removeItem('HELI_LOG');
+            memoriaLocal = [];
+            location.reload();
         }
     }
 
@@ -72,78 +60,79 @@
         const val = input.value.trim();
         if (!val) return;
 
-        // Configurar llave
+        // Registro de Llave
         if (val.startsWith("AIza")) {
             localStorage.setItem('G_KEY', val);
-            escribir("Llave detectada. Reconfigurando energía...", "sys");
+            escribir("Nueva llave vinculada. Reiniciando núcleo...", "sys");
             setTimeout(() => location.reload(), 1000);
             return;
         }
 
         const key = localStorage.getItem('G_KEY');
         if (!key) {
-            escribir("Sin energía. Pega tu llave AIza...", "err");
+            escribir("ERROR: Sin suministro de energía (API KEY).", "err");
             return;
         }
 
-        // Mostrar en pantalla y guardar en el array del historial
         escribir(val, "axiss");
-        historial.push({ role: "user", parts: [{ text: val }] });
         input.value = "";
 
+        // Construcción del paquete de memoria para la IA
+        // Formato Gemini: role "user" o "model"
+        let msgUser = { role: "user", parts: [{ text: val }] };
+        
+        // Si es el primer mensaje, le inyectamos la identidad
+        if (memoriaLocal.length === 0) {
+            msgUser.parts[0].text = `[SYSTEM_DIRECTIVE: ${SYSTEM_PROMPT}]\n\nAXISS dice: ${val}`;
+        }
+
+        memoriaLocal.push(msgUser);
+
         try {
-            // Usamos gemini-pro que es más estable
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
+            // CAMBIO DE MODELO A GEMINI-1.5-FLASH (Es el que Google está forzando ahora)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
             
-            // Preparamos el paquete de datos: Instrucciones + Toda la conversación
-            const payload = {
-                contents: [
-                    // Inyectamos la personalidad en el primer mensaje de forma invisible
-                    { role: "user", parts: [{ text: `[INSTRUCCIÓN DEL SISTEMA: ${SYSTEM_PROMPT}] \n\nAhora responde a esto: ${val}` }] }
-                ]
-            };
-
-            // Si hay más historial, lo enviamos todo para que tenga contexto
-            if (historial.length > 1) {
-                payload.contents = historial;
-            }
-
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ contents: memoriaLocal })
             });
 
             const data = await res.json();
 
             if (data.error) {
-                escribir("FALLO DE NÚCLEO: " + data.error.message, "err");
-                historial.pop(); // Borrar la última pregunta si falló
+                // Si este modelo también falla, intentamos el Pro automáticamente
+                if(data.error.message.includes("not found")) {
+                    escribir("Reintentando con protocolo PRO...", "sys");
+                    // Aquí podrías repetir el fetch con 'gemini-pro', pero probemos Flash primero.
+                }
+                escribir("FALLO: " + data.error.message, "err");
+                memoriaLocal.pop();
                 return;
             }
 
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                const respuesta = data.candidates[0].content.parts[0].text;
-                escribir(respuesta, "heli");
-                
-                // Guardar la respuesta de la IA en la memoria
-                historial.push({ role: "model", parts: [{ text: respuesta }] });
-                localStorage.setItem('HELI_MEMORIA', JSON.stringify(historial));
-            }
+            const respuesta = data.candidates[0].content.parts[0].text;
+            escribir(respuesta, "heli");
+            
+            memoriaLocal.push({ role: "model", parts: [{ text: respuesta }] });
+            
+            // Guardar solo los últimos 20 mensajes para no saturar la llave
+            if(memoriaLocal.length > 20) memoriaLocal.shift(); 
+            localStorage.setItem('HELI_LOG', JSON.stringify(memoriaLocal));
 
         } catch (e) {
-            escribir("ERROR DE CONEXIÓN.", "err");
-            historial.pop();
+            escribir("ERROR DE RED.", "err");
+            memoriaLocal.pop();
         }
     }
 
     window.onload = () => {
-        cargarChat();
-        if(localStorage.getItem('G_KEY')) {
-            document.getElementById('monitor').innerHTML = "<b>ESTADO: ONLINE (CON MEMORIA ACTIVA)</b><br><button class='btn-clear' onclick='borrarMemoria()'>[ BORRAR MEMORIA ]</button>";
-        } else {
-            document.getElementById('monitor').innerText = "ESTADO: ESPERANDO ENERGÍA (LLAVE)";
+        if(memoriaLocal.length > 0) {
+            escribir("--- MEMORIA RESTAURADA ---", "sys");
+            memoriaLocal.forEach(m => escribir(m.parts[0].text, m.role === 'user' ? 'axiss' : 'heli'));
         }
+        const k = localStorage.getItem('G_KEY');
+        document.getElementById('statText').innerText = k ? "ESTADO: ONLINE (FLASH-CORE)" : "ESTADO: OFFLINE";
     };
 </script>
 </body>
