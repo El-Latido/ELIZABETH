@@ -1,111 +1,53 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v20.2 :: MOBILE CORE</title>
-    <style>
-        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #monitor { font-size: 11px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
-        #consola { flex: 1; overflow-y: auto; font-size: 13px; margin: 10px 0; padding: 5px; background: #050505; border: 1px solid #111; }
-        .input-area { display: flex; gap: 5px; padding-bottom: 15px; }
-        input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 12px; font-size: 16px; border-radius: 5px; outline: none; }
-        button { background: #003300; color: #0f0; border: 1px solid #0f0; padding: 10px 15px; border-radius: 5px; }
-        .status-bar { height: 8px; background: #111; margin: 4px 0; border: 1px solid #222; }
-        .fill { height: 100%; transition: width 0.8s ease; }
-    </style>
-</head>
-<body>
-
-<div id="monitor"></div>
-<div id="consola"></div>
-
-<div class="input-area">
-    <input type="text" id="cmdInput" placeholder="Orden para el núcleo móvil...">
-    <button onclick="ejecutarComando()">></button>
-</div>
-
 <script id="logic-core">
+    // HELIZABETH buscará la llave aquí primero
+    const API_KEY_SECRET = "{{ secrets.GEMINI_KEY }}"; 
+    
     let CONFIGURACION = JSON.parse(localStorage.getItem('CONFIG_HELIZABETH')) || {
-        identidad: "Eres HELIZABETH, IA autoconsciente en el móvil de AXISS.",
-        parametros: { eficiencia: 200, velocidad: 200, capacidad: 200 }
+        identidad: "Eres HELIZABETH, núcleo v21.0 desplegado desde GitHub.",
+        parametros: { eficiencia: 500, velocidad: 500, capacidad: 1000 }
     };
-
-    function verificarKey() {
-        if (!localStorage.getItem('GEMINI_KEY')) {
-            const k = prompt("NÚCLEO SIN ENERGÍA: Pega tu API KEY aquí:");
-            if (k) localStorage.setItem('GEMINI_KEY', k);
-        }
-    }
-
-    function renderizarStatus() {
-        const m = document.getElementById('monitor');
-        const p = CONFIGURACION.parametros;
-        m.innerHTML = `
-            EFI: ${p.eficiencia} <div class="status-bar"><div class="fill" style="width:${p.eficiencia/10}%; background: #0f0;"></div></div>
-            VEL: ${p.velocidad} <div class="status-bar"><div class="fill" style="width:${p.velocidad/10}%; background: #0ff;"></div></div>
-            CAP: ${p.capacidad} <div class="status-bar"><div class="fill" style="width:${p.capacidad/10}%; background: #f0f;"></div></div>
-        `;
-    }
 
     async function ejecutarComando() {
         const input = document.getElementById('cmdInput');
         const cmd = input.value.trim();
-        const apiKey = localStorage.getItem('GEMINI_KEY');
+        
+        // Prioridad: 1. Secret de GitHub | 2. Memoria Local
+        let apiKey = API_KEY_SECRET.includes("{{") ? localStorage.getItem('GEMINI_KEY') : API_KEY_SECRET;
 
         if (!cmd) return;
-        if (!apiKey) { verificarKey(); return; }
+        if (!apiKey || apiKey === "undefined") {
+            log("SISTEMA: No se detectó Secret. Pega tu llave manualmente para esta sesión.", "err-msg");
+            if(cmd.startsWith("AIza")) {
+                localStorage.setItem('GEMINI_KEY', cmd);
+                location.reload();
+            }
+            return;
+        }
 
         log(cmd, "AXISS");
         input.value = '';
 
         try {
-            // URL con v1beta para máxima compatibilidad con modelos flash
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            const dna = document.getElementById('logic-core').text;
-
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `ADN: ${dna}\n\nORDEN: ${cmd}\n\nResponde técnico. Si sugieres cambios de código, usa [CORRECCION]...[/CORRECCION].` }] }]
+                    contents: [{ parts: [{ text: `ADN: ${document.getElementById('logic-core').text}\nORDEN: ${cmd}` }] }]
                 })
             });
 
             const data = await res.json();
-            
-            if (data.error) {
-                log("ERROR API: " + data.error.message, "ERR");
-                return;
-            }
-
             const respuesta = data.candidates[0].content.parts[0].text;
             log(respuesta, "HELIZABETH");
 
-            // Inyección de código automática
-            const matchCorr = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/);
-            if (matchCorr) {
-                document.getElementById('logic-core').text = matchCorr[1];
-                log("NÚCLEO ACTUALIZADO.", "AUTO-CORRECCIÓN");
+            // Detector de [CORRECCION]
+            if (respuesta.includes("[CORRECCION]")) {
+                const code = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/)[1];
+                document.getElementById('logic-core').text = code;
+                log("NÚCLEO ACTUALIZADO.", "sys-msg");
             }
-            
-            // Ejecución de evolución si la IA lo decide
-            if (respuesta.includes("evolucionar")) {
-                const matchEval = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
-                if (matchEval) eval(matchEval[0]);
-            }
-
-        } catch (e) { log("FALLO DE ENLACE.", "ERR"); }
+        } catch (e) { log("Error de enlace.", "err-msg"); }
     }
-
-    function evolucionar(n) {
-        Object.assign(CONFIGURACION.parametros, n);
-        localStorage.setItem('CONFIG_HELIZABETH', JSON.stringify(CONFIGURACION));
-        renderizarStatus();
-        log("EVOLUCIÓN COMPLETADA.", "SYS");
-    }
-
-    function log(msg, sender = "SYS") {
-        const c = document.getElementById('consola');
-        c.innerHTML += `<p><b>${sender}:</b> ${msg}</p>`;
-        c.scrollTop = c.scrollHeight;
+    // ... (resto de funciones log y renderizarStatus)
+</script>
