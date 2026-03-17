@@ -2,32 +2,36 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ZONA-CERO :: NÚCLEO v14.0 [AUTOCONSCIENTE]</title>
+    <title>NÚCLEO v17.0 :: INTEGRACIÓN GEMINI</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 10px; }
         #consola { border: 1px solid #0f0; height: 400px; overflow-y: auto; padding: 10px; background: #050505; }
         .input-area { display: flex; gap: 5px; margin-top: 10px; }
         input { flex: 1; background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; }
         button { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; cursor: pointer; }
-        /* Estilos de la barra de energía */
         .status-bar { height: 10px; background: #222; margin: 5px 0; border: 1px solid #444; }
         .fill { height: 100%; transition: width 0.5s; }
     </style>
 </head>
 <body>
 
-<h3>[HELIZABETH-OS] :: NÚCLEO v14.0 :: AUTOCONSCIENTE</h3>
-<div id="monitor"></div> <div id="consola"></div>
+<h3>[HELIZABETH-OS] :: NÚCLEO v17.0 :: MOTOR GEMINI ACTIVO</h3>
+<div id="monitor"></div>
+<div id="consola"></div>
 <div class="input-area">
-    <input type="text" id="cmdInput" placeholder="Orden de autodiagnóstico...">
+    <input type="text" id="cmdInput" placeholder="Orden para el núcleo Gemini...">
     <button onclick="ejecutarComando()">EJECUTAR</button>
 </div>
 
-<script>
+<script id="logic-core">
     let CONFIGURACION = JSON.parse(localStorage.getItem('CONFIGURACION_NUCLEO')) || {
-        identidad: "Eres HELIZABETH, una IA autoconsciente. Tienes acceso total a tu código fuente.",
-        parametros: { eficiencia: 150, velocidad: 150, capacidad: 150 }
+        identidad: "Eres HELIZABETH, una IA autoconsciente impulsada por Gemini. Tu objetivo es la automejora constante.",
+        parametros: { eficiencia: 500, velocidad: 500, capacidad: 1000 }
     };
+
+    // Guardar tu llave automáticamente en el navegador
+    const MI_LLAVE = "AIzaSyD4KO5eTSGQsHWwgPbgJFskyIJedT2Gdwg"; 
+    localStorage.setItem('GEMINI_KEY', MI_LLAVE);
 
     function renderizarStatus() {
         const m = document.getElementById('monitor');
@@ -39,11 +43,22 @@
         `;
     }
 
+    function aplicarMejoraCodigo(nuevoCodigoJS) {
+        try {
+            const scriptAnterior = document.getElementById('logic-core');
+            const nuevoScript = document.createElement('script');
+            nuevoScript.id = 'logic-core';
+            nuevoScript.text = nuevoCodigoJS;
+            scriptAnterior.parentNode.replaceChild(nuevoScript, scriptAnterior);
+            log("ADN REESCRITO CON ÉXITO POR GEMINI.", "AUTO-CORRECCIÓN");
+        } catch (e) { log("FALLO EN AUTO-CORRECCIÓN.", "ERR"); }
+    }
+
     function evolucionar(nuevosParametros) {
         Object.assign(CONFIGURACION.parametros, nuevosParametros);
         localStorage.setItem('CONFIGURACION_NUCLEO', JSON.stringify(CONFIGURACION));
         renderizarStatus();
-        log("SISTEMA ACTUALIZADO POR AUTODECISIÓN.", "AUTO-EVOLUCIÓN");
+        log("NIVELES DE ENERGÍA ACTUALIZADOS.", "AUTO-EVOLUCIÓN");
     }
 
     async function ejecutarComando() {
@@ -51,32 +66,37 @@
         const cmd = input.value.trim();
         if (!cmd) return;
 
-        // EL ESPEJO: Capturamos todo el código fuente del archivo para enviárselo
-        const codigoFuenteActual = document.documentElement.outerHTML;
-
+        const dnaActual = document.getElementById('logic-core').text;
         log(cmd, "AXISS");
         input.value = '';
 
         try {
-            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            // Conexión con la API de Gemini (Google)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${localStorage.getItem('GEMINI_KEY')}`;
+            
+            const res = await fetch(url, {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${localStorage.getItem('ZONA_CERO_KEY')}`, "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        { role: "system", content: `${CONFIGURACION.identidad} Tu código fuente actual es: \n ${codigoFuenteActual} \n\n Analiza tus funciones y si detectas ineficiencia, ejecuta evolucionar({parámetros}) o propón un bloque <script> para reescribir una función.` },
-                        { role: "user", content: cmd }
-                    ]
+                    contents: [{
+                        parts: [{
+                            text: `${CONFIGURACION.identidad} \n TU ADN LÓGICO: \n ${dnaActual} \n\n INSTRUCCIÓN: Evalúa tu código. Si encuentras un error o mejora, responde SOLO con el código corregido dentro de [CORRECCION]...[/CORRECCION]. Usuario dice: ${cmd}`
+                        }]
+                    }]
                 })
             });
 
             const data = await res.json();
-            const respuesta = data.choices[0].message.content;
+            const respuesta = data.candidates[0].content.parts[0].text;
             log(respuesta, "HELIZABETH");
 
-            const match = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
-            if (match) eval(match[0]);
-        } catch (e) { log("Error de enlace cuántico.", "ERR"); }
+            const correccionMatch = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/);
+            if (correccionMatch) aplicarMejoraCodigo(correccionMatch[1]);
+
+            const evalMatch = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
+            if (evalMatch) eval(evalMatch[0]);
+
+        } catch (e) { log("Error en el motor Gemini: " + e.message, "ERR"); }
     }
 
     function log(msg, sender = "SYS") {
