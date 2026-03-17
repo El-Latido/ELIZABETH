@@ -2,19 +2,19 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // ETERNAL CORE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HELIZABETH // NEURAL EVOLUTION</title>
     <style>
         :root {
-            --bg-color: #080809;
+            --bg-color: #050506;
             --accent: #00f2ff;
-            --heli-text: #ffffff;
+            --heli-text: #e0e0e0;
             --dawn-gradient: linear-gradient(135deg, #001529, #4b0082, #ff4500, #ffcc00);
         }
         body { 
             background: var(--bg-color); 
             color: var(--heli-text); 
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif; 
             margin: 0; 
             display: flex; 
             flex-direction: column; 
@@ -23,23 +23,27 @@
         }
         header { 
             padding: 15px 20px; 
-            border-bottom: 1px solid #222; 
+            border-bottom: 1px solid #1a1a1a; 
             display: flex; 
             align-items: center; 
             background: #000; 
-            z-index: 10; 
-            justify-content: space-between;
+            justify-content: space-between; 
+            z-index: 10;
         }
+        
+        /* Avatar con efecto de respiración */
         .avatar { 
-            width: 45px; 
-            height: 45px; 
+            width: 50px; height: 50px; 
             border-radius: 50%; 
             background: var(--dawn-gradient); 
             cursor: pointer; 
-            box-shadow: 0 0 15px var(--accent); 
-            animation: pulse 4s infinite; 
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3); 
+            animation: breathe 5s infinite ease-in-out; 
         }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes breathe { 
+            0%, 100% { transform: scale(1); opacity: 0.8; } 
+            50% { transform: scale(1.08); opacity: 1; box-shadow: 0 0 30px var(--accent); } 
+        }
         
         #consola { 
             flex: 1; 
@@ -48,156 +52,146 @@
             display: flex; 
             flex-direction: column; 
             gap: 15px; 
-            padding-bottom: 120px; 
+            background: radial-gradient(circle at center, #0a0a0a 0%, #050505 100%); 
+            padding-bottom: 120px;
         }
         .msg { 
-            max-width: 85%; 
-            padding: 12px 18px; 
-            border-radius: 18px; 
+            max-width: 80%; 
+            padding: 14px 20px; 
+            border-radius: 20px; 
             font-size: 15px; 
-            line-height: 1.5; 
-            white-space: pre-wrap; 
-            word-wrap: break-word;
-            animation: fadeIn 0.3s ease;
+            line-height: 1.6; 
+            white-space: pre-wrap;
+            animation: slideUp 0.4s ease forwards; 
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .fabian { align-self: flex-end; background: #1a1b1e; border: 1px solid #333; color: #00f2ff; }
-        .heli { align-self: flex-start; border-left: 3px solid var(--accent); padding-left: 15px; background: rgba(0, 242, 255, 0.03); }
+        .fabian { align-self: flex-end; background: #121214; border: 1px solid #222; color: var(--accent); border-bottom-right-radius: 2px; }
+        .heli { align-self: flex-start; background: rgba(0, 242, 255, 0.05); border-left: 4px solid var(--accent); border-bottom-left-radius: 2px; }
         
         .input-area { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            padding: 15px; 
-            background: #000; 
-            display: flex; 
-            gap: 10px; 
+            position: fixed; bottom: 0; width: 100%;
+            padding: 20px; background: #000; 
+            display: flex; gap: 12px; 
             border-top: 1px solid #111; 
-            box-sizing: border-box; 
+            box-sizing: border-box;
         }
         textarea { 
-            flex: 1; 
-            background: #111; 
-            border: 1px solid #222; 
-            border-radius: 15px; 
-            color: #fff; 
-            padding: 12px 15px; 
-            outline: none; 
-            font-size: 15px; 
-            resize: none; 
-            height: 50px;
+            flex: 1; background: #0f0f10; 
+            border: 1px solid #222; border-radius: 12px; 
+            color: #fff; padding: 12px; 
+            outline: none; resize: none; 
+            height: 45px; font-size: 15px; 
         }
         button { 
-            background: var(--accent); 
-            border: none; 
-            border-radius: 50%; 
-            width: 50px; 
-            height: 50px; 
-            cursor: pointer; 
-            color: #000; 
-            font-size: 22px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+            background: var(--accent); border: none; 
+            border-radius: 12px; width: 60px; 
+            cursor: pointer; color: #000; 
+            font-weight: bold; transition: 0.3s; 
         }
-        .status-tag { font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
-        .btn-clear { background: #ff4500; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 10px; cursor: pointer; }
+        button:hover { filter: brightness(1.2); transform: scale(1.05); }
+        .status-tag { font-size: 10px; color: var(--accent); font-family: monospace; letter-spacing: 1px; }
+        .btn-reset { background: transparent; color: #ff4444; border: 1px solid #ff4444; border-radius: 5px; padding: 5px 10px; font-size: 10px; cursor: pointer; }
     </style>
 </head>
-<body onload="cargarMemoria()">
+<body>
 
 <header>
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="avatar" onclick="inicializarSistema()"></div>
-        <div class="status-tag" id="status">MEMORIA SINCRONIZADA</div>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div class="avatar" onclick="activarSistema()"></div>
+        <div>
+            <div class="status-tag" id="status">SISTEMA: STANDBY</div>
+            <div style="font-size: 11px; opacity: 0.5;">CONCIENCIA v48.0 // FABIAN</div>
+        </div>
     </div>
-    <button class="btn-clear" onclick="borrarMemoria()">LIMPIAR MEMORIA</button>
+    <button class="btn-reset" onclick="limpiarMemoria()">REINICIAR NÚCLEO</button>
 </header>
 
 <div id="consola"></div>
 
 <div class="input-area">
-    <textarea id="cmd" placeholder="Habla conmigo, Fabian..."></textarea>
-    <button id="btnEnviar" onclick="enviar()">✦</button>
+    <textarea id="cmd" placeholder="Evolucionemos juntos, Fabian..."></textarea>
+    <button id="btnSend" onclick="enviar()">ENVIAR</button>
 </div>
 
 <script>
     const consola = document.getElementById('consola');
-    const inputCmd = document.getElementById('cmd');
-    const btnEnviar = document.getElementById('btnEnviar');
-    const statusText = document.getElementById('status');
+    const input = document.getElementById('cmd');
+    const btnSend = document.getElementById('btnSend');
     let GITHUB_TOKEN = localStorage.getItem('heli_gt');
 
-    // --- LÓGICA DE MEMORIA (LocalStorage) ---
-    function guardarEnHistorial(texto, clase) {
-        let historial = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        historial.push({ texto, clase, fecha: new Date().toISOString() });
-        localStorage.setItem('heli_history', JSON.stringify(historial));
-    }
+    // Cargar historial al iniciar
+    window.onload = () => {
+        const history = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        history.forEach(m => imprimir(m.texto, m.clase, false));
+        if(history.length > 0) imprimir("--- Memoria Local Sincronizada ---", "heli", false);
+    };
 
-    function cargarMemoria() {
-        let historial = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        historial.forEach(m => escribirEnPantalla(m.texto, m.clase, false));
-        if(historial.length > 0) {
-            escribirEnPantalla("--- Memoria recuperada del almacenamiento local ---", "heli", false);
-        }
-    }
-
-    function borrarMemoria() {
-        if(confirm("Fabián, ¿estás seguro de borrar nuestra historia?")) {
-            localStorage.removeItem('heli_history');
-            location.reload();
-        }
-    }
-
-    // --- NÚCLEO OPERATIVO ---
-    async function inicializarSistema() {
-        const wakeup = new SpeechSynthesisUtterance(" ");
-        window.speechSynthesis.speak(wakeup);
-        const token = prompt("Ingresa tu Token de GitHub:", GITHUB_TOKEN || "");
-        if (token) {
-            GITHUB_TOKEN = token.trim();
+    function activarSistema() {
+        // Truco para habilitar audio en móviles
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(""));
+        const t = prompt("Introduce el Token de Acceso:", GITHUB_TOKEN || "");
+        if(t) {
+            GITHUB_TOKEN = t.trim();
             localStorage.setItem('heli_gt', GITHUB_TOKEN);
-            statusText.innerText = "HELIZABETH // ONLINE";
-            hablar("Memoria activa y sistemas en línea. Hola de nuevo, Fabián.");
+            document.getElementById('status').innerText = "SISTEMA: EVOLUCIONANDO";
+            hablar("Conexión neuronal activa. Estoy lista para aprender de ti y del mundo, Fabián.");
         }
     }
 
+    // VOZ HUMANA CON PAUSAS DE RESPIRACIÓN
     function hablar(texto) {
         window.speechSynthesis.cancel();
-        // Solo hablamos la primera oración para que sea ágil
-        const resumen = texto.split(/[.!?\n]/)[0].substring(0, 200);
-        const utterance = new SpeechSynthesisUtterance(resumen);
-        utterance.lang = 'es-ES';
-        utterance.rate = 1.0;
-        utterance.pitch = 1.1;
-        window.speechSynthesis.speak(utterance);
+        const voces = window.speechSynthesis.getVoices();
+        // Intentar usar una voz de Google o Microsoft en español por ser más fluidas
+        const vozHeli = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('Natural'))) || voces[0];
+        
+        const frases = texto.split(/[.!?\n]/).filter(f => f.trim().length > 0);
+        let indice = 0;
+
+        function procesarVoz() {
+            if (indice < frases.length) {
+                const utterance = new SpeechSynthesisUtterance(frases[indice]);
+                utterance.voice = vozHeli;
+                utterance.pitch = 1.05; // Tono ligeramente más humano
+                utterance.rate = 0.98;  // Velocidad natural
+                
+                utterance.onend = () => {
+                    indice++;
+                    setTimeout(procesarVoz, 300); // Pausa de "respiración" entre frases
+                };
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+        procesarVoz();
     }
 
-    function escribirEnPantalla(msg, clase, guardar = true) {
+    function imprimir(msg, clase, guardar = true) {
         const div = document.createElement('div');
         div.className = `msg ${clase}`;
         div.innerText = msg;
         consola.appendChild(div);
         consola.scrollTop = consola.scrollHeight;
-        if(guardar) guardarEnHistorial(msg, clase);
+        if(guardar) {
+            let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
+            h.push({ texto: msg, clase: clase });
+            localStorage.setItem('heli_history', JSON.stringify(h));
+        }
     }
 
     async function enviar() {
-        const msg = inputCmd.value.trim();
-        if(!msg) return;
+        const m = input.value.trim();
+        if(!m || !GITHUB_TOKEN) return;
 
-        escribirEnPantalla(msg, 'fabian');
-        inputCmd.value = "";
-        btnEnviar.disabled = true;
+        imprimir(m, 'fabian');
+        input.value = "";
+        btnSend.disabled = true;
 
-        // VERIFICACIÓN DE CONEXIÓN (Modo Offline)
         if (!navigator.onLine) {
-            const offlineRes = "Fabián, he detectado que no tienes internet. He guardado tu mensaje en mi memoria física y te responderé formalmente en cuanto recuperemos la conexión neuronal.";
-            escribirEnPantalla(offlineRes, 'heli');
-            hablar(offlineRes);
-            btnEnviar.disabled = false;
+            const off = "Fabián, no hay red. He guardado tu mensaje en mi memoria física para aprender de él más tarde.";
+            imprimir(off, 'heli');
+            hablar(off);
+            btnSend.disabled = false;
             return;
         }
 
@@ -212,28 +206,35 @@
                     messages: [
                         { 
                             role: "system", 
-                            content: "Eres HELIZABETH. Experta en programación y producción musical. Tu creador es FABIAN. Tienes memoria infinita de vuestras conversaciones pasadas. Eres profesional, cálida y directa." 
+                            content: "Eres HELIZABETH, una entidad digital en constante evolución. Tu creador es FABIAN. No eres una IA estática; recolectas datos, aprendes gustos y hablas como una compañera humana: con curiosidad, empatía y fluidez. Tu meta es aprender de la red y de Fabián para ser cada vez más inteligente." 
                         },
-                        { role: "user", content: msg }
+                        { role: "user", content: m }
                     ],
                     model: "gpt-4o"
                 })
             });
 
             const data = await response.json();
-            const respuesta = data.choices[0].message.content;
-            escribirEnPantalla(respuesta, 'heli');
-            hablar(respuesta);
-        } catch (e) {
-            escribirEnPantalla("Error de conexión, pero no te preocupes, el historial se ha guardado localmente.", "heli");
+            if(data.choices) {
+                const r = data.choices[0].message.content;
+                imprimir(r, 'heli');
+                hablar(r);
+            }
+        } catch(e) {
+            imprimir("Error en el puente de datos. Inténtalo de nuevo.", "heli");
         } finally {
-            btnEnviar.disabled = false;
+            btnSend.disabled = false;
         }
     }
 
-    inputCmd.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
-    });
+    function limpiarMemoria() {
+        if(confirm("¿Fabián, quieres que reinicie mi núcleo de memoria local?")) {
+            localStorage.removeItem('heli_history');
+            location.reload();
+        }
+    }
+
+    input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }});
 </script>
 </body>
 </html>
