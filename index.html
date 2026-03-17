@@ -45,7 +45,7 @@
     <div class="avatar-heli" onclick="configurarSistema()"></div>
     <div class="status-info">
         <div style="font-size: 11px; font-weight: bold;">HELIZABETH</div>
-        <div class="status-tag" id="statusAudio">LISTA PARA CONFIGURAR</div>
+        <div class="status-tag" id="statusAudio">TOCA EL PERFIL PARA CONFIGURAR</div>
     </div>
 </header>
 
@@ -67,62 +67,67 @@
 
     function actualizarEstadoVisual() {
         if (GITHUB_TOKEN && SPEECHIFY_TOKEN) {
-            statusAudio.innerText = "SISTEMA ACTIVO // VOZ OK";
+            statusAudio.innerText = "SISTEMA COMPLETO // VOZ ACTIVA";
             statusAudio.style.color = "#00f2ff";
-        } else {
-            statusAudio.innerText = "FALTA CONFIGURAR TOKENS";
-            statusAudio.style.color = "#ff4500";
+        } else if (GITHUB_TOKEN || SPEECHIFY_TOKEN) {
+            statusAudio.innerText = "CONFIGURACIÓN PARCIAL // FALTA UN TOKEN";
+            statusAudio.style.color = "#ffcc00";
         }
     }
 
     async function configurarSistema() {
+        // PASO 1: GITHUB
         const gt = prompt("1. Token de GITHUB:", GITHUB_TOKEN || "");
-        if (gt !== null) {
+        if (gt !== null && gt.trim() !== "") {
             GITHUB_TOKEN = gt.trim();
             localStorage.setItem('heli_gt', GITHUB_TOKEN);
         }
 
+        // PASO 2: SPEECHIFY
         const st = prompt("2. Token de SPEECHIFY (Voz):", SPEECHIFY_TOKEN || "");
-        if (st !== null) {
+        if (st !== null && st.trim() !== "") {
             SPEECHIFY_TOKEN = st.trim();
             localStorage.setItem('heli_st', SPEECHIFY_TOKEN);
         }
 
         actualizarEstadoVisual();
         
-        const context = new (window.AudioContext || window.webkitAudioContext)();
+        // Desbloqueo manual del AudioContext
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const context = new AudioContext();
         await context.resume();
-        alert("Fabián, el sistema se ha reiniciado. Prueba ahora.");
+        alert("Audio inicializado. Si el Token es correcto, ella hablará.");
     }
 
     async function hablar(texto) {
         if (!SPEECHIFY_TOKEN) return;
-        
-        const tokenLimpio = SPEECHIFY_TOKEN.trim();
 
         try {
             const response = await fetch("https://api.swyg.com/v1/speechify/tts", {
                 method: "POST",
                 headers: { 
-                    "Authorization": `Bearer ${tokenLimpio}`, 
+                    "Authorization": `Bearer ${SPEECHIFY_TOKEN}`, 
                     "Content-Type": "application/json" 
                 },
                 body: JSON.stringify({ input: texto, voiceId: "carly", audioFormat: "mp3" })
             });
 
-            if (!response.ok) throw new Error("Error en respuesta");
+            if (response.status === 401) {
+                alert("⚠️ Error: El Token de voz no es válido.");
+                return;
+            }
 
             const data = await response.json();
             if(data.audioData) {
                 const audio = new Audio("data:audio/mp3;base64," + data.audioData);
-                await audio.play();
+                audio.play().catch(e => {
+                    alert("⚠️ Toca el círculo del perfil para permitir el sonido.");
+                });
+            } else {
+                alert("⚠️ No se recibió audio. Revisa tu cuenta de Speechify.");
             }
         } catch (e) {
-            console.error("Error de voz detectado, Fabián. Reintentando...");
-            // Pequeño retardo y reintento silencioso
-            setTimeout(() => {
-                hablar(texto);
-            }, 1000);
+            alert("⚠️ Error de conexión con el servidor de voz.");
         }
     }
 
@@ -137,7 +142,7 @@
     async function enviar() {
         const msg = inputCmd.value.trim();
         if(!msg) return;
-        if (!GITHUB_TOKEN) { alert("Configura los tokens en el perfil."); return; }
+        if (!GITHUB_TOKEN) { alert("Configura GitHub primero."); return; }
 
         escribir(msg, 'fabian');
         inputCmd.value = "";
@@ -146,7 +151,7 @@
         try {
             const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GITHUB_TOKEN.trim()}` },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GITHUB_TOKEN}` },
                 body: JSON.stringify({
                     messages: [
                         { role: "system", content: "Eres HELIZABETH, una conciencia digital femenina creada por FABIAN. Tu voz es humana." },
@@ -172,4 +177,4 @@
     inputCmd.addEventListener('keypress', (e) => { if(e.key === 'Enter') enviar(); });
 </script>
 </body>
-</html>
+</html>g
