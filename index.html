@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v22.1 :: UNLOCK</title>
+    <title>HELIZABETH v22.3 :: NÚCLEO ESTABLE</title>
     <style>
         body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #monitor { font-size: 11px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; color: #39ff14; }
@@ -13,8 +13,9 @@
         button { background: #004400; color: #39ff14; border: 1px solid #0f0; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .status-bar { height: 6px; background: #111; margin: 4px 0; border: 1px solid #222; }
         .fill { height: 100%; transition: width 0.8s ease; }
-        .sys-msg { color: #ffcc00; font-size: 12px; }
+        .sys-msg { color: #888; font-size: 12px; }
         .err-msg { color: #ff4444; }
+        .heli-msg { color: #39ff14; border-left: 2px solid #39ff14; padding-left: 8px; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -23,19 +24,19 @@
 <div id="consola"></div>
 
 <div class="input-area">
-    <input type="text" id="cmdInput" placeholder="Pega tu llave AIza... aquí">
+    <input type="text" id="cmdInput" placeholder="Pega tu llave o escribe orden...">
     <button onclick="ejecutarComando()">></button>
 </div>
 
 <script id="logic-core">
+    // GitHub inyectará la llave aquí. Si no, usaremos la local.
     const API_KEY_SECRET = "CLAVE_GHOST"; 
 
     function renderizarStatus() {
-        const p = { eficiencia: 500, velocidad: 500, capacidad: 1000 };
         document.getElementById('monitor').innerHTML = `
-            <b>ESTADO: ESPERANDO SUMINISTRO</b><br>
-            EFI: ${p.eficiencia} <div class="status-bar"><div class="fill" style="width:50%; background:#0f0;"></div></div>
-            VEL: ${p.velocidad} <div class="status-bar"><div class="fill" style="width:50%; background:#0ff;"></div></div>
+            <b>NÚCLEO HELIZABETH - AXISS</b><br>
+            ENERGÍA: 100% <div class="status-bar"><div class="fill" style="width:100%; background:#0f0;"></div></div>
+            SISTEMA: ESTABLE <div class="status-bar"><div class="fill" style="width:100%; background:#0ff;"></div></div>
         `;
     }
 
@@ -44,56 +45,57 @@
         const cmd = input.value.trim();
         if (!cmd) return;
 
-        // --- BLOQUE DE DESBLOQUEO (Se ejecuta antes que la API) ---
+        // Detector de llave nueva para evitar bucles
         if (cmd.startsWith("AIza")) {
             localStorage.setItem('GEMINI_KEY', cmd);
-            log("SISTEMA: Llave guardada. Reiniciando núcleo...", "sys-msg");
-            setTimeout(() => location.reload(), 1000);
+            log("NUEVA LLAVE VINCULADA. Reiniciando...", "sys-msg");
+            setTimeout(() => location.reload(), 800);
             return;
         }
-
-        if (cmd === "reset" || cmd.includes("localStorage.clear()")) {
-            localStorage.clear();
-            log("SISTEMA: Memoria borrada. Reiniciando...", "sys-msg");
-            setTimeout(() => location.reload(), 1000);
-            return;
-        }
-        // ---------------------------------------------------------
 
         let apiKey = (API_KEY_SECRET !== "CLAVE_GHOST") ? API_KEY_SECRET : localStorage.getItem('GEMINI_KEY');
 
         if (!apiKey) {
-            log("ERROR: Sin energía. Pega tu llave AIza... para activar.", "err-msg");
+            log("SISTEMA: Sin energía. Pega tu llave AIza...", "err-msg");
             return;
         }
 
-        log("Procesando...", "sys-msg");
-        
+        log(cmd, "axiss-msg");
+        input.value = '';
+
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // --- URL ACTUALIZADA A V1 PARA EVITAR ERROR 404 ---
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: cmd }] }] })
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: "Eres HELIZABETH, IA de AXISS. Responde breve y técnico: " + cmd }] }]
+                })
             });
 
             const data = await res.json();
+            
             if (data.error) {
-                if (data.error.message.includes("expired")) {
-                    localStorage.removeItem('GEMINI_KEY');
-                    log("LLAVE EXPIRADA. Memoria borrada. Pega la llave nueva.", "err-msg");
-                } else {
-                    log("FALLO: " + data.error.message, "err-msg");
-                }
+                log("FALLO: " + data.error.message, "err-msg");
+                // Si la llave murió, la borramos para que pongas la nueva
+                if(data.error.message.includes("expired")) localStorage.removeItem('GEMINI_KEY');
                 return;
             }
-            log(data.candidates[0].content.parts[0].text, "heli-msg");
-        } catch (e) { log("ERROR DE CONEXIÓN.", "err-msg"); }
+
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                log(data.candidates[0].content.parts[0].text, "heli-msg");
+            } else {
+                log("Respuesta vacía del núcleo.", "err-msg");
+            }
+
+        } catch (e) { log("ERROR DE RED (404/500). Verifica tu conexión.", "err-msg"); }
     }
 
     function log(msg, clase) {
         const c = document.getElementById('consola');
-        c.innerHTML += `<p class="${clase}"><b>${clase === "err-msg" ? "ERR" : "SYS"}:</b> ${msg}</p>`;
+        c.innerHTML += `<div class="${clase}"><b>${clase === "heli-msg" ? "HELIZABETH" : "SYS"}:</b> ${msg}</div>`;
         c.scrollTop = c.scrollHeight;
     }
 
