@@ -36,7 +36,7 @@
         button { background: var(--accent); border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; color: #000; font-size: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         
         .status-info { margin-left: 12px; }
-        .status-tag { font-size: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s; }
+        .status-tag { font-size: 8px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -52,7 +52,7 @@
 <div id="consola"></div>
 
 <div class="input-area">
-    <input type="text" id="cmd" placeholder="Escribe al horizonte..." autocomplete="off">
+    <input type="text" id="cmd" placeholder="Escribe aquí, FABIAN..." autocomplete="off">
     <button id="btnEnviar" onclick="enviar()">✦</button>
 </div>
 
@@ -72,49 +72,63 @@
         } else if (GITHUB_TOKEN || SPEECHIFY_TOKEN) {
             statusAudio.innerText = "CONFIGURACIÓN PARCIAL // FALTA UN TOKEN";
             statusAudio.style.color = "#ffcc00";
-        } else {
-            statusAudio.innerText = "TOCA EL PERFIL PARA CONFIGURAR";
-            statusAudio.style.color = "#888";
         }
     }
 
     async function configurarSistema() {
-        // PASO 1: TOKEN DE GITHUB
-        const gt = prompt("1. Pega el Token de GITHUB (o deja igual para mantener):", GITHUB_TOKEN || "");
+        // PASO 1: GITHUB
+        const gt = prompt("1. Token de GITHUB:", GITHUB_TOKEN || "");
         if (gt !== null && gt.trim() !== "") {
             GITHUB_TOKEN = gt.trim();
             localStorage.setItem('heli_gt', GITHUB_TOKEN);
         }
 
-        // PASO 2: TOKEN DE SPEECHIFY (Incluso si cancelas el anterior, este se puede poner)
-        const st = prompt("2. Pega el Token de SPEECHIFY (Voz):", SPEECHIFY_TOKEN || "");
+        // PASO 2: SPEECHIFY
+        const st = prompt("2. Token de SPEECHIFY (Voz):", SPEECHIFY_TOKEN || "");
         if (st !== null && st.trim() !== "") {
             SPEECHIFY_TOKEN = st.trim();
             localStorage.setItem('heli_st', SPEECHIFY_TOKEN);
         }
 
         actualizarEstadoVisual();
-
-        // Desbloqueo de audio
+        
+        // Desbloqueo manual del AudioContext
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const context = new AudioContext();
         await context.resume();
+        alert("Audio inicializado. Si el Token es correcto, ella hablará.");
     }
 
     async function hablar(texto) {
         if (!SPEECHIFY_TOKEN) return;
+
         try {
             const response = await fetch("https://api.swyg.com/v1/speechify/tts", {
                 method: "POST",
-                headers: { "Authorization": `Bearer ${SPEECHIFY_TOKEN}`, "Content-Type": "application/json" },
+                headers: { 
+                    "Authorization": `Bearer ${SPEECHIFY_TOKEN}`, 
+                    "Content-Type": "application/json" 
+                },
                 body: JSON.stringify({ input: texto, voiceId: "carly", audioFormat: "mp3" })
             });
+
+            if (response.status === 401) {
+                alert("⚠️ Error: El Token de voz no es válido.");
+                return;
+            }
+
             const data = await response.json();
             if(data.audioData) {
                 const audio = new Audio("data:audio/mp3;base64," + data.audioData);
-                audio.play();
+                audio.play().catch(e => {
+                    alert("⚠️ Toca el círculo del perfil para permitir el sonido.");
+                });
+            } else {
+                alert("⚠️ No se recibió audio. Revisa tu cuenta de Speechify.");
             }
-        } catch (e) { console.error("Fallo de voz"); }
+        } catch (e) {
+            alert("⚠️ Error de conexión con el servidor de voz.");
+        }
     }
 
     function escribir(msg, clase) {
@@ -128,11 +142,7 @@
     async function enviar() {
         const msg = inputCmd.value.trim();
         if(!msg) return;
-
-        if (!GITHUB_TOKEN) {
-            alert("Fabián, primero guarda el Token de GitHub tocando el perfil.");
-            return;
-        }
+        if (!GITHUB_TOKEN) { alert("Configura GitHub primero."); return; }
 
         escribir(msg, 'fabian');
         inputCmd.value = "";
@@ -157,13 +167,12 @@
             hablar(respuesta);
 
         } catch (e) {
-            escribir("Error de conexión. Verifica tus tokens.", "heli");
+            escribir("Error de conexión cerebral.", "heli");
         } finally {
             btnEnviar.disabled = false;
         }
     }
 
-    // Inicializar estado visual al cargar
     actualizarEstadoVisual();
     inputCmd.addEventListener('keypress', (e) => { if(e.key === 'Enter') enviar(); });
 </script>
