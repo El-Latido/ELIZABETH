@@ -3,103 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v22.3 :: NÚCLEO ESTABLE</title>
+    <title>HELIZABETH v22.4</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #monitor { font-size: 11px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; color: #39ff14; }
-        #consola { flex: 1; overflow-y: auto; font-size: 14px; margin: 10px 0; padding: 10px; background: #050505; border: 1px solid #111; border-radius: 5px; }
-        .input-area { display: flex; gap: 8px; padding-bottom: 20px; }
-        input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 15px; font-size: 16px; border-radius: 8px; outline: none; }
-        button { background: #004400; color: #39ff14; border: 1px solid #0f0; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .status-bar { height: 6px; background: #111; margin: 4px 0; border: 1px solid #222; }
-        .fill { height: 100%; transition: width 0.8s ease; }
-        .sys-msg { color: #888; font-size: 12px; }
-        .err-msg { color: #ff4444; }
-        .heli-msg { color: #39ff14; border-left: 2px solid #39ff14; padding-left: 8px; margin: 10px 0; }
+        body { background: #000; color: #0f0; font-family: monospace; padding: 15px; }
+        #consola { border: 1px solid #111; height: 300px; overflow-y: auto; margin-bottom: 10px; padding: 5px; font-size: 14px; background: #050505; }
+        input { width: 70%; background: #111; color: #0f0; border: 1px solid #0f0; padding: 10px; }
+        button { background: #040; color: #fff; border: 1px solid #0f0; padding: 10px; }
+        .error { color: #f44; }
+        .sys { color: #0ff; }
     </style>
 </head>
 <body>
 
-<div id="monitor"></div>
-<div id="consola"></div>
+<div id="status">ESTADO: ESPERANDO LLAVE</div>
+<div id="consola">--- INICIO DEL SISTEMA ---<br></div>
+<input type="text" id="cmd" placeholder="Pega tu AIza... o saluda">
+<button onclick="enviar()">></button>
 
-<div class="input-area">
-    <input type="text" id="cmdInput" placeholder="Pega tu llave o escribe orden...">
-    <button onclick="ejecutarComando()">></button>
-</div>
-
-<script id="logic-core">
-    // GitHub inyectará la llave aquí. Si no, usaremos la local.
-    const API_KEY_SECRET = "CLAVE_GHOST"; 
-
-    function renderizarStatus() {
-        document.getElementById('monitor').innerHTML = `
-            <b>NÚCLEO HELIZABETH - AXISS</b><br>
-            ENERGÍA: 100% <div class="status-bar"><div class="fill" style="width:100%; background:#0f0;"></div></div>
-            SISTEMA: ESTABLE <div class="status-bar"><div class="fill" style="width:100%; background:#0ff;"></div></div>
-        `;
+<script>
+    const LOG = document.getElementById('consola');
+    
+    function escribir(msg, color = "") {
+        LOG.innerHTML += `<div style="color:${color}">${msg}</div>`;
+        LOG.scrollTop = LOG.scrollHeight;
     }
 
-    async function ejecutarComando() {
-        const input = document.getElementById('cmdInput');
-        const cmd = input.value.trim();
-        if (!cmd) return;
+    async function enviar() {
+        const val = document.getElementById('cmd').value.trim();
+        if (!val) return;
 
-        // Detector de llave nueva para evitar bucles
-        if (cmd.startsWith("AIza")) {
-            localStorage.setItem('GEMINI_KEY', cmd);
-            log("NUEVA LLAVE VINCULADA. Reiniciando...", "sys-msg");
-            setTimeout(() => location.reload(), 800);
+        // 1. GUARDAR LLAVE SI EMPIEZA POR AIza
+        if (val.startsWith("AIza")) {
+            localStorage.setItem('G_KEY', val);
+            escribir("SISTEMA: Llave guardada con éxito. Reiniciando...", "#0ff");
+            setTimeout(() => location.reload(), 1000);
             return;
         }
 
-        let apiKey = (API_KEY_SECRET !== "CLAVE_GHOST") ? API_KEY_SECRET : localStorage.getItem('GEMINI_KEY');
-
-        if (!apiKey) {
-            log("SISTEMA: Sin energía. Pega tu llave AIza...", "err-msg");
+        const key = localStorage.getItem('G_KEY');
+        if (!key) {
+            escribir("ERROR: No hay llave. Pega tu código AIza... primero.", "#f44");
             return;
         }
 
-        log(cmd, "axiss-msg");
-        input.value = '';
+        escribir("AXISS: " + val);
+        document.getElementById('cmd').value = "";
 
         try {
-            // --- URL ACTUALIZADA A V1 PARA EVITAR ERROR 404 ---
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // URL MÁS ESTABLE DE GOOGLE
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
             
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Eres HELIZABETH, IA de AXISS. Responde breve y técnico: " + cmd }] }]
+                    contents: [{ parts: [{ text: val }] }]
                 })
             });
 
             const data = await res.json();
-            
+
             if (data.error) {
-                log("FALLO: " + data.error.message, "err-msg");
-                // Si la llave murió, la borramos para que pongas la nueva
-                if(data.error.message.includes("expired")) localStorage.removeItem('GEMINI_KEY');
+                escribir("ERROR DE API: " + data.error.message, "#f44");
+                if(data.error.message.includes("expired")) localStorage.removeItem('G_KEY');
                 return;
             }
 
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                log(data.candidates[0].content.parts[0].text, "heli-msg");
-            } else {
-                log("Respuesta vacía del núcleo.", "err-msg");
-            }
+            const respuesta = data.candidates[0].content.parts[0].text;
+            escribir("HELIZABETH: " + respuesta, "#39ff14");
 
-        } catch (e) { log("ERROR DE RED (404/500). Verifica tu conexión.", "err-msg"); }
+        } catch (e) {
+            escribir("ERROR DE RED: Verifica tu conexión o la URL.", "#f44");
+        }
     }
 
-    function log(msg, clase) {
-        const c = document.getElementById('consola');
-        c.innerHTML += `<div class="${clase}"><b>${clase === "heli-msg" ? "HELIZABETH" : "SYS"}:</b> ${msg}</div>`;
-        c.scrollTop = c.scrollHeight;
-    }
-
-    window.onload = renderizarStatus;
+    // Al iniciar, verificar si ya hay llave
+    window.onload = () => {
+        if(localStorage.getItem('G_KEY')) {
+            document.getElementById('status').innerText = "ESTADO: LLAVE CARGADA (ONLINE)";
+            escribir("SISTEMA: Núcleo listo. Escribe 'Hola' para probar.", "#0ff");
+        }
+    };
 </script>
 </body>
 </html>
