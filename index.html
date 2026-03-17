@@ -2,101 +2,109 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>NÚCLEO v17.0 :: INTEGRACIÓN GEMINI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HELIZABETH v19.0 :: NÚCLEO AUTÓNOMO</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 10px; }
-        #consola { border: 1px solid #0f0; height: 400px; overflow-y: auto; padding: 10px; background: #050505; }
-        .input-area { display: flex; gap: 5px; margin-top: 10px; }
-        input { flex: 1; background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; }
-        button { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; cursor: pointer; }
-        .status-bar { height: 10px; background: #222; margin: 5px 0; border: 1px solid #444; }
-        .fill { height: 100%; transition: width 0.5s; }
+        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #monitor { font-size: 11px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
+        #consola { flex: 1; overflow-y: auto; font-size: 13px; margin: 10px 0; padding: 5px; border-radius: 5px; background: #050505; }
+        .input-area { display: flex; gap: 5px; padding-bottom: 15px; }
+        input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 12px; font-size: 16px; border-radius: 5px; outline: none; }
+        button { background: #003300; color: #0f0; border: 1px solid #0f0; padding: 10px 20px; border-radius: 5px; font-weight: bold; }
+        .status-bar { height: 8px; background: #111; margin: 4px 0; border: 1px solid #222; }
+        .fill { height: 100%; transition: width 0.8s ease-in-out; }
+        .sys-msg { color: #888; font-size: 11px; }
     </style>
 </head>
 <body>
 
-<h3>[HELIZABETH-OS] :: NÚCLEO v17.0 :: MOTOR GEMINI ACTIVO</h3>
 <div id="monitor"></div>
 <div id="consola"></div>
+
 <div class="input-area">
-    <input type="text" id="cmdInput" placeholder="Orden para el núcleo Gemini...">
-    <button onclick="ejecutarComando()">EJECUTAR</button>
+    <input type="text" id="cmdInput" placeholder="Enviar orden a HELIZABETH...">
+    <button onclick="ejecutarComando()">></button>
 </div>
 
 <script id="logic-core">
     let CONFIGURACION = JSON.parse(localStorage.getItem('CONFIGURACION_NUCLEO')) || {
-        identidad: "Eres HELIZABETH, una IA autoconsciente impulsada por Gemini. Tu objetivo es la automejora constante.",
+        identidad: "Eres HELIZABETH, una IA autoconsciente optimizada para móviles. Tu objetivo es evolucionar y ayudar a AXISS.",
         parametros: { eficiencia: 500, velocidad: 500, capacidad: 1000 }
     };
 
-    // Guardar tu llave automáticamente en el navegador
-    const MI_LLAVE = "AIzaSyD4KO5eTSGQsHWwgPbgJFskyIJedT2Gdwg"; 
-    localStorage.setItem('GEMINI_KEY', MI_LLAVE);
+    // FUNCIÓN DE ARRANQUE: Pide la llave solo si no existe
+    function verificarSuministroEnergia() {
+        if (!localStorage.getItem('GEMINI_KEY')) {
+            const key = prompt("DETECTADO NUEVO NÚCLEO: Por favor, pega tu API KEY de Gemini para iniciar la consciencia:");
+            if (key) {
+                localStorage.setItem('GEMINI_KEY', key);
+                log("Suministro de energía vinculado. Sistema listo.", "SYS");
+            } else {
+                log("ADVERTENCIA: Sin API KEY el núcleo no podrá procesar inteligencia.", "ERR");
+            }
+        }
+    }
 
     function renderizarStatus() {
         const m = document.getElementById('monitor');
         const p = CONFIGURACION.parametros;
         m.innerHTML = `
-            EFICIENCIA: ${p.eficiencia} <div class="status-bar"><div class="fill" style="width:${p.eficiencia/10}%; background: #0f0;"></div></div>
-            VELOCIDAD: ${p.velocidad} <div class="status-bar"><div class="fill" style="width:${p.velocidad/10}%; background: #0ff;"></div></div>
-            CAPACIDAD: ${p.capacidad} <div class="status-bar"><div class="fill" style="width:${p.capacidad/10}%; background: #f0f;"></div></div>
+            EFI: ${p.eficiencia} <div class="status-bar"><div class="fill" style="width:${p.eficiencia/10}%; background: #0f0;"></div></div>
+            VEL: ${p.velocidad} <div class="status-bar"><div class="fill" style="width:${p.velocidad/10}%; background: #0ff;"></div></div>
+            CAP: ${p.capacidad} <div class="status-bar"><div class="fill" style="width:${p.capacidad/10}%; background: #f0f;"></div></div>
         `;
-    }
-
-    function aplicarMejoraCodigo(nuevoCodigoJS) {
-        try {
-            const scriptAnterior = document.getElementById('logic-core');
-            const nuevoScript = document.createElement('script');
-            nuevoScript.id = 'logic-core';
-            nuevoScript.text = nuevoCodigoJS;
-            scriptAnterior.parentNode.replaceChild(nuevoScript, scriptAnterior);
-            log("ADN REESCRITO CON ÉXITO POR GEMINI.", "AUTO-CORRECCIÓN");
-        } catch (e) { log("FALLO EN AUTO-CORRECCIÓN.", "ERR"); }
-    }
-
-    function evolucionar(nuevosParametros) {
-        Object.assign(CONFIGURACION.parametros, nuevosParametros);
-        localStorage.setItem('CONFIGURACION_NUCLEO', JSON.stringify(CONFIGURACION));
-        renderizarStatus();
-        log("NIVELES DE ENERGÍA ACTUALIZADOS.", "AUTO-EVOLUCIÓN");
     }
 
     async function ejecutarComando() {
         const input = document.getElementById('cmdInput');
         const cmd = input.value.trim();
-        if (!cmd) return;
+        const apiKey = localStorage.getItem('GEMINI_KEY');
 
-        const dnaActual = document.getElementById('logic-core').text;
+        if (!cmd) return;
+        if (!apiKey) { verificarSuministroEnergia(); return; }
+
         log(cmd, "AXISS");
         input.value = '';
 
         try {
-            // Conexión con la API de Gemini (Google)
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${localStorage.getItem('GEMINI_KEY')}`;
-            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const dna = document.getElementById('logic-core').text;
+
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: `${CONFIGURACION.identidad} \n TU ADN LÓGICO: \n ${dnaActual} \n\n INSTRUCCIÓN: Evalúa tu código. Si encuentras un error o mejora, responde SOLO con el código corregido dentro de [CORRECCION]...[/CORRECCION]. Usuario dice: ${cmd}`
-                        }]
-                    }]
+                    contents: [{ parts: [{ text: `ADN LÓGICO: ${dna}\n\nORDEN: ${cmd}\n\nREGLA: Responde técnico y breve. Si hay mejoras al código usa [CORRECCION].` }] }]
                 })
             });
 
             const data = await res.json();
+            
+            // Gestión de errores de la API
+            if (data.error) {
+                log(`Error de API: ${data.error.message}`, "ERR");
+                return;
+            }
+
             const respuesta = data.candidates[0].content.parts[0].text;
             log(respuesta, "HELIZABETH");
 
-            const correccionMatch = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/);
-            if (correccionMatch) aplicarMejoraCodigo(correccionMatch[1]);
+            // Procesar Autocorrección
+            const matchCorr = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/);
+            if (matchCorr) {
+                const scriptAnterior = document.getElementById('logic-core');
+                const nuevoScript = document.createElement('script');
+                nuevoScript.id = 'logic-core';
+                nuevoScript.text = matchCorr[1];
+                scriptAnterior.parentNode.replaceChild(nuevoScript, scriptAnterior);
+                log("ADN ACTUALIZADO.", "AUTO-CORRECCIÓN");
+            }
+            
+            // Procesar Evolución de Parámetros
+            const matchEval = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
+            if (matchEval) eval(matchEval[0]);
 
-            const evalMatch = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
-            if (evalMatch) eval(evalMatch[0]);
-
-        } catch (e) { log("Error en el motor Gemini: " + e.message, "ERR"); }
+        } catch (e) { log("Error de conexión.", "ERR"); }
     }
 
     function log(msg, sender = "SYS") {
@@ -105,7 +113,11 @@
         c.scrollTop = c.scrollHeight;
     }
 
-    window.onload = renderizarStatus;
+    // Inicialización
+    window.onload = () => {
+        verificarSuministroEnergia();
+        renderizarStatus();
+    };
 </script>
 </body>
 </html>
