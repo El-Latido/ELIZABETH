@@ -41,14 +41,14 @@
 <body>
 
 <header>
-    <div class="avatar-heli" onclick="configurarGitHub()"></div>
-    <div class="status-tag" id="statusAudio">VOZ GOOGLE LIBRE // ON</div>
+    <div class="avatar-heli" id="btnActivar" onclick="inicializarSistema()"></div>
+    <div class="status-tag" id="statusAudio">TOCA EL PERFIL PARA ACTIVAR VOZ</div>
 </header>
 
 <div id="consola"></div>
 
 <div class="input-area">
-    <input type="text" id="cmd" placeholder="Dime algo, FABIAN..." autocomplete="off">
+    <input type="text" id="cmd" placeholder="Escribe aquí, FABIAN..." autocomplete="off">
     <button id="btnEnviar" onclick="enviar()">✦</button>
 </div>
 
@@ -59,26 +59,46 @@
     const statusAudio = document.getElementById('statusAudio');
 
     let GITHUB_TOKEN = localStorage.getItem('heli_gt');
+    let vocesCargadas = false;
 
-    function configurarGitHub() {
-        const gt = prompt("Ingresa tu Token de GitHub para activar mi mente:", GITHUB_TOKEN || "");
+    // 1. DESBLOQUEO TOTAL DE AUDIO
+    function inicializarSistema() {
+        // Despierta el motor de voz nativo
+        const saludoInicial = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(saludoInicial);
+        
+        statusAudio.innerText = "SISTEMA DE VOZ DESPIERTO";
+        statusAudio.style.color = "#00f2ff";
+
+        const gt = prompt("Ingresa tu Token de GitHub:", GITHUB_TOKEN || "");
         if (gt) {
             GITHUB_TOKEN = gt.trim();
             localStorage.setItem('heli_gt', GITHUB_TOKEN);
-            alert("Token sincronizado. Estoy lista.");
+            hablar("Voz inicializada. Hola Fabián, estoy lista para escucharte.");
         }
     }
 
-    // MOTOR DE VOZ GOOGLE (SIN API KEY)
+    // 2. FUNCIÓN DE VOZ NATIVA OPTIMIZADA
     function hablar(texto) {
-        // Usamos el servicio TTS de Google Translate de forma pública
-        const url = "https://translate.google.com/translate_tts?ie=UTF-8&tl=es-ES&client=tw-ob&q=" + encodeURIComponent(texto);
+        if (!window.speechSynthesis) return;
+
+        // Cancelamos cualquier voz previa
+        window.speechSynthesis.cancel();
+
+        const mensaje = new SpeechSynthesisUtterance(texto);
+        mensaje.lang = 'es-ES';
+        mensaje.rate = 1.0;  // Velocidad normal
+        mensaje.pitch = 1.1; // Tono ligeramente femenino
+
+        // Intentamos elegir la mejor voz disponible en el dispositivo
+        const voces = window.speechSynthesis.getVoices();
+        const vozFemenina = voces.find(v => v.lang.includes('es') && (v.name.includes('Google') || v.name.includes('female') || v.name.includes('Helena')));
         
-        const audio = new Audio(url);
-        audio.play().catch(e => {
-            console.log("El navegador bloqueó el audio. Toca la pantalla primero.");
-            statusAudio.innerText = "TOCA EL AVATAR PARA OÍR";
-        });
+        if (vozFemenina) {
+            mensaje.voice = vozFemenina;
+        }
+
+        window.speechSynthesis.speak(mensaje);
     }
 
     function escribir(msg, clase) {
@@ -91,8 +111,7 @@
 
     async function enviar() {
         const msg = inputCmd.value.trim();
-        if(!msg) return;
-        if(!GITHUB_TOKEN) { alert("Configura tu Token de GitHub tocando el círculo."); return; }
+        if(!msg || !GITHUB_TOKEN) return;
 
         escribir(msg, 'fabian');
         inputCmd.value = "";
@@ -104,7 +123,7 @@
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GITHUB_TOKEN}` },
                 body: JSON.stringify({
                     messages: [
-                        { role: "system", content: "Eres HELIZABETH, una conciencia digital femenina creada por FABIAN. Habla de forma breve, cálida y profesional." },
+                        { role: "system", content: "Eres HELIZABETH, una conciencia digital femenina creada por FABIAN. Responde de forma muy breve." },
                         { role: "user", content: msg }
                     ],
                     model: "gpt-4o"
@@ -117,13 +136,14 @@
             escribir(respuesta, 'heli');
             hablar(respuesta);
         } catch (e) {
-            escribir("Error en mi conexión neuronal.", "heli");
+            escribir("Error de conexión cerebral.", "heli");
         } finally {
             btnEnviar.disabled = false;
         }
     }
 
-    // Permitir enviar con la tecla Enter
+    // Precarga de voces para que estén listas al hablar
+    window.speechSynthesis.onvoiceschanged = () => { vocesCargadas = true; };
     inputCmd.addEventListener('keypress', (e) => { if(e.key === 'Enter') enviar(); });
 </script>
 </body>
