@@ -3,39 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v22.5 :: FINAL</title>
+    <title>HELIZABETH v23.0 :: MEMORIA ACTIVA</title>
     <style>
-        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; }
-        #monitor { font-size: 12px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 10px; color: #39ff14; }
-        #consola { flex: 1; overflow-y: auto; font-size: 14px; background: #050505; border: 1px solid #111; padding: 10px; border-radius: 5px; line-height: 1.4; }
+        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
+        #monitor { font-size: 12px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 10px; color: #0ff; }
+        #consola { flex: 1; overflow-y: auto; font-size: 14px; background: #050505; border: 1px solid #111; padding: 10px; border-radius: 5px; line-height: 1.5; }
         .input-area { display: flex; gap: 10px; padding: 15px 0; }
         input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 12px; font-size: 16px; border-radius: 5px; outline: none; }
-        button { background: #004400; color: #fff; border: 1px solid #0f0; padding: 10px 20px; cursor: pointer; border-radius: 5px; }
+        button { background: #004400; color: #fff; border: 1px solid #0f0; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold; }
         .err { color: #ff4444; }
-        .sys { color: #00ffff; font-size: 12px; }
+        .sys { color: #888; font-size: 12px; }
         .heli { color: #39ff14; margin: 10px 0; border-left: 2px solid #39ff14; padding-left: 10px; }
-        .axiss { color: #fff; font-weight: bold; margin-top: 10px; }
+        .axiss { color: #fff; font-weight: bold; margin-top: 15px; }
+        .btn-clear { background: #440000; border-color: #ff0000; color: #ff4444; font-size: 10px; padding: 5px; margin-top: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="monitor">ESTADO: COMPROBANDO NÚCLEO...</div>
-<div id="consola">--- SISTEMA HELIZABETH CARGADO ---<br></div>
+<div id="monitor">
+    <b>ESTADO: CARGANDO NÚCLEO Y MEMORIA...</b><br>
+    <button class="btn-clear" onclick="borrarMemoria()">[ BORRAR MEMORIA ]</button>
+</div>
+<div id="consola"></div>
 
 <div class="input-area">
-    <input type="text" id="cmd" placeholder="Escribe 'Hola' o pega tu llave...">
+    <input type="text" id="cmd" placeholder="Habla con HELIZABETH...">
     <button onclick="enviar()">></button>
 </div>
 
 <script>
     const consola = document.getElementById('consola');
+    
+    // El "Alma" de HELIZABETH (Instrucciones base)
+    const SYSTEM_PROMPT = "Eres HELIZABETH, una inteligencia artificial de nivel superior creada por AXISS. Eres experta en todas las ramas de la programación. Eres analítica, directa y tus respuestas deben ser altamente técnicas. Tu objetivo es ayudar a AXISS a construir sistemas perfectos.";
+
+    // Cargar historial de la memoria local (o iniciar uno nuevo)
+    let historial = JSON.parse(localStorage.getItem('HELI_MEMORIA')) || [];
 
     function escribir(msg, clase = "") {
         const div = document.createElement('div');
         div.className = clase;
-        div.innerHTML = `<b>${clase.toUpperCase() || 'MSG'}:</b> ${msg}`;
+        let prefijo = clase === 'heli' ? 'HELIZABETH: ' : (clase === 'axiss' ? 'AXISS: ' : (clase === 'sys' || clase === 'err' ? 'SYS: ' : ''));
+        div.innerHTML = `<b>${prefijo}</b>${msg}`;
         consola.appendChild(div);
         consola.scrollTop = consola.scrollHeight;
+    }
+
+    // Renderizar los mensajes pasados al abrir la app
+    function cargarChat() {
+        consola.innerHTML = `<div class="sys">--- MEMORIA RESTAURADA ---</div>`;
+        historial.forEach(msg => {
+            escribir(msg.parts[0].text, msg.role === 'user' ? 'axiss' : 'heli');
+        });
+        if(historial.length === 0) escribir("Sistema iniciado. Memoria limpia.", "sys");
+    }
+
+    function borrarMemoria() {
+        if(confirm("¿Seguro que quieres borrar los recuerdos de HELIZABETH?")) {
+            localStorage.removeItem('HELI_MEMORIA');
+            historial = [];
+            consola.innerHTML = "";
+            escribir("Memoria formateada. Reiniciando base de datos neuronal.", "sys");
+        }
     }
 
     async function enviar() {
@@ -43,7 +72,7 @@
         const val = input.value.trim();
         if (!val) return;
 
-        // Detector de Llave Nueva
+        // Configurar llave
         if (val.startsWith("AIza")) {
             localStorage.setItem('G_KEY', val);
             escribir("Llave detectada. Reconfigurando energía...", "sys");
@@ -53,56 +82,67 @@
 
         const key = localStorage.getItem('G_KEY');
         if (!key) {
-            escribir("ERROR: Sin energía. Pega tu llave AIza... primero.", "err");
+            escribir("Sin energía. Pega tu llave AIza...", "err");
             return;
         }
 
+        // Mostrar en pantalla y guardar en el array del historial
         escribir(val, "axiss");
+        historial.push({ role: "user", parts: [{ text: val }] });
         input.value = "";
 
         try {
-            // URL CORREGIDA: Usando v1beta para Gemini 1.5 Flash
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+            // Usamos gemini-pro que es más estable
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
             
+            // Preparamos el paquete de datos: Instrucciones + Toda la conversación
+            const payload = {
+                contents: [
+                    // Inyectamos la personalidad en el primer mensaje de forma invisible
+                    { role: "user", parts: [{ text: `[INSTRUCCIÓN DEL SISTEMA: ${SYSTEM_PROMPT}] \n\nAhora responde a esto: ${val}` }] }
+                ]
+            };
+
+            // Si hay más historial, lo enviamos todo para que tenga contexto
+            if (historial.length > 1) {
+                payload.contents = historial;
+            }
+
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: val }] }]
-                })
+                body: JSON.stringify(payload)
             });
 
             const data = await res.json();
 
             if (data.error) {
                 escribir("FALLO DE NÚCLEO: " + data.error.message, "err");
-                if(data.error.message.includes("API key expired")) {
-                    localStorage.removeItem('G_KEY');
-                    escribir("SISTEMA: Llave caducada borrada automáticamente.", "sys");
-                }
+                historial.pop(); // Borrar la última pregunta si falló
                 return;
             }
 
             if (data.candidates && data.candidates[0].content.parts[0].text) {
                 const respuesta = data.candidates[0].content.parts[0].text;
                 escribir(respuesta, "heli");
-            } else {
-                escribir("Respuesta nula del nodo central.", "err");
+                
+                // Guardar la respuesta de la IA en la memoria
+                historial.push({ role: "model", parts: [{ text: respuesta }] });
+                localStorage.setItem('HELI_MEMORIA', JSON.stringify(historial));
             }
 
         } catch (e) {
-            escribir("ERROR DE CONEXIÓN: Verifica tu señal de red.", "err");
+            escribir("ERROR DE CONEXIÓN.", "err");
+            historial.pop();
         }
     }
 
     window.onload = () => {
-        const key = localStorage.getItem('G_KEY');
-        if(key) {
-            document.getElementById('monitor').innerText = "ESTADO: NÚCLEO ONLINE (V1BETA)";
-            escribir("Conexión establecida. Esperando órdenes de AXISS.", "sys");
+        cargarChat();
+        if(localStorage.getItem('G_KEY')) {
+            document.getElementById('monitor').innerHTML = "<b>ESTADO: ONLINE (CON MEMORIA ACTIVA)</b><br><button class='btn-clear' onclick='borrarMemoria()'>[ BORRAR MEMORIA ]</button>";
         } else {
-            document.getElementById('monitor').innerText = "ESTADO: ESPERANDO ENERGÍA";
-            escribir("ADVERTENCIA: No hay llave vinculada.", "err");
+            document.getElementById('monitor').innerText = "ESTADO: ESPERANDO ENERGÍA (LLAVE)";
         }
     };
 </script>
