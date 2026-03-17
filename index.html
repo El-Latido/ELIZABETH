@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v24.1 :: ESTABLE</title>
+    <title>HELIZABETH v25.0 :: GITHUB ENGINE</title>
     <style>
-        body { background: #000; color: #39ff14; font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-        #consola { flex: 1; overflow-y: auto; border: 1px solid #333; padding: 10px; background: #050505; margin-bottom: 10px; font-size: 14px; line-height: 1.5; border-radius: 5px; }
-        .input-area { display: flex; gap: 10px; }
-        input { flex: 1; background: #111; color: #fff; border: 1px solid #39ff14; padding: 12px; outline: none; border-radius: 5px; }
-        button { background: #39ff14; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px; }
-        .axiss { color: #fff; margin-top: 10px; font-weight: bold; }
-        .heli { color: #39ff14; margin-bottom: 15px; border-left: 2px solid #39ff14; padding-left: 10px; white-space: pre-wrap; }
-        .sys { color: #0ff; font-size: 11px; margin-top: 5px; }
+        body { background: #0d1117; color: #58a6ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
+        #consola { flex: 1; overflow-y: auto; border: 1px solid #30363d; padding: 15px; background: #010409; margin-bottom: 15px; font-size: 14px; line-height: 1.6; border-radius: 8px; color: #c9d1d9; }
+        .input-area { display: flex; gap: 10px; background: #161b22; padding: 10px; border-radius: 8px; border: 1px solid #30363d; }
+        input { flex: 1; background: transparent; color: #fff; border: none; padding: 10px; outline: none; font-size: 16px; }
+        button { background: #238636; color: #fff; border: none; padding: 10px 25px; cursor: pointer; font-weight: bold; border-radius: 6px; transition: 0.2s; }
+        button:hover { background: #2ea043; }
+        .axiss { color: #58a6ff; margin-top: 15px; font-weight: bold; border-bottom: 1px solid #30363d; padding-bottom: 5px; }
+        .heli { color: #7ee787; margin-bottom: 20px; padding: 10px; background: #161b22; border-radius: 5px; white-space: pre-wrap; }
+        .sys { color: #8b949e; font-size: 11px; font-family: monospace; }
     </style>
 </head>
 <body>
 
-<div id="status" style="color: #0ff; font-size: 12px; margin-bottom: 5px;">SISTEMA: INICIALIZANDO NÚCLEO...</div>
+<div id="status" class="sys">SISTEMA: ESPERANDO TOKEN DE GITHUB...</div>
 <div id="consola"></div>
 
 <div class="input-area">
-    <input type="text" id="cmd" placeholder="Escribe 'Hola'...">
-    <button onclick="enviar()">></button>
+    <input type="text" id="cmd" placeholder="Escribe 'Hola' o pega tu Token (ghp_)...">
+    <button onclick="enviar()">EJECUTAR</button>
 </div>
 
 <script>
@@ -31,7 +32,7 @@
     function escribir(msg, clase = "") {
         const div = document.createElement('div');
         div.className = clase;
-        let pfx = clase === 'heli' ? 'HELIZABETH: ' : (clase === 'axiss' ? 'AXISS: ' : 'SYS: ');
+        let pfx = clase === 'heli' ? 'HELIZABETH: ' : (clase === 'axiss' ? 'AXISS: ' : '>> ');
         div.innerHTML = `<b>${pfx}</b>${msg}`;
         consola.appendChild(div);
         consola.scrollTop = consola.scrollHeight;
@@ -42,61 +43,63 @@
         const val = input.value.trim();
         if (!val) return;
 
-        // Registro de Llave
-        if (val.startsWith("AIza")) {
-            localStorage.setItem('G_KEY', val);
-            escribir("LLAVE REGISTRADA. REINICIANDO...", "sys");
+        // Detector de Token de GitHub
+        if (val.startsWith("ghp_") || val.startsWith("github_pat_")) {
+            localStorage.setItem('GH_TOKEN', val);
+            escribir("TOKEN DE GITHUB VINCULADO. REINICIANDO NÚCLEO...", "sys");
             setTimeout(() => location.reload(), 1000);
             return;
         }
 
-        const key = localStorage.getItem('G_KEY');
-        if (!key) { escribir("ERROR: PEGA TU LLAVE NUEVA.", "sys"); return; }
+        const token = localStorage.getItem('GH_TOKEN');
+        if (!token) { escribir("ADVERTENCIA: Inyecta tu GitHub Token para continuar.", "sys"); return; }
 
         escribir(val, "axiss");
         input.value = "";
-        document.getElementById('status').innerText = "SISTEMA: PROCESANDO DATOS...";
+        document.getElementById('status').innerText = "SISTEMA: CONSULTANDO GITHUB MODELS...";
 
         try {
-            // CAMBIO CRÍTICO: Usamos v1 (Estable) y gemini-pro (Alta compatibilidad)
-            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${key}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            // Usamos el modelo GPT-4o a través de la API de GitHub (o puedes usar Llama-3)
+            const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: val }] }]
+                    messages: [
+                        { role: "system", content: "Eres HELIZABETH, una IA avanzada de AXISS, experta en programación y sistemas." },
+                        { role: "user", content: val }
+                    ],
+                    model: "gpt-4o", // Modelo estándar en GitHub Models
+                    temperature: 0.7,
+                    max_tokens: 1000
                 })
             });
 
             const data = await response.json();
 
             if (data.error) {
-                escribir(`ERROR ${data.error.code}: ${data.error.message}`, "sys");
-                document.getElementById('status').innerText = "SISTEMA: ERROR DE NODO";
+                escribir(`FALLO EN GITHUB: ${data.error.message}`, "sys");
                 return;
             }
 
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                const txt = data.candidates[0].content.parts[0].text;
-                escribir(txt, "heli");
-                document.getElementById('status').innerText = "SISTEMA: ONLINE";
-            } else {
-                escribir("Respuesta vacía del servidor.", "sys");
-            }
+            const txt = data.choices[0].message.content;
+            escribir(txt, "heli");
+            document.getElementById('status').innerText = "SISTEMA: ONLINE (GITHUB ENGINE)";
 
         } catch (e) {
-            escribir("FALLO DE RED. REINTENTA.", "sys");
+            escribir("ERROR CRÍTICO: No se pudo conectar con el servidor de GitHub.", "sys");
         }
     }
 
     window.onload = () => {
-        const key = localStorage.getItem('G_KEY');
-        if(key) {
-            document.getElementById('status').innerText = "SISTEMA: NÚCLEO V1 ACTIVO";
-            escribir("Conexión establecida. Esperando órdenes.", "sys");
+        const token = localStorage.getItem('GH_TOKEN');
+        if(token) {
+            document.getElementById('status').innerText = "SISTEMA: GITHUB CORE ACTIVO";
+            escribir("Enlace con GitHub establecido. Esperando órdenes de AXISS.", "sys");
         } else {
-            escribir("ADVERTENCIA: Sin energía. Pega tu nueva llave AIza...", "sys");
+            escribir("SISTEMA SIN ENERGÍA. Inyecta un GitHub Personal Access Token.", "sys");
         }
     };
 </script>
