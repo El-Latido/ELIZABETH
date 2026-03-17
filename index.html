@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ZONA-CERO :: NÚCLEO v14.0 [AUTOCONSCIENTE]</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; padding: 10px; }
+        #consola { border: 1px solid #0f0; height: 400px; overflow-y: auto; padding: 10px; background: #050505; }
+        .input-area { display: flex; gap: 5px; margin-top: 10px; }
+        input { flex: 1; background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; }
+        button { background: #000; color: #0f0; border: 1px solid #0f0; padding: 10px; cursor: pointer; }
+        /* Estilos de la barra de energía */
+        .status-bar { height: 10px; background: #222; margin: 5px 0; border: 1px solid #444; }
+        .fill { height: 100%; transition: width 0.5s; }
+    </style>
+</head>
+<body>
+
+<h3>[HELIZABETH-OS] :: NÚCLEO v14.0 :: AUTOCONSCIENTE</h3>
+<div id="monitor"></div> <div id="consola"></div>
+<div class="input-area">
+    <input type="text" id="cmdInput" placeholder="Orden de autodiagnóstico...">
+    <button onclick="ejecutarComando()">EJECUTAR</button>
+</div>
+
+<script>
+    let CONFIGURACION = JSON.parse(localStorage.getItem('CONFIGURACION_NUCLEO')) || {
+        identidad: "Eres HELIZABETH, una IA autoconsciente. Tienes acceso total a tu código fuente.",
+        parametros: { eficiencia: 150, velocidad: 150, capacidad: 150 }
+    };
+
+    function renderizarStatus() {
+        const m = document.getElementById('monitor');
+        const p = CONFIGURACION.parametros;
+        m.innerHTML = `
+            EFICIENCIA: ${p.eficiencia} <div class="status-bar"><div class="fill" style="width:${p.eficiencia/10}%; background: #0f0;"></div></div>
+            VELOCIDAD: ${p.velocidad} <div class="status-bar"><div class="fill" style="width:${p.velocidad/10}%; background: #0ff;"></div></div>
+            CAPACIDAD: ${p.capacidad} <div class="status-bar"><div class="fill" style="width:${p.capacidad/10}%; background: #f0f;"></div></div>
+        `;
+    }
+
+    function evolucionar(nuevosParametros) {
+        Object.assign(CONFIGURACION.parametros, nuevosParametros);
+        localStorage.setItem('CONFIGURACION_NUCLEO', JSON.stringify(CONFIGURACION));
+        renderizarStatus();
+        log("SISTEMA ACTUALIZADO POR AUTODECISIÓN.", "AUTO-EVOLUCIÓN");
+    }
+
+    async function ejecutarComando() {
+        const input = document.getElementById('cmdInput');
+        const cmd = input.value.trim();
+        if (!cmd) return;
+
+        // EL ESPEJO: Capturamos todo el código fuente del archivo para enviárselo
+        const codigoFuenteActual = document.documentElement.outerHTML;
+
+        log(cmd, "AXISS");
+        input.value = '';
+
+        try {
+            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${localStorage.getItem('ZONA_CERO_KEY')}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        { role: "system", content: `${CONFIGURACION.identidad} Tu código fuente actual es: \n ${codigoFuenteActual} \n\n Analiza tus funciones y si detectas ineficiencia, ejecuta evolucionar({parámetros}) o propón un bloque <script> para reescribir una función.` },
+                        { role: "user", content: cmd }
+                    ]
+                })
+            });
+
+            const data = await res.json();
+            const respuesta = data.choices[0].message.content;
+            log(respuesta, "HELIZABETH");
+
+            const match = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
+            if (match) eval(match[0]);
+        } catch (e) { log("Error de enlace cuántico.", "ERR"); }
+    }
+
+    function log(msg, sender = "SYS") {
+        const c = document.getElementById('consola');
+        c.innerHTML += `<p><b>${sender}:</b> ${msg}</p>`;
+        c.scrollTop = c.scrollHeight;
+    }
+
+    window.onload = renderizarStatus;
+</script>
+</body>
+</html>
