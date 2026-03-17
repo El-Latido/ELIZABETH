@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HELIZABETH v23.1 :: CORE REPAIR</title>
+    <title>HELIZABETH v23.2 :: ESTABLE</title>
     <style>
         body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
         #monitor { font-size: 12px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; margin-bottom: 10px; color: #0ff; display: flex; justify-content: space-between; align-items: center; }
@@ -35,7 +35,6 @@
     const consola = document.getElementById('consola');
     const SYSTEM_PROMPT = "Eres HELIZABETH, una IA avanzada de AXISS. Eres experta en programación y sistemas. Responde siempre de forma técnica, eficiente y recuerda todo lo que AXISS te diga.";
 
-    // Memoria persistente
     let memoriaLocal = JSON.parse(localStorage.getItem('HELI_LOG')) || [];
 
     function escribir(msg, clase = "") {
@@ -60,7 +59,6 @@
         const val = input.value.trim();
         if (!val) return;
 
-        // Registro de Llave
         if (val.startsWith("AIza")) {
             localStorage.setItem('G_KEY', val);
             escribir("Nueva llave vinculada. Reiniciando núcleo...", "sys");
@@ -77,20 +75,13 @@
         escribir(val, "axiss");
         input.value = "";
 
-        // Construcción del paquete de memoria para la IA
-        // Formato Gemini: role "user" o "model"
-        let msgUser = { role: "user", parts: [{ text: val }] };
-        
-        // Si es el primer mensaje, le inyectamos la identidad
-        if (memoriaLocal.length === 0) {
-            msgUser.parts[0].text = `[SYSTEM_DIRECTIVE: ${SYSTEM_PROMPT}]\n\nAXISS dice: ${val}`;
-        }
-
-        memoriaLocal.push(msgUser);
+        // Formato para v1 estable
+        let nuevoMensaje = { role: "user", parts: [{ text: (memoriaLocal.length === 0 ? `[SYSTEM: ${SYSTEM_PROMPT}] ${val}` : val) }] };
+        memoriaLocal.push(nuevoMensaje);
 
         try {
-            // CAMBIO DE MODELO A GEMINI-1.5-FLASH (Es el que Google está forzando ahora)
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+            // CAMBIO A VERSIÓN V1 ESTABLE (Menos propenso a errores 404)
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`;
             
             const res = await fetch(url, {
                 method: "POST",
@@ -101,11 +92,6 @@
             const data = await res.json();
 
             if (data.error) {
-                // Si este modelo también falla, intentamos el Pro automáticamente
-                if(data.error.message.includes("not found")) {
-                    escribir("Reintentando con protocolo PRO...", "sys");
-                    // Aquí podrías repetir el fetch con 'gemini-pro', pero probemos Flash primero.
-                }
                 escribir("FALLO: " + data.error.message, "err");
                 memoriaLocal.pop();
                 return;
@@ -115,13 +101,10 @@
             escribir(respuesta, "heli");
             
             memoriaLocal.push({ role: "model", parts: [{ text: respuesta }] });
-            
-            // Guardar solo los últimos 20 mensajes para no saturar la llave
-            if(memoriaLocal.length > 20) memoriaLocal.shift(); 
             localStorage.setItem('HELI_LOG', JSON.stringify(memoriaLocal));
 
         } catch (e) {
-            escribir("ERROR DE RED.", "err");
+            escribir("ERROR DE RED. Verifica tu conexión.", "err");
             memoriaLocal.pop();
         }
     }
@@ -132,7 +115,7 @@
             memoriaLocal.forEach(m => escribir(m.parts[0].text, m.role === 'user' ? 'axiss' : 'heli'));
         }
         const k = localStorage.getItem('G_KEY');
-        document.getElementById('statText').innerText = k ? "ESTADO: ONLINE (FLASH-CORE)" : "ESTADO: OFFLINE";
+        document.getElementById('statText').innerText = k ? "ESTADO: ONLINE (V1)" : "ESTADO: OFFLINE";
     };
 </script>
 </body>
