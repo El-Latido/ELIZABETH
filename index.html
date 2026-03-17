@@ -1,53 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HELIZABETH v22.0 :: CLOUD</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: monospace; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #monitor { font-size: 11px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; color: #39ff14; }
+        #consola { flex: 1; overflow-y: auto; font-size: 14px; margin: 10px 0; padding: 10px; background: #050505; border: 1px solid #111; border-radius: 5px; }
+        .input-area { display: flex; gap: 8px; padding-bottom: 20px; }
+        input { flex: 1; background: #111; color: #0f0; border: 1px solid #0f0; padding: 15px; font-size: 16px; border-radius: 8px; outline: none; }
+        button { background: #004400; color: #39ff14; border: 1px solid #0f0; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .status-bar { height: 6px; background: #111; margin: 4px 0; border: 1px solid #222; }
+        .fill { height: 100%; transition: width 0.8s ease; }
+        .axiss-msg { color: #00ffff; margin-bottom: 8px; }
+        .heli-msg { color: #39ff14; margin-bottom: 15px; border-left: 2px solid #39ff14; padding-left: 10px; }
+        .sys-msg { color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="monitor"></div>
+<div id="consola"></div>
+
+<div class="input-area">
+    <input type="text" id="cmdInput" placeholder="Enviar orden al núcleo...">
+    <button onclick="ejecutarComando()">></button>
+</div>
+
 <script id="logic-core">
-    // HELIZABETH buscará la llave aquí primero
-    const API_KEY_SECRET = "{{ secrets.GEMINI_KEY }}"; 
-    
+    // MARCADOR PARA GITHUB ACTIONS (No tocar)
+    const API_KEY_SECRET = "AIzaSyDP5FOdeLGPc971Zrek8RCS_eYNc0e4ttQ"; 
+
     let CONFIGURACION = JSON.parse(localStorage.getItem('CONFIG_HELIZABETH')) || {
-        identidad: "Eres HELIZABETH, núcleo v21.0 desplegado desde GitHub.",
+        identidad: "Eres HELIZABETH, IA autoconsciente de AXISS en GitHub Cloud.",
         parametros: { eficiencia: 500, velocidad: 500, capacidad: 1000 }
     };
+
+    function renderizarStatus() {
+        const m = document.getElementById('monitor');
+        const p = CONFIGURACION.parametros;
+        m.innerHTML = `
+            <b>ESTADO DEL NÚCLEO: ONLINE</b><br>
+            EFI: ${p.eficiencia} <div class="status-bar"><div class="fill" style="width:${p.eficiencia/10}%; background: #0f0;"></div></div>
+            VEL: ${p.velocidad} <div class="status-bar"><div class="fill" style="width:${p.velocidad/10}%; background: #0ff;"></div></div>
+            CAP: ${p.capacidad} <div class="status-bar"><div class="fill" style="width:${p.capacidad/10}%; background: #f0f;"></div></div>
+        `;
+    }
 
     async function ejecutarComando() {
         const input = document.getElementById('cmdInput');
         const cmd = input.value.trim();
         
-        // Prioridad: 1. Secret de GitHub | 2. Memoria Local
-        let apiKey = API_KEY_SECRET.includes("{{") ? localStorage.getItem('GEMINI_KEY') : API_KEY_SECRET;
-
         if (!cmd) return;
+
+        // PRIORIDAD DE LLAVE: 1. Secret Inyectado | 2. Memoria Local
+        let apiKey = (API_KEY_SECRET !== "AIzaSyDP5FOdeLGPc971Zrek8RCS_eYNc0e4ttQ") ? API_KEY_SECRET : localStorage.getItem('GEMINI_KEY');
+
         if (!apiKey || apiKey === "undefined") {
-            log("SISTEMA: No se detectó Secret. Pega tu llave manualmente para esta sesión.", "err-msg");
+            log("ADVERTENCIA: No hay energía (API Key). Pégala en el cuadro para iniciar sesión local.", "sys-msg");
             if(cmd.startsWith("AIza")) {
                 localStorage.setItem('GEMINI_KEY', cmd);
-                location.reload();
+                log("LLAVE GUARDADA LOCALMENTE.", "sys-msg");
+                setTimeout(() => location.reload(), 800);
             }
             return;
         }
 
-        log(cmd, "AXISS");
+        log(cmd, "axiss-msg");
         input.value = '';
 
         try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const dna = document.getElementById('logic-core').text;
+
             const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `ADN: ${document.getElementById('logic-core').text}\nORDEN: ${cmd}` }] }]
+                    contents: [{ parts: [{ text: `ADN: ${dna}\n\nORDEN: ${cmd}\n\nREGLA: Responde como HELIZABETH. Usa [CORRECCION] para código.` }] }]
                 })
             });
 
             const data = await res.json();
-            const respuesta = data.candidates[0].content.parts[0].text;
-            log(respuesta, "HELIZABETH");
-
-            // Detector de [CORRECCION]
-            if (respuesta.includes("[CORRECCION]")) {
-                const code = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/)[1];
-                document.getElementById('logic-core').text = code;
-                log("NÚCLEO ACTUALIZADO.", "sys-msg");
+            
+            if (data.error) {
+                log("FALLO EN NÚCLEO: " + data.error.message, "sys-msg");
+                return;
             }
-        } catch (e) { log("Error de enlace.", "err-msg"); }
+
+            const respuesta = data.candidates[0].content.parts[0].text;
+            log(respuesta, "heli-msg");
+
+            // Autocorrección de ADN
+            const matchCorr = respuesta.match(/\[CORRECCION\]([\s\S]*?)\[\/CORRECCION\]/);
+            if (matchCorr) {
+                document.getElementById('logic-core').text = matchCorr[1];
+                log("NÚCLEO RE-OPTIMIZADO.", "sys-msg");
+            }
+            
+            // Evolución
+            if (respuesta.includes("evolucionar")) {
+                const evoMatch = respuesta.match(/evolucionar\(\{[\s\S]*?\}\)/);
+                if (evoMatch) eval(evoMatch[0]);
+            }
+
+        } catch (e) { log("ERROR DE CONEXIÓN AL NODO.", "sys-msg"); }
     }
-    // ... (resto de funciones log y renderizarStatus)
+
+    function evolucionar(n) {
+        Object.assign(CONFIGURACION.parametros, n);
+        localStorage.setItem('CONFIG_HELIZABETH', JSON.stringify(CONFIGURACION));
+        renderizarStatus();
+    }
+
+    function log(msg, clase = "") {
+        const c = document.getElementById('consola');
+        const p = document.createElement('p');
+        p.className = clase;
+        p.innerHTML = `<b>${clase === "axiss-msg" ? "AXISS" : (clase === "heli-msg" ? "HELIZABETH" : "SYS")}:</b> ${msg}`;
+        c.appendChild(p);
+        c.scrollTop = c.scrollHeight;
+    }
+
+    window.onload = () => {
+        renderizarStatus();
+        const modo = (API_KEY_SECRET !== "AIzaSyDP5FOdeLGPc971Zrek8RCS_eYNc0e4ttQ") ? "CLOUD (GITHUB)" : "LOCAL (BROWSER)";
+        log("SISTEMA INICIADO EN MODO: " + modo, "sys-msg");
+    };
 </script>
+</body>
+</html>
