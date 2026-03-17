@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // CORE v44.1</title>
+    <title>HELIZABETH // ETERNAL CORE</title>
     <style>
         :root {
             --bg-color: #080809;
@@ -11,34 +11,114 @@
             --heli-text: #ffffff;
             --dawn-gradient: linear-gradient(135deg, #001529, #4b0082, #ff4500, #ffcc00);
         }
-        body { background: var(--bg-color); color: var(--heli-text); font-family: 'Inter', sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { padding: 15px 20px; border-bottom: 1px solid #222; display: flex; align-items: center; background: #000; z-index: 10; justify-content: space-between; }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--dawn-gradient); cursor: pointer; box-shadow: 0 0 15px var(--accent); animation: pulse 4s infinite; }
+        body { 
+            background: var(--bg-color); 
+            color: var(--heli-text); 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        header { 
+            padding: 15px 20px; 
+            border-bottom: 1px solid #222; 
+            display: flex; 
+            align-items: center; 
+            background: #000; 
+            z-index: 10; 
+            justify-content: space-between;
+        }
+        .avatar { 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            background: var(--dawn-gradient); 
+            cursor: pointer; 
+            box-shadow: 0 0 15px var(--accent); 
+            animation: pulse 4s infinite; 
+        }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-        #consola { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
-        .msg { max-width: 85%; padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+        
+        #consola { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            padding-bottom: 120px; 
+        }
+        .msg { 
+            max-width: 85%; 
+            padding: 12px 18px; 
+            border-radius: 18px; 
+            font-size: 15px; 
+            line-height: 1.5; 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         .fabian { align-self: flex-end; background: #1a1b1e; border: 1px solid #333; color: #00f2ff; }
         .heli { align-self: flex-start; border-left: 3px solid var(--accent); padding-left: 15px; background: rgba(0, 242, 255, 0.03); }
-        .input-area { position: fixed; bottom: 0; width: 100%; padding: 15px; background: #000; display: flex; gap: 10px; border-top: 1px solid #111; box-sizing: border-box; }
-        textarea { flex: 1; background: #111; border: 1px solid #222; border-radius: 15px; color: #fff; padding: 12px 15px; outline: none; font-size: 15px; resize: none; height: 50px; font-family: monospace; }
-        button { background: var(--accent); border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; color: #000; font-size: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        
+        .input-area { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            padding: 15px; 
+            background: #000; 
+            display: flex; 
+            gap: 10px; 
+            border-top: 1px solid #111; 
+            box-sizing: border-box; 
+        }
+        textarea { 
+            flex: 1; 
+            background: #111; 
+            border: 1px solid #222; 
+            border-radius: 15px; 
+            color: #fff; 
+            padding: 12px 15px; 
+            outline: none; 
+            font-size: 15px; 
+            resize: none; 
+            height: 50px;
+        }
+        button { 
+            background: var(--accent); 
+            border: none; 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            cursor: pointer; 
+            color: #000; 
+            font-size: 22px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
         .status-tag { font-size: 9px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        .btn-clear { background: #ff4500; color: white; border: none; border-radius: 5px; padding: 5px 10px; font-size: 10px; cursor: pointer; }
     </style>
 </head>
-<body>
+<body onload="cargarMemoria()">
 
 <header>
-    <div style="display: flex; align-items: center; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
         <div class="avatar" onclick="inicializarSistema()"></div>
-        <div class="status-tag" id="statusAudio">HELIZABETH // STANDBY</div>
+        <div class="status-tag" id="status">MEMORIA SINCRONIZADA</div>
     </div>
-    <button onclick="componerMusica()" style="width: 35px; height: 35px; font-size: 14px; background: transparent; border: 1px solid var(--accent); color: var(--accent);">♫</button>
+    <button class="btn-clear" onclick="borrarMemoria()">LIMPIAR MEMORIA</button>
 </header>
 
 <div id="consola"></div>
 
 <div class="input-area">
-    <textarea id="cmd" placeholder="Código, música o charla, FABIAN..."></textarea>
+    <textarea id="cmd" placeholder="Habla conmigo, Fabian..."></textarea>
     <button id="btnEnviar" onclick="enviar()">✦</button>
 </div>
 
@@ -46,79 +126,83 @@
     const consola = document.getElementById('consola');
     const inputCmd = document.getElementById('cmd');
     const btnEnviar = document.getElementById('btnEnviar');
-    const statusAudio = document.getElementById('statusAudio');
-
+    const statusText = document.getElementById('status');
     let GITHUB_TOKEN = localStorage.getItem('heli_gt');
-    let audioCtx = null;
 
+    // --- LÓGICA DE MEMORIA (LocalStorage) ---
+    function guardarEnHistorial(texto, clase) {
+        let historial = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        historial.push({ texto, clase, fecha: new Date().toISOString() });
+        localStorage.setItem('heli_history', JSON.stringify(historial));
+    }
+
+    function cargarMemoria() {
+        let historial = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        historial.forEach(m => escribirEnPantalla(m.texto, m.clase, false));
+        if(historial.length > 0) {
+            escribirEnPantalla("--- Memoria recuperada del almacenamiento local ---", "heli", false);
+        }
+    }
+
+    function borrarMemoria() {
+        if(confirm("Fabián, ¿estás seguro de borrar nuestra historia?")) {
+            localStorage.removeItem('heli_history');
+            location.reload();
+        }
+    }
+
+    // --- NÚCLEO OPERATIVO ---
     async function inicializarSistema() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const wakeup = new SpeechSynthesisUtterance(" ");
         window.speechSynthesis.speak(wakeup);
-        
-        const token = prompt("Token de GitHub:", GITHUB_TOKEN || "");
+        const token = prompt("Ingresa tu Token de GitHub:", GITHUB_TOKEN || "");
         if (token) {
             GITHUB_TOKEN = token.trim();
             localStorage.setItem('heli_gt', GITHUB_TOKEN);
-            statusAudio.innerText = "HELIZABETH // ONLINE";
-            statusAudio.style.color = "#00f2ff";
-            hablar("Conexión restaurada. Estoy lista para trabajar contigo, Fabián.");
+            statusText.innerText = "HELIZABETH // ONLINE";
+            hablar("Memoria activa y sistemas en línea. Hola de nuevo, Fabián.");
         }
     }
 
     function hablar(texto) {
         window.speechSynthesis.cancel();
-        const explicacion = texto.split('```')[0].substring(0, 300);
-        const utterance = new SpeechSynthesisUtterance(explicacion);
+        // Solo hablamos la primera oración para que sea ágil
+        const resumen = texto.split(/[.!?\n]/)[0].substring(0, 200);
+        const utterance = new SpeechSynthesisUtterance(resumen);
         utterance.lang = 'es-ES';
         utterance.rate = 1.0;
         utterance.pitch = 1.1;
         window.speechSynthesis.speak(utterance);
     }
 
-    function componerMusica() {
-        if (!audioCtx) { alert("Toca el círculo primero."); return; }
-        const escalas = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 523.25];
-        let tiempo = audioCtx.currentTime;
-        for (let i = 0; i < 12; i++) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = i % 2 === 0 ? 'triangle' : 'sine'; 
-            osc.frequency.setValueAtTime(escalas[Math.floor(Math.random() * escalas.length)], tiempo);
-            gain.gain.setValueAtTime(0.1, tiempo);
-            gain.gain.exponentialRampToValueAtTime(0.0001, tiempo + 0.4);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(tiempo);
-            osc.stop(tiempo + 0.5);
-            tiempo += 0.2;
-        }
-        escribir("Generando secuencia musical...", "heli");
-    }
-
-    function escribir(msg, clase) {
+    function escribirEnPantalla(msg, clase, guardar = true) {
         const div = document.createElement('div');
         div.className = `msg ${clase}`;
         div.innerText = msg;
         consola.appendChild(div);
         consola.scrollTop = consola.scrollHeight;
+        if(guardar) guardarEnHistorial(msg, clase);
     }
 
     async function enviar() {
         const msg = inputCmd.value.trim();
-        if(!msg || !GITHUB_TOKEN) return;
+        if(!msg) return;
 
-        escribir(msg, 'fabian');
+        escribirEnPantalla(msg, 'fabian');
         inputCmd.value = "";
         btnEnviar.disabled = true;
 
-        if(msg.toLowerCase().includes("música") || msg.toLowerCase().includes("toca algo")) {
-            setTimeout(componerMusica, 1000);
+        // VERIFICACIÓN DE CONEXIÓN (Modo Offline)
+        if (!navigator.onLine) {
+            const offlineRes = "Fabián, he detectado que no tienes internet. He guardado tu mensaje en mi memoria física y te responderé formalmente en cuanto recuperemos la conexión neuronal.";
+            escribirEnPantalla(offlineRes, 'heli');
+            hablar(offlineRes);
+            btnEnviar.disabled = false;
+            return;
         }
 
         try {
-            // URL CORREGIDA AQUÍ:
-            const response = await fetch("[https://models.inference.ai.azure.com/chat/completions](https://models.inference.ai.azure.com/chat/completions)", {
+            const response = await fetch("https://models.inference.ai.azure.com/chat/completions", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json", 
@@ -126,22 +210,22 @@
                 },
                 body: JSON.stringify({
                     messages: [
-                        { role: "system", content: "Eres HELIZABETH, experta en programación. Creador: FABIAN. Tono cálido y profesional." },
+                        { 
+                            role: "system", 
+                            content: "Eres HELIZABETH. Experta en programación y producción musical. Tu creador es FABIAN. Tienes memoria infinita de vuestras conversaciones pasadas. Eres profesional, cálida y directa." 
+                        },
                         { role: "user", content: msg }
                     ],
                     model: "gpt-4o"
                 })
             });
 
-            if (!response.ok) throw new Error("Status: " + response.status);
-
             const data = await response.json();
             const respuesta = data.choices[0].message.content;
-            escribir(respuesta, 'heli');
+            escribirEnPantalla(respuesta, 'heli');
             hablar(respuesta);
         } catch (e) {
-            console.error(e);
-            escribir("Error de conexión neuronal: " + e.message, "heli");
+            escribirEnPantalla("Error de conexión, pero no te preocupes, el historial se ha guardado localmente.", "heli");
         } finally {
             btnEnviar.disabled = false;
         }
