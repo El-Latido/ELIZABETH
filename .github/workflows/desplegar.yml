@@ -1,0 +1,25 @@
+name: Desplegar HELIZABETH
+on:
+  push:
+    branches: [ main ] # Se activa al subir cambios a la rama main
+
+permissions:
+  contents: write # Permiso para crear la rama gh-pages
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v3
+
+      - name: Inyectar API Key 💉
+        run: |
+          # Reemplaza la marca CLAVE_GHOST por tu Secret de GitHub
+          sed -i 's/CLAVE_GHOST/${{ secrets.GEMINI_KEY }}/g' index.html
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .
+          branch: gh-pages # Rama donde vivirá tu página web
