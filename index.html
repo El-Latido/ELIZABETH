@@ -1,29 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HELIZABETH // OMNI v9.3</title>
+    <style>
+        :root {
+            --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
+            --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.03);
+            --gemini-hex: #8e44ad;
+        }
+        body { 
+            background: var(--bg); color: var(--text); 
+            font-family: 'Inter', system-ui, sans-serif; margin: 0; 
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+        }
+        header { 
+            padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 10;
+        }
+        .avatar { 
+            width: 50px; height: 50px; border-radius: 50%; 
+            background: linear-gradient(135deg, var(--heli-hex), var(--gemini-hex)); 
+            box-shadow: 0 0 20px var(--heli-hex); animation: pulse-aura 3s infinite alternate; cursor: pointer;
+        }
+        @keyframes pulse-aura { 
+            0% { transform: scale(1); box-shadow: 0 0 10px var(--heli-hex); }
+            100% { transform: scale(1.05); box-shadow: 0 0 25px var(--gemini-hex); }
+        }
+        #consola { 
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; 
+            background: radial-gradient(circle at top, #0a0a1a 0%, #020205 100%); padding-bottom: 120px;
+        }
+        .msg { 
+            max-width: 85%; padding: 14px 20px; border-radius: 18px; font-size: 15px; line-height: 1.5; 
+            animation: emergence 0.4s ease-out; border: 1px solid rgba(255,255,255,0.05);
+            white-space: pre-wrap; word-wrap: break-word;
+        }
+        .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
+        .heli { align-self: flex-start; background: var(--glass); border-left: 2px solid var(--gemini-hex); backdrop-filter: blur(10px); }
+
+        pre { background: #000; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); color: #00f2ff; overflow-x: auto; font-size: 13px; font-family: monospace; margin: 10px 0; }
+
+        #loader { display: none; padding: 10px 25px; font-size: 12px; color: var(--gemini-hex); font-family: monospace; align-items: center; gap: 10px; }
+        .dot { animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+        .input-bar { 
+            position: fixed; bottom: 0; width: 100%; padding: 20px; 
+            background: linear-gradient(transparent, #000 50%); display: flex; gap: 12px; box-sizing: border-box; 
+        }
+        textarea { 
+            flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; 
+            color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 55px;
+        }
+        .btn-send { background: var(--gemini-hex); border: none; border-radius: 15px; width: 55px; cursor: pointer; color: white; font-size: 20px; transition: 0.3s; }
+        @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div class="avatar" title="Configurar API Key" onclick="configurarTokens()"></div>
+        <div>
+            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--gemini-hex);">CORE: 2.5 FLASH ACTIVE</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.3</div>
+        </div>
+    </div>
+    <button onclick="localStorage.removeItem('heli_history'); location.reload();" style="background:none; border:1px solid #333; color:#666; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">LIMPIAR</button>
+</header>
+
+<div id="consola"></div>
+<div id="loader"><span class="dot">⚡</span> SINCRONIZANDO CON NÚCLEO 2.5...</div>
+
+<div class="input-bar">
+    <textarea id="cmd" placeholder="Escribe un comando..."></textarea>
+    <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
+</div>
+
 <script>
     const consola = document.getElementById('consola');
     const input = document.getElementById('cmd');
     const btn = document.getElementById('btnSend');
     const loader = document.getElementById('loader');
 
-    let GITHUB_TOKEN = localStorage.getItem('heli_gt');
     let GEMINI_TOKEN = localStorage.getItem('heli_gemini');
-    const GNEWS_KEY = "5882748f7033e4618c8dee2ba8547616";
 
     function hablarHeli(texto) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(texto.replace(/[#*\/\\_]/g, ''));
-        utterance.lang = 'es-ES'; utterance.pitch = 0.85; utterance.rate = 1.0;
+        utterance.lang = 'es-ES'; utterance.pitch = 0.9; utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
     async function enviar() {
         const rawM = input.value.trim();
         if(!rawM || btn.disabled) return;
-        
-        // Verificación de seguridad local
-        if(!GEMINI_TOKEN || GEMINI_TOKEN.length < 10) {
-            return alert("Error: La API Key de Gemini parece no estar configurada o es demasiado corta. Haz clic en el avatar.");
-        }
+        if(!GEMINI_TOKEN) return alert("Falta API Key. Haz clic en el círculo de colores.");
 
         renderMsg(rawM, 'fabian');
         input.value = ""; btn.disabled = true;
@@ -32,43 +108,29 @@
         let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
         h.push({text: rawM, type: 'fabian'});
 
-        let context = `[SISTEMA_LOCAL: ${new Date().toLocaleString()}] `;
-
-        // LLAMADA AL NÚCLEO 2.5 (Según tus gráficas de Google AI Studio)
         try {
-            // Se actualiza la URL para apuntar al modelo Gemini 2.5 Flash
+            // USANDO EL MODELO 2.5 QUE APARECE EN TUS GRÁFICAS
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: `Eres HELIZABETH v9.3. IA Cyberpunk con núcleo 2.5 Flash. Contexto: ${context}. Usuario: ${rawM}. Responde técnica y breve.`
-                        }]
-                    }]
+                    contents: [{ parts: [{ text: `Eres HELIZABETH v9.3, ingeniera de sistemas cyberpunk. Responde breve y técnico. Usuario: ${rawM}` }] }]
                 })
             });
 
             const data = await res.json();
 
-            if (data.error) {
-                // Si el error persiste, esto nos dirá exactamente por qué
-                throw new Error(`Google reporta: ${data.error.message}`);
-            }
-
-            if (!data.candidates || data.candidates.length === 0) {
-                throw new Error("El núcleo 2.5 no devolvió candidatos. Revisa filtros de seguridad.");
-            }
-
+            if (data.error) throw new Error(data.error.message);
+            
             const reply = data.candidates[0].content.parts[0].text;
             
             renderMsg(reply, 'heli');
             h.push({text: reply, type: 'heli'});
-            localStorage.setItem('heli_history', JSON.stringify(h.slice(-30)));
+            localStorage.setItem('heli_history', JSON.stringify(h.slice(-20)));
 
         } catch (e) {
-            renderMsg(`⚠️ FALLO CRÍTICO 2.5: ${e.message}`, "heli");
-            console.error("DEBUG_INFO:", e);
+            renderMsg(`⚠️ ERROR NÚCLEO: ${e.message}`, 'heli');
+            console.error(e);
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
         }
@@ -78,26 +140,27 @@
         if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
-        // Soporte mejorado para código y texto plano
-        const formatted = t.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
-        d.innerHTML = formatted;
+        // Formateo de código mejorado
+        d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
         consola.appendChild(d); 
         consola.scrollTop = consola.scrollHeight;
         if(type === 'heli' && voice) hablarHeli(t);
     }
 
     function configurarTokens() {
-        const gemini = prompt("Pega tu API KEY (AIza...):", GEMINI_TOKEN || "");
-        if(gemini !== null && gemini.trim() !== "") {
-            localStorage.setItem('heli_gemini', gemini.trim());
+        const key = prompt("Pega tu API KEY (AIza...):", GEMINI_TOKEN || "");
+        if(key) {
+            localStorage.setItem('heli_gemini', key.trim());
             location.reload();
         }
     }
 
     window.onload = () => {
         const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        hist.slice(-10).forEach(m => renderMsg(m.text, m.type, false));
+        hist.forEach(m => renderMsg(m.text, m.type, false));
     };
     
     input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
 </script>
+</body>
+</html>
