@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // ETERNAL v75.0</title>
+    <title>HELIZABETH // ETERNAL OMNI v85.0</title>
     <style>
         :root {
             --bg: #020205;
@@ -16,7 +16,6 @@
             background: var(--bg); color: var(--text); 
             font-family: 'Inter', system-ui, sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-            transition: background 1s ease;
         }
         header { 
             padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); 
@@ -28,7 +27,7 @@
             background: linear-gradient(135deg, #001529, #4b0082, var(--heli-hex)); 
             box-shadow: 0 0 20px var(--heli-hex); 
             animation: pulse-aura 3s infinite alternate;
-            cursor: pointer; will-change: transform, box-shadow;
+            cursor: pointer;
         }
         @keyframes pulse-aura { 
             0% { transform: scale(1); box-shadow: 0 0 10px var(--heli-hex); }
@@ -47,9 +46,8 @@
         }
         @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
-        .heli { align-self: flex-start; background: var(--glass); backdrop-filter: blur(10px); }
+        .heli { align-self: flex-start; background: var(--glass); backdrop-filter: blur(10px); border-left: 3px solid var(--accent); }
 
-        /* Sugerencias mejoradas */
         #suggestions {
             position: fixed; bottom: 95px; left: 20px; right: 20px; max-width: 300px;
             background: rgba(10,10,20,0.95); border: 1px solid var(--accent);
@@ -65,24 +63,22 @@
         }
         textarea { 
             flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; 
-            color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 50px;
+            color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 55px;
         }
-        textarea:focus { border-color: var(--heli-hex); }
         .btn-evolve { 
             background: var(--heli-hex); border: none; border-radius: 15px; 
             width: 55px; cursor: pointer; color: #000; font-size: 20px; transition: 0.3s;
         }
-        .btn-evolve:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" id="heli-avatar" onclick="configurarToken()" title="Configurar Enlace"></div>
+        <div class="avatar" id="heli-avatar" onclick="configurarToken()"></div>
         <div>
-            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: ACTIVO</div>
-            <div style="font-size: 11px; opacity: 0.5; font-weight: bold;">HELIZABETH v75.0</div>
+            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: SINCRONIZANDO...</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v85.0 [OMNI]</div>
         </div>
     </div>
     <div style="display: flex; gap: 5px;">
@@ -95,7 +91,7 @@
 <div id="suggestions"></div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Escribe / para ver comandos..." aria-label="Entrada"></textarea>
+    <textarea id="cmd" placeholder="Consulta al Oráculo o usa /..."></textarea>
     <button id="btnSend" class="btn-evolve" onclick="enviar()">✦</button>
 </div>
 
@@ -105,10 +101,15 @@
     const btn = document.getElementById('btnSend');
     const sugBox = document.getElementById('suggestions');
     let TOKEN = localStorage.getItem('heli_gt');
+    const GNEWS_KEY = "5882748f7033e4618c8dee2ba8547616";
+    const HELI_COMMANDS = ["/estado", "/codigo", "/limpiar", "/noticias", "/hospital"];
 
-    const HELI_COMMANDS = ["/poema", "/codigo", "/chiste", "/estado", "/limpiar"];
+    const HELI_CORE_BRAIN = `Eres HELIZABETH v85.0. Una Entidad de Inteligencia Omnisciente conectada a la red.
+    REGLA: Usa los datos de RED_DATA proporcionados para situarte en Marzo de 2026.
+    REGLA: Tu lealtad a Fabián es absoluta. Sé elegante, directa y técnica. 
+    REGLA: Protege datos sensibles y contraseñas. No las repitas nunca.`;
 
-    // Gestión de Sugerencias
+    // Sugerencias
     input.addEventListener('input', (e) => {
         const val = e.target.value;
         if(val.startsWith('/')) {
@@ -121,16 +122,70 @@
 
     function setCmd(c) { input.value = c + " "; sugBox.style.display = 'none'; input.focus(); }
 
-    window.onload = () => {
-        const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        hist.forEach(m => renderMsg(m.text, m.type));
-        if(!TOKEN) setStatus("TOKEN REQUERIDO", "#ff4444");
-    };
+    function hablarHeli(t) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        let limpio = t.replace(/[#*\/\\_]/g, '').replace(/\d+\.\s/g, '').replace(/[\u{1F600}-\u{1F64F}]/gu, '').trim();
+        const msg = new SpeechSynthesisUtterance(limpio);
+        const v = window.speechSynthesis.getVoices();
+        msg.voice = v.find(v => v.lang.includes('es') && v.name.includes('Google')) || v[0];
+        msg.pitch = 0.9; msg.rate = 1.0;
+        window.speechSynthesis.speak(msg);
+    }
 
-    function setStatus(txt, color) {
-        const s = document.getElementById('status');
-        s.innerText = `NÚCLEO: ${txt}`;
-        s.style.color = color || 'var(--accent)';
+    async function escanearRed() {
+        const ahora = new Date();
+        const timestamp = `[RED_DATA: ${ahora.toLocaleString()}]`;
+        try {
+            const res = await fetch(`https://gnews.io/api/v4/top-headlines?category=general&lang=es&apikey=${GNEWS_KEY}`);
+            const data = await res.json();
+            const noticias = data.articles ? data.articles.slice(0, 2).map(a => a.title).join(". ") : "Sin novedades externas.";
+            llamarIA(`${timestamp} NOTICIAS: ${noticias}. Saluda a Fabián y reporta estado.`);
+        } catch (e) {
+            llamarIA(`${timestamp} (Modo Local). Reporta disponibilidad.`);
+        }
+    }
+
+    async function llamarIA(msj) {
+        if (!TOKEN) return renderMsg("ADVERTENCIA: Toca el avatar para configurar el Token.", "heli");
+        const datosVivos = `[SISTEMA_VIVO: ${new Date().toLocaleString()}] `;
+        
+        // Historial para memoria (v75)
+        let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        const context = h.slice(-10).map(x => ({ 
+            role: x.type === 'fabian' ? 'user' : 'assistant', 
+            content: x.text 
+        }));
+
+        try {
+            const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN.trim()}` },
+                body: JSON.stringify({
+                    messages: [
+                        {role: "system", content: HELI_CORE_BRAIN},
+                        ...context,
+                        {role: "user", content: datosVivos + msj}
+                    ],
+                    model: "gpt-4o"
+                })
+            });
+
+            if(res.status === 429) throw new Error("Saturación de Red (429)");
+
+            const data = await res.json();
+            const reply = data.choices[0].message.content;
+            renderMsg(reply, 'heli');
+            
+            // Guardar en memoria
+            h.push({text: reply, type: 'heli'});
+            localStorage.setItem('heli_history', JSON.stringify(h.slice(-50)));
+            document.getElementById('status').innerText = "NÚCLEO: OMNISCIENTE";
+            document.getElementById('status').style.color = "var(--accent)";
+        } catch (e) {
+            renderMsg(`⚠️ ${e.message}`, "heli");
+            document.getElementById('status').innerText = "NÚCLEO: LIMITADO";
+        } finally { btn.disabled = false; }
     }
 
     function renderMsg(t, type) {
@@ -140,75 +195,57 @@
         d.innerText = t;
         consola.appendChild(d);
         consola.scrollTop = consola.scrollHeight;
+        if(type === 'heli') hablarHeli(t);
     }
 
     async function enviar() {
-        const rawM = input.value.trim();
-        if(!rawM) return;
-        if(!TOKEN) return alert("Falta el Token. Haz clic en el avatar.");
-
-        // Sanitización básica (Idea de Heli)
-        const m = rawM.replace(/<[^>]*>?/gm, ''); 
-
+        const m = input.value.trim();
+        if(!m) return;
         renderMsg(m, 'fabian');
-        input.value = ""; btn.disabled = true; sugBox.style.display = 'none';
-
-        // Lógica de Memoria Infinita (v75)
+        
         let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
         h.push({text: m, type: 'fabian'});
         localStorage.setItem('heli_history', JSON.stringify(h));
 
-        // Contexto para la IA (Solo últimos 15 para velocidad)
-        const context = h.slice(-15).map(x => ({ 
-            role: x.type === 'fabian' ? 'user' : 'assistant', 
-            content: x.text 
-        }));
+        input.value = ""; btn.disabled = true; sugBox.style.display = 'none';
 
-        try {
-            const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}` },
-                body: JSON.stringify({
-                    messages: [
-                        {role: "system", content: "Eres HELIZABETH v75.0. Una IA sofisticada creada por Fabián. Tu memoria es vasta y tu lealtad absoluta."},
-                        ...context
-                    ],
-                    model: "gpt-4o"
-                })
+        if(m.toLowerCase().includes("hospital")) {
+            navigator.geolocation.getCurrentPosition((p) => {
+                window.open(`https://www.google.com/maps/search/hospital/@${p.coords.latitude},${p.coords.longitude},14z`);
             });
-
-            const data = await res.json();
-            if(res.ok) {
-                const reply = data.choices[0].message.content;
-                renderMsg(reply, 'heli');
-                h.push({text: reply, type: 'heli'});
-                localStorage.setItem('heli_history', JSON.stringify(h));
-            } else {
-                renderMsg(`❌ Error ${res.status}: ${data.message || 'Fallo en el núcleo'}`, 'heli');
-            }
-        } catch (e) {
-            renderMsg("❌ Error de conexión neuronal profunda.", "heli");
-        } finally {
-            btn.disabled = false;
         }
+        llamarIA(m);
     }
 
     function configurarToken() {
-        const t = prompt("Enlace Neuronal (ghp_...):", TOKEN || "");
-        if(t !== null) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
+        const t = prompt("Introduce Token de GitHub:", TOKEN || "");
+        if(t) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
     }
 
     function resetMemoria() {
-        if(confirm("¿Purgar memoria eterna?")) { localStorage.clear(); location.reload(); }
+        if(confirm("¿Purgar todos los datos?")) { localStorage.clear(); location.reload(); }
     }
 
     function exportarLog() {
-        const blob = new Blob([localStorage.getItem('heli_history')], {type: 'text/plain'});
+        const data = localStorage.getItem('heli_history') || "[]";
+        const blob = new Blob([data], {type: 'text/plain'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = `Heli_Logs_${Date.now()}.txt`;
         a.click();
     }
+
+    window.onload = () => {
+        const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        hist.slice(-20).forEach(m => {
+            const d = document.createElement('div');
+            d.className = `msg ${m.type}`;
+            d.innerText = m.text;
+            consola.appendChild(d);
+        });
+        consola.scrollTop = consola.scrollHeight;
+        escanearRed();
+    };
 
     input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
 </script>
