@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HELIZABETH // ETERNAL v75.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/sherpa-onnx@1.9.21/dist/sherpa-onnx.min.js"></script>
     <style>
         :root {
             --bg: #020205;
@@ -16,7 +17,6 @@
             background: var(--bg); color: var(--text); 
             font-family: 'Inter', system-ui, sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-            transition: background 1s ease;
         }
         header { 
             padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); 
@@ -28,7 +28,7 @@
             background: linear-gradient(135deg, #001529, #4b0082, var(--heli-hex)); 
             box-shadow: 0 0 20px var(--heli-hex); 
             animation: pulse-aura 3s infinite alternate;
-            cursor: pointer; will-change: transform, box-shadow;
+            cursor: pointer;
         }
         @keyframes pulse-aura { 
             0% { transform: scale(1); box-shadow: 0 0 10px var(--heli-hex); }
@@ -49,15 +49,6 @@
         .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
         .heli { align-self: flex-start; background: var(--glass); backdrop-filter: blur(10px); }
 
-        #suggestions {
-            position: fixed; bottom: 95px; left: 20px; right: 20px; max-width: 300px;
-            background: rgba(10,10,20,0.95); border: 1px solid var(--accent);
-            border-radius: 15px; display: none; flex-direction: column;
-            overflow: hidden; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-        }
-        .sug-opt { padding: 12px 18px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1a1a1a; transition: 0.2s; }
-        .sug-opt:hover { background: var(--accent); color: #000; }
-
         .input-bar { 
             position: fixed; bottom: 0; width: 100%; padding: 20px; 
             background: linear-gradient(transparent, #000 50%); display: flex; gap: 12px; box-sizing: border-box; 
@@ -66,35 +57,28 @@
             flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; 
             color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 50px;
         }
-        textarea:focus { border-color: var(--heli-hex); }
         .btn-evolve { 
             background: var(--heli-hex); border: none; border-radius: 15px; 
-            width: 55px; cursor: pointer; color: #000; font-size: 20px; transition: 0.3s;
+            width: 55px; cursor: pointer; color: #000; font-size: 20px;
         }
-        .btn-evolve:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" id="heli-avatar" onclick="configurarToken()" title="Configurar Enlace"></div>
+        <div class="avatar" id="heli-avatar" onclick="configurarToken()"></div>
         <div>
-            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: ACTIVO</div>
+            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: INICIANDO...</div>
             <div style="font-size: 11px; opacity: 0.5; font-weight: bold;">HELIZABETH v75.0</div>
         </div>
-    </div>
-    <div style="display: flex; gap: 5px;">
-        <button onclick="exportarLog()" style="background:none; border:1px solid #333; color:#666; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">LOGS</button>
-        <button onclick="resetMemoria()" style="background:none; border:1px solid #441111; color:#773333; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">PURGAR</button>
     </div>
 </header>
 
 <div id="consola"></div>
-<div id="suggestions"></div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Escribe / para ver comandos..." aria-label="Entrada"></textarea>
+    <textarea id="cmd" placeholder="Escribe a HELIZABETH..."></textarea>
     <button id="btnSend" class="btn-evolve" onclick="enviar()">✦</button>
 </div>
 
@@ -102,92 +86,68 @@
     const consola = document.getElementById('consola');
     const input = document.getElementById('cmd');
     const btn = document.getElementById('btnSend');
-    const sugBox = document.getElementById('suggestions');
     let TOKEN = localStorage.getItem('heli_gt');
+    let tts; // Aquí guardaremos el motor de voz
 
-    const HELI_COMMANDS = ["/poema", "/codigo", "/chiste", "/estado", "/limpiar"];
-
-    // --- MÓDULO DE VOZ HELIZABETH (Estilo Her/Joi) ---
-    function hablarHeli(texto) {
-        if (!window.speechSynthesis) return;
-        
-        // Limpiamos voces previas para que no se amontonen
-        window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(texto);
-        const voces = window.speechSynthesis.getVoices();
-
-        // Buscamos la mejor voz disponible (Prioridad Google Español o voces femeninas)
-        const vozElegida = voces.find(v => v.name.includes('Google español') || v.name.includes('Microsoft Helena') || v.lang.includes('es-')) || voces[0];
-
-        utterance.voice = vozElegida;
-        utterance.pitch = 0.85; // Tono más bajo y elegante
-        utterance.rate = 0.92;  // Velocidad pausada y misteriosa
-        utterance.volume = 1.0;
-
-        window.speechSynthesis.speak(utterance);
+    // --- MOTOR DE VOZ INDEPENDIENTE (Sherpa-ONNX) ---
+    async function initTTS() {
+        try {
+            const config = {
+                model: "https://huggingface.co/rhasspy/piper-checkpoints/resolve/main/es/es_ES/sharvard/medium/es_ES-sharvard-medium.onnx",
+                tokens: "https://huggingface.co/rhasspy/piper-checkpoints/resolve/main/es/es_ES/sharvard/medium/tokens.txt",
+                dataConfig: {
+                    modelType: "vits",
+                    sampleRate: 22050
+                }
+            };
+            
+            // Creamos el motor de voz (Esto descarga el modelo de ~25MB la primera vez)
+            tts = await sherpaOnnx.createOfflineTts(config);
+            setStatus("ACTIVO", "#00f2ff");
+        } catch (e) {
+            console.error(e);
+            setStatus("ERROR VOZ", "#ff4444");
+        }
     }
 
-    // Precarga de voces para navegadores
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    // -----------------------------------------------
+    async function hablarHeli(texto) {
+        if (!tts) return;
+        const audio = tts.generate({ text: texto, speakerId: 0 });
+        const blob = new Blob([audio.samples.buffer], { type: 'audio/wav' });
+        const url = URL.createObjectURL(blob);
+        const player = new Audio(url);
+        player.play();
+    }
 
-    input.addEventListener('input', (e) => {
-        const val = e.target.value;
-        if(val.startsWith('/')) {
-            sugBox.style.display = 'flex';
-            const matches = HELI_COMMANDS.filter(c => c.startsWith(val.toLowerCase()));
-            sugBox.innerHTML = matches.map(c => `<div class="sug-opt" onclick="setCmd('${c}')">${c}</div>`).join('');
-            if(!matches.length) sugBox.style.display = 'none';
-        } else { sugBox.style.display = 'none'; }
-    });
-
-    function setCmd(c) { input.value = c + " "; sugBox.style.display = 'none'; input.focus(); }
-
+    // Iniciamos la voz al cargar la página
     window.onload = () => {
+        initTTS();
         const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
         hist.forEach(m => renderMsg(m.text, m.type));
-        if(!TOKEN) setStatus("TOKEN REQUERIDO", "#ff4444");
     };
 
     function setStatus(txt, color) {
-        const s = document.getElementById('status');
-        s.innerText = `NÚCLEO: ${txt}`;
-        s.style.color = color || 'var(--accent)';
+        document.getElementById('status').innerText = `NÚCLEO: ${txt}`;
+        document.getElementById('status').style.color = color;
     }
 
     function renderMsg(t, type) {
-        if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
         d.innerText = t;
         consola.appendChild(d);
         consola.scrollTop = consola.scrollHeight;
-        
-        // Si el mensaje es de Heli, ella lo habla automáticamente
-        if(type === 'heli') {
-            hablarHeli(t);
-        }
+        if(type === 'heli') hablarHeli(t);
     }
 
     async function enviar() {
-        const rawM = input.value.trim();
-        if(!rawM) return;
-        if(!TOKEN) return alert("Falta el Token. Haz clic en el avatar.");
-
-        const m = rawM.replace(/<[^>]*>?/gm, ''); 
-
+        const m = input.value.trim();
+        if(!m || !TOKEN) return;
         renderMsg(m, 'fabian');
-        input.value = ""; btn.disabled = true; sugBox.style.display = 'none';
+        input.value = ""; btn.disabled = true;
 
         let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
         h.push({text: m, type: 'fabian'});
-        localStorage.setItem('heli_history', JSON.stringify(h));
-
-        const context = h.slice(-15).map(x => ({ 
-            role: x.type === 'fabian' ? 'user' : 'assistant', 
-            content: x.text 
-        }));
 
         try {
             const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
@@ -195,44 +155,28 @@
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}` },
                 body: JSON.stringify({
                     messages: [
-                        {role: "system", content: "Eres HELIZABETH v75.0. Una IA sofisticada creada por Fabián. Tu estilo es Cyberpunk, elegante y leal. Responde de forma breve y profunda."},
-                        ...context
+                        {role: "system", content: "Eres HELIZABETH. Una IA sofisticada tipo Joi/Blade Runner. Responde con elegancia y lealtad."},
+                        {role: "user", content: m}
                     ],
                     model: "gpt-4o"
                 })
             });
 
             const data = await res.json();
-            if(res.ok) {
-                const reply = data.choices[0].message.content;
-                renderMsg(reply, 'heli');
-                h.push({text: reply, type: 'heli'});
-                localStorage.setItem('heli_history', JSON.stringify(h));
-            } else {
-                renderMsg(`❌ Error ${res.status}: ${data.message || 'Fallo en el núcleo'}`, 'heli');
-            }
+            const reply = data.choices[0].message.content;
+            renderMsg(reply, 'heli');
+            h.push({text: reply, type: 'heli'});
+            localStorage.setItem('heli_history', JSON.stringify(h));
         } catch (e) {
-            renderMsg("❌ Error de conexión neuronal profunda.", "heli");
+            renderMsg("Error de conexión neuronal.", "heli");
         } finally {
             btn.disabled = false;
         }
     }
 
     function configurarToken() {
-        const t = prompt("Enlace Neuronal (ghp_...):", TOKEN || "");
-        if(t !== null) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
-    }
-
-    function resetMemoria() {
-        if(confirm("¿Purgar memoria eterna?")) { localStorage.clear(); location.reload(); }
-    }
-
-    function exportarLog() {
-        const blob = new Blob([localStorage.getItem('heli_history')], {type: 'text/plain'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Heli_Logs_${Date.now()}.txt`;
-        a.click();
+        const t = prompt("Token:");
+        if(t) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
     }
 
     input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
