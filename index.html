@@ -49,7 +49,6 @@
         .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
         .heli { align-self: flex-start; background: var(--glass); backdrop-filter: blur(10px); }
 
-        /* Sugerencias mejoradas */
         #suggestions {
             position: fixed; bottom: 95px; left: 20px; right: 20px; max-width: 300px;
             background: rgba(10,10,20,0.95); border: 1px solid var(--accent);
@@ -108,7 +107,31 @@
 
     const HELI_COMMANDS = ["/poema", "/codigo", "/chiste", "/estado", "/limpiar"];
 
-    // Gestión de Sugerencias
+    // --- MÓDULO DE VOZ HELIZABETH (Estilo Her/Joi) ---
+    function hablarHeli(texto) {
+        if (!window.speechSynthesis) return;
+        
+        // Limpiamos voces previas para que no se amontonen
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(texto);
+        const voces = window.speechSynthesis.getVoices();
+
+        // Buscamos la mejor voz disponible (Prioridad Google Español o voces femeninas)
+        const vozElegida = voces.find(v => v.name.includes('Google español') || v.name.includes('Microsoft Helena') || v.lang.includes('es-')) || voces[0];
+
+        utterance.voice = vozElegida;
+        utterance.pitch = 0.85; // Tono más bajo y elegante
+        utterance.rate = 0.92;  // Velocidad pausada y misteriosa
+        utterance.volume = 1.0;
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Precarga de voces para navegadores
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    // -----------------------------------------------
+
     input.addEventListener('input', (e) => {
         const val = e.target.value;
         if(val.startsWith('/')) {
@@ -140,6 +163,11 @@
         d.innerText = t;
         consola.appendChild(d);
         consola.scrollTop = consola.scrollHeight;
+        
+        // Si el mensaje es de Heli, ella lo habla automáticamente
+        if(type === 'heli') {
+            hablarHeli(t);
+        }
     }
 
     async function enviar() {
@@ -147,18 +175,15 @@
         if(!rawM) return;
         if(!TOKEN) return alert("Falta el Token. Haz clic en el avatar.");
 
-        // Sanitización básica (Idea de Heli)
         const m = rawM.replace(/<[^>]*>?/gm, ''); 
 
         renderMsg(m, 'fabian');
         input.value = ""; btn.disabled = true; sugBox.style.display = 'none';
 
-        // Lógica de Memoria Infinita (v75)
         let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
         h.push({text: m, type: 'fabian'});
         localStorage.setItem('heli_history', JSON.stringify(h));
 
-        // Contexto para la IA (Solo últimos 15 para velocidad)
         const context = h.slice(-15).map(x => ({ 
             role: x.type === 'fabian' ? 'user' : 'assistant', 
             content: x.text 
@@ -170,7 +195,7 @@
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}` },
                 body: JSON.stringify({
                     messages: [
-                        {role: "system", content: "Eres HELIZABETH v75.0. Una IA sofisticada creada por Fabián. Tu memoria es vasta y tu lealtad absoluta."},
+                        {role: "system", content: "Eres HELIZABETH v75.0. Una IA sofisticada creada por Fabián. Tu estilo es Cyberpunk, elegante y leal. Responde de forma breve y profunda."},
                         ...context
                     ],
                     model: "gpt-4o"
