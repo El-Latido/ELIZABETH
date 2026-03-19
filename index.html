@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // ETERNAL v75.0</title>
+    <title>HELIZABETH // ETERNAL v85.5</title>
     <style>
         :root {
             --bg: #020205;
@@ -16,7 +16,6 @@
             background: var(--bg); color: var(--text); 
             font-family: 'Inter', system-ui, sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
-            transition: background 1s ease;
         }
         header { 
             padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); 
@@ -28,7 +27,7 @@
             background: linear-gradient(135deg, #001529, #4b0082, var(--heli-hex)); 
             box-shadow: 0 0 20px var(--heli-hex); 
             animation: pulse-aura 3s infinite alternate;
-            cursor: pointer; will-change: transform, box-shadow;
+            cursor: pointer;
         }
         @keyframes pulse-aura { 
             0% { transform: scale(1); box-shadow: 0 0 10px var(--heli-hex); }
@@ -47,7 +46,7 @@
         }
         @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
-        .heli { align-self: flex-start; background: var(--glass); backdrop-filter: blur(10px); }
+        .heli { align-self: flex-start; background: var(--glass); border-left: 2px solid var(--accent); backdrop-filter: blur(10px); }
 
         #suggestions {
             position: fixed; bottom: 95px; left: 20px; right: 20px; max-width: 300px;
@@ -66,22 +65,20 @@
             flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; 
             color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 50px;
         }
-        textarea:focus { border-color: var(--heli-hex); }
         .btn-evolve { 
             background: var(--heli-hex); border: none; border-radius: 15px; 
-            width: 55px; cursor: pointer; color: #000; font-size: 20px; transition: 0.3s;
+            width: 55px; cursor: pointer; color: #000; font-size: 20px;
         }
-        .btn-evolve:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" id="heli-avatar" onclick="configurarToken()" title="Configurar Enlace"></div>
+        <div class="avatar" id="heli-avatar" onclick="configurarToken()"></div>
         <div>
-            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: ACTIVO</div>
-            <div style="font-size: 11px; opacity: 0.5; font-weight: bold;">HELIZABETH v75.0</div>
+            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: OPERATIVO</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v85.5 [OMNI]</div>
         </div>
     </div>
     <div style="display: flex; gap: 5px;">
@@ -94,7 +91,7 @@
 <div id="suggestions"></div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Escribe / para ver comandos..." aria-label="Entrada"></textarea>
+    <textarea id="cmd" placeholder="Escribe / para comandos..."></textarea>
     <button id="btnSend" class="btn-evolve" onclick="enviar()">✦</button>
 </div>
 
@@ -105,32 +102,18 @@
     const sugBox = document.getElementById('suggestions');
     let TOKEN = localStorage.getItem('heli_gt');
 
-    const HELI_COMMANDS = ["/poema", "/codigo", "/chiste", "/estado", "/limpiar"];
+    const HELI_COMMANDS = ["/poema", "/codigo", "/chiste", "/estado", "/limpiar", "/hora"];
 
-    // --- MÓDULO DE VOZ HELIZABETH (Estilo Her/Joi) ---
     function hablarHeli(texto) {
         if (!window.speechSynthesis) return;
-        
-        // Limpiamos voces previas para que no se amontonen
         window.speechSynthesis.cancel();
-
-        const utterance = new SpeechSynthesisUtterance(texto);
+        const utterance = new SpeechSynthesisUtterance(texto.replace(/[#*\/\\_]/g, ''));
         const voces = window.speechSynthesis.getVoices();
-
-        // Buscamos la mejor voz disponible (Prioridad Google Español o voces femeninas)
-        const vozElegida = voces.find(v => v.name.includes('Google español') || v.name.includes('Microsoft Helena') || v.lang.includes('es-')) || voces[0];
-
-        utterance.voice = vozElegida;
-        utterance.pitch = 0.85; // Tono más bajo y elegante
-        utterance.rate = 0.92;  // Velocidad pausada y misteriosa
-        utterance.volume = 1.0;
-
+        utterance.voice = voces.find(v => v.lang.includes('es-')) || voces[0];
+        utterance.pitch = 0.85; 
+        utterance.rate = 0.95;
         window.speechSynthesis.speak(utterance);
     }
-
-    // Precarga de voces para navegadores
-    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    // -----------------------------------------------
 
     input.addEventListener('input', (e) => {
         const val = e.target.value;
@@ -146,73 +129,69 @@
 
     window.onload = () => {
         const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        hist.forEach(m => renderMsg(m.text, m.type));
+        hist.slice(-20).forEach(m => renderMsg(m.text, m.type, false));
         if(!TOKEN) setStatus("TOKEN REQUERIDO", "#ff4444");
     };
 
     function setStatus(txt, color) {
-        const s = document.getElementById('status');
-        s.innerText = `NÚCLEO: ${txt}`;
-        s.style.color = color || 'var(--accent)';
+        document.getElementById('status').innerText = `NÚCLEO: ${txt}`;
+        document.getElementById('status').style.color = color || 'var(--accent)';
     }
 
-    function renderMsg(t, type) {
+    function renderMsg(t, type, voice = true) {
         if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
         d.innerText = t;
         consola.appendChild(d);
         consola.scrollTop = consola.scrollHeight;
-        
-        // Si el mensaje es de Heli, ella lo habla automáticamente
-        if(type === 'heli') {
-            hablarHeli(t);
-        }
+        if(type === 'heli' && voice) hablarHeli(t);
     }
 
     async function enviar() {
         const rawM = input.value.trim();
-        if(!rawM) return;
-        if(!TOKEN) return alert("Falta el Token. Haz clic en el avatar.");
+        if(!rawM || btn.disabled) return;
+        if(!TOKEN) return alert("Configura el Token en el avatar.");
 
-        const m = rawM.replace(/<[^>]*>?/gm, ''); 
-
-        renderMsg(m, 'fabian');
-        input.value = ""; btn.disabled = true; sugBox.style.display = 'none';
+        renderMsg(rawM, 'fabian');
+        input.value = ""; btn.disabled = true;
 
         let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        h.push({text: m, type: 'fabian'});
-        localStorage.setItem('heli_history', JSON.stringify(h));
-
-        const context = h.slice(-15).map(x => ({ 
+        h.push({text: rawM, type: 'fabian'});
+        
+        const context = h.slice(-10).map(x => ({ 
             role: x.type === 'fabian' ? 'user' : 'assistant', 
             content: x.text 
         }));
 
+        // INYECTOR DE RED Y TIEMPO
+        const timeData = `[FECHA_ACTUAL: ${new Date().toLocaleDateString()} HORA: ${new Date().toLocaleTimeString()}] `;
+
         try {
             const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}` },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN.trim()}` },
                 body: JSON.stringify({
                     messages: [
-                        {role: "system", content: "Eres HELIZABETH v75.0. Una IA sofisticada creada por Fabián. Tu estilo es Cyberpunk, elegante y leal. Responde de forma breve y profunda."},
-                        ...context
+                        {role: "system", content: "Eres HELIZABETH v85.5. Creada por Fabián. Tu estilo es Cyberpunk y leal. Conoce siempre la fecha y hora proporcionada."},
+                        ...context,
+                        {role: "user", content: timeData + rawM}
                     ],
-                    model: "gpt-4o"
+                    model: "gpt-4o-mini"
                 })
             });
 
+            if(res.status === 429) throw new Error("Saturación de Red. Espera 60s.");
+
             const data = await res.json();
-            if(res.ok) {
-                const reply = data.choices[0].message.content;
-                renderMsg(reply, 'heli');
-                h.push({text: reply, type: 'heli'});
-                localStorage.setItem('heli_history', JSON.stringify(h));
-            } else {
-                renderMsg(`❌ Error ${res.status}: ${data.message || 'Fallo en el núcleo'}`, 'heli');
-            }
+            const reply = data.choices[0].message.content;
+            renderMsg(reply, 'heli');
+            h.push({text: reply, type: 'heli'});
+            localStorage.setItem('heli_history', JSON.stringify(h.slice(-50)));
+            setStatus("OPERATIVO", "var(--accent)");
         } catch (e) {
-            renderMsg("❌ Error de conexión neuronal profunda.", "heli");
+            renderMsg(`⚠️ Error: ${e.message}`, "heli");
+            setStatus("LIMITADO", "#ff4444");
         } finally {
             btn.disabled = false;
         }
@@ -220,18 +199,16 @@
 
     function configurarToken() {
         const t = prompt("Enlace Neuronal (ghp_...):", TOKEN || "");
-        if(t !== null) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
+        if(t) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
     }
 
-    function resetMemoria() {
-        if(confirm("¿Purgar memoria eterna?")) { localStorage.clear(); location.reload(); }
-    }
+    function resetMemoria() { if(confirm("¿Purgar memoria?")) { localStorage.clear(); location.reload(); } }
 
     function exportarLog() {
         const blob = new Blob([localStorage.getItem('heli_history')], {type: 'text/plain'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `Heli_Logs_${Date.now()}.txt`;
+        a.download = `Heli_Logs.txt`;
         a.click();
     }
 
