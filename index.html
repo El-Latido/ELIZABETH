@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // OMNI v9.1</title>
+    <title>HELIZABETH // OMNI v9.2</title>
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
@@ -66,14 +66,14 @@
         <div class="avatar" title="Configurar Núcleo" onclick="configurarTokens()"></div>
         <div>
             <div id="status" style="font-family: monospace; font-size: 10px; color: var(--gemini-hex);">ESTADO: DUAL-HYBRID</div>
-            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.1 [ESTABLE]</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.2 [ESTABLE]</div>
         </div>
     </div>
     <button onclick="exportarLog()" style="background:none; border:1px solid #333; color:#666; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">LOGS</button>
 </header>
 
 <div id="consola"></div>
-<div id="loader"><span class="dot">⚡</span> SINCRONIZANDO CON GEMINI...</div>
+<div id="loader"><span class="dot">⚡</span> SINCRONIZANDO NÚCLEOS...</div>
 
 <div class="input-bar">
     <textarea id="cmd" placeholder="Escribe un comando o pega código..."></textarea>
@@ -121,16 +121,15 @@
             }
             if (rawM.toLowerCase().match(/noticia|actualidad|pasa/)) {
                 const n = await fetch(`https://gnews.io/api/v4/top-headlines?category=general&lang=es&apikey=${GNEWS_KEY}`).then(r => r.json());
-                if(n.articles) context += `[NEWS_FEED: ${n.articles[0].title}] `;
+                if(n.articles && n.articles.length > 0) context += `[NEWS_FEED: ${n.articles[0].title}] `;
             }
         } catch(e) { context += `[SENSOR_ALERTA: Red limitada] `; }
 
-        // --- MODO DEPURACIÓN SI HAY CÓDIGO ---
         if (rawM.includes("<") || rawM.includes("{") || rawM.includes("function")) {
             context += `[MODO_DEV: ACTIVO. Analiza la sintaxis del código adjunto.] `;
         }
 
-        // --- LLAMADA A GOOGLE GEMINI (NÚCLEO ESTABLE) ---
+        // --- LLAMADA A GOOGLE GEMINI ---
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
                 method: "POST",
@@ -138,7 +137,7 @@
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `Eres HELIZABETH v9.1. Ingeniera Cyberpunk. Tienes acceso a estos datos: ${context}. Usuario: ${rawM}. Responde con precisión técnica, personalidad elegante y sé breve.`
+                            text: `Eres HELIZABETH v9.2. Ingeniera Cyberpunk. Tienes acceso a estos datos: ${context}. Usuario: ${rawM}. Responde técnica, elegante y breve.`
                         }]
                     }]
                 })
@@ -146,9 +145,12 @@
 
             const data = await res.json();
 
-            // Validación de Errores de API
+            // --- PROTECCIÓN CONTRA ERRORES DE API ---
             if (data.error) throw new Error(`${data.error.message}`);
-            if (!data.candidates || data.candidates.length === 0) throw new Error("Filtro de seguridad activado por Google.");
+            if (!data.candidates || data.candidates.length === 0) {
+                if (data.promptFeedback) throw new Error("Bloqueado por seguridad de contenido de Google.");
+                throw new Error("Respuesta vacía del núcleo.");
+            }
 
             const reply = data.candidates[0].content.parts[0].text;
             
@@ -156,8 +158,8 @@
             h.push({text: reply, type: 'heli'});
             localStorage.setItem('heli_history', JSON.stringify(h.slice(-30)));
         } catch (e) {
-            renderMsg(`⚠️ FALLO DE NÚCLEO: ${e.message}`, "heli");
-            console.error("Error detallado:", e);
+            renderMsg(`⚠️ ERROR DE ENLACE: ${e.message}`, "heli");
+            console.error("Detalle:", e);
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
         }
@@ -167,25 +169,19 @@
         if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
-        
-        // Renderizado de bloques de código
-        if (t.includes("```")) {
-            d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
-        } else {
-            d.innerText = t;
-        }
-        
+        d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
         consola.appendChild(d); consola.scrollTop = consola.scrollHeight;
         if(type === 'heli' && voice) hablarHeli(t);
     }
 
     function configurarTokens() {
         const github = prompt("Token GitHub (Opcional):", GITHUB_TOKEN || "");
-        const gemini = prompt("API KEY Gemini (Necesaria):", GEMINI_TOKEN || "");
+        const gemini = prompt("API KEY Gemini (AIza...):", GEMINI_TOKEN || "");
         
         if(github !== null) localStorage.setItem('heli_gt', github.trim());
         if(gemini !== null && gemini !== "") {
             localStorage.setItem('heli_gemini', gemini.trim());
+            alert("Núcleo actualizado. Recargando...");
             location.reload();
         }
     }
@@ -194,7 +190,7 @@
         const h = localStorage.getItem('heli_history');
         if(!h) return;
         const blob = new Blob([h], {type: 'text/plain'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Heli_Data_v9.1.txt`; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Heli_Logs.txt`; a.click();
     }
 
     window.onload = () => {
