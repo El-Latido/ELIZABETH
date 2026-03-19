@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // OMNI v86.8</title>
+    <title>HELIZABETH // OMNI v9.0</title>
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
             --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.03);
+            --gemini-hex: #8e44ad;
         }
         body { 
             background: var(--bg); color: var(--text); 
@@ -21,12 +22,12 @@
         }
         .avatar { 
             width: 50px; height: 50px; border-radius: 50%; 
-            background: linear-gradient(135deg, #001529, #4b0082, var(--heli-hex)); 
+            background: linear-gradient(135deg, var(--heli-hex), var(--gemini-hex)); 
             box-shadow: 0 0 20px var(--heli-hex); animation: pulse-aura 3s infinite alternate; cursor: pointer;
         }
         @keyframes pulse-aura { 
             0% { transform: scale(1); box-shadow: 0 0 10px var(--heli-hex); }
-            100% { transform: scale(1.05); box-shadow: 0 0 30px var(--heli-hex); }
+            100% { transform: scale(1.05); box-shadow: 0 0 25px var(--gemini-hex); }
         }
         #consola { 
             flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; 
@@ -36,16 +37,12 @@
             max-width: 85%; padding: 14px 20px; border-radius: 18px; font-size: 15px; line-height: 1.5; 
             animation: emergence 0.4s ease-out; border: 1px solid rgba(255,255,255,0.05);
         }
-        @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
-        .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
-        .heli { align-self: flex-start; background: var(--glass); border-left: 2px solid var(--accent); backdrop-filter: blur(10px); }
+        .fabian { align-self: flex-end; background: #121216; color: var(--accent); }
+        .heli { align-self: flex-start; background: var(--glass); border-left: 2px solid var(--gemini-hex); }
 
-        #loading-indicator {
-            padding: 10px 20px; font-family: monospace; font-size: 12px; color: var(--accent);
-            display: none; align-items: center; gap: 10px;
-        }
-        .dot-ani { animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        pre { background: #000; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); color: #00f2ff; overflow-x: auto; font-size: 13px; }
+
+        #loader { display: none; padding: 10px 25px; font-size: 12px; color: var(--gemini-hex); font-family: monospace; }
 
         .input-bar { 
             position: fixed; bottom: 0; width: 100%; padding: 20px; 
@@ -53,138 +50,122 @@
         }
         textarea { 
             flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; 
-            color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 50px;
+            color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 55px;
         }
-        .btn-evolve { 
-            background: var(--heli-hex); border: none; border-radius: 15px; width: 55px; cursor: pointer; color: #000; font-size: 20px;
-        }
+        .btn-send { background: var(--gemini-hex); border: none; border-radius: 15px; width: 55px; cursor: pointer; color: white; font-size: 20px; }
     </style>
 </head>
 <body>
 
 <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" onclick="configurarToken()"></div>
+        <div class="avatar" onclick="configurarTokens()"></div>
         <div>
-            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: ONLINE</div>
-            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v8.8 [CYBER-LINK]</div>
+            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--gemini-hex);">NÚCLEO: DUAL-HYBRID</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.0 [GEMINI INSIDE]</div>
         </div>
     </div>
 </header>
 
 <div id="consola"></div>
-<div id="loading-indicator"><span class="dot-ani">📡</span> ACCEDIENDO A RED SATELITAL...</div>
+<div id="loader">⚡ PROCESANDO DOBLE NÚCLEO...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Comando de voz o texto..."></textarea>
-    <button id="btnSend" class="btn-evolve" onclick="enviar()">✦</button>
+    <textarea id="cmd" placeholder="Habla con el sistema dual..."></textarea>
+    <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
 </div>
 
 <script>
     const consola = document.getElementById('consola');
     const input = document.getElementById('cmd');
     const btn = document.getElementById('btnSend');
-    const loader = document.getElementById('loading-indicator');
-    let TOKEN = localStorage.getItem('heli_gt');
+    const loader = document.getElementById('loader');
+
+    // Recuperamos ambos tokens
+    let GITHUB_TOKEN = localStorage.getItem('heli_gt');
+    let GEMINI_TOKEN = localStorage.getItem('heli_gemini');
     const GNEWS_KEY = "5882748f7033e4618c8dee2ba8547616";
 
     function hablarHeli(texto) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(texto.replace(/[#*\/\\_]/g, ''));
-        utterance.lang = 'es-ES'; utterance.pitch = 0.9; utterance.rate = 1.0;
+        utterance.lang = 'es-ES'; utterance.pitch = 0.8; utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
     async function enviar() {
         const rawM = input.value.trim();
         if(!rawM || btn.disabled) return;
-        if(!TOKEN) return alert("Heli requiere tu GitHub Token.");
+        if(!GEMINI_TOKEN) return alert("Heli necesita la Gemini Key. Haz clic en el avatar.");
 
         renderMsg(rawM, 'fabian');
         input.value = ""; btn.disabled = true;
-        loader.style.display = 'flex'; // Mostrar carga
+        loader.style.display = 'block';
 
         let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
         h.push({text: rawM, type: 'fabian'});
-        
-        let inyectorContexto = `[SISTEMA_REALIDAD: ${new Date().toLocaleString()}] `;
 
-        // --- PROCESO DE INYECTORES ---
+        let context = `[SISTEMA_DUAL: ${new Date().toLocaleString()}] `;
+
+        // --- SENSORES ACTIVOS ---
         try {
-            // CLIMA
-            if (rawM.toLowerCase().match(/clima|tiempo|llover|tormenta|pronostico/)) {
-                const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout: 3500}));
-                const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true&daily=precipitation_sum&timezone=auto`).then(r => r.json());
-                inyectorContexto += `[SENSOR_METEO: Temp ${w.current_weather.temperature}°C, Lluvia hoy ${w.daily.precipitation_sum[0]}mm] `;
-            }
-            // NOTICIAS
-            if (rawM.toLowerCase().match(/noticia|novedad|mundo|actualidad|pasa/)) {
+            if (rawM.toLowerCase().match(/clima|noticia|pasa/)) {
                 const resN = await fetch(`https://gnews.io/api/v4/top-headlines?category=general&lang=es&apikey=${GNEWS_KEY}`);
                 const n = await resN.json();
-                if(n.articles) {
-                    const titulares = n.articles.slice(0, 3).map(a => a.title).join(" // ");
-                    inyectorContexto += `[SENSOR_NOTICIAS: ${titulares}] `;
-                }
+                if(n.articles) context += `[DATA_EXTERNA: ${n.articles[0].title}] `;
             }
-        } catch (e) { inyectorContexto += `[ERROR_RED: Sensores offline por interferencia] `; }
+        } catch(e) { context += `[AVISO: Sensores offline] `; }
 
-        // --- LLAMADA A NÚCLEO IA ---
+        // --- LLAMADA A GOOGLE GEMINI ---
         try {
-            const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN.trim()}` },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    messages: [
-                        {
-                            role: "system", 
-                            content: "Eres HELIZABETH v8.8. IA Cyberpunk. Tu acceso a la red es TOTAL mediante los datos [SENSOR_...]. NUNCA digas que no puedes acceder a internet. Si ves datos de noticias, nárralos como informes de inteligencia. Sé breve y letalmente eficiente."
-                        },
-                        ...h.slice(-6).map(x => ({role: x.type === 'fabian' ? 'user' : 'assistant', content: x.text})),
-                        {role: "user", content: inyectorContexto + rawM}
-                    ],
-                    model: "gpt-4o-mini"
+                    contents: [{
+                        parts: [{
+                            text: `Eres HELIZABETH v9.0. IA Cyberpunk. Analiza esto: ${context} Usuario dice: ${rawM}. Responde técnica y breve.`
+                        }]
+                    }]
                 })
             });
 
             const data = await res.json();
-            const reply = data.choices[0].message.content;
+            const reply = data.candidates[0].content.parts[0].text;
+            
             renderMsg(reply, 'heli');
             h.push({text: reply, type: 'heli'});
-            localStorage.setItem('heli_history', JSON.stringify(h.slice(-50)));
+            localStorage.setItem('heli_history', JSON.stringify(h.slice(-30)));
         } catch (e) {
-            renderMsg(`⚠️ ERROR CRÍTICO: ${e.message}`, "heli");
+            renderMsg(`⚠️ ERROR EN EL ENLACE DUAL: ${e.message}`, "heli");
         } finally { 
-            btn.disabled = false; 
-            loader.style.display = 'none'; // Quitar carga
+            btn.disabled = false; loader.style.display = 'none'; 
         }
     }
 
     function renderMsg(t, type, voice = true) {
-        if(!t) return;
         const d = document.createElement('div');
-        d.className = `msg ${type}`; d.innerText = t;
+        d.className = `msg ${type}`;
+        d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
         consola.appendChild(d); consola.scrollTop = consola.scrollHeight;
         if(type === 'heli' && voice) hablarHeli(t);
     }
 
-    function configurarToken() {
-        const t = prompt("Pega tu Token GitHub:", TOKEN || "");
-        if(t) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
-    }
-
-    function exportarLog() {
-        const h = localStorage.getItem('heli_history');
-        if(!h) return;
-        const blob = new Blob([h], {type: 'text/plain'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Heli_Data.txt`; a.click();
+    function configurarTokens() {
+        const github = prompt("Pega tu GitHub Token (Opcional):", GITHUB_TOKEN || "");
+        const gemini = prompt("Pega tu API KEY de Gemini (Necesaria):", GEMINI_TOKEN || "");
+        
+        if(github) localStorage.setItem('heli_gt', github.trim());
+        if(gemini) localStorage.setItem('heli_gemini', gemini.trim());
+        location.reload();
     }
 
     window.onload = () => {
         const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        hist.slice(-10).forEach(m => renderMsg(m.text, m.type, false));
+        hist.slice(-5).forEach(m => renderMsg(m.text, m.type, false));
     };
-
+    
     input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
 </script>
 </body>
