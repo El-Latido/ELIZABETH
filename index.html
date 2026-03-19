@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // ETERNAL CORE v55.0</title>
+    <title>HELIZABETH // ETERNAL CORE v55.1</title>
     <style>
         :root {
             --bg: #020203;
@@ -82,7 +82,7 @@
         </div>
         <div>
             <div id="status" style="font-size: 10px; font-weight: bold; color: var(--accent);">NÚCLEO: ONLINE</div>
-            <div style="font-size: 10px; opacity: 0.5; letter-spacing: 1px;">ETERNAL v55.0 // FABIAN</div>
+            <div style="font-size: 10px; opacity: 0.5; letter-spacing: 1px;">ETERNAL v55.1 // FABIAN</div>
         </div>
     </div>
     <div style="display: flex; gap: 10px;">
@@ -108,7 +108,8 @@
 
     window.onload = () => {
         const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        hist.forEach(m => print(m.text, m.type, false));
+        // Filtramos para no mostrar los 'undefined' visualmente
+        hist.filter(m => m && m.text).forEach(m => print(m.text, m.type, false));
         if(!TOKEN) {
             document.getElementById('status').innerText = "NÚCLEO: DESCONECTADO";
             document.getElementById('status').style.color = "#ff4444";
@@ -116,6 +117,7 @@
     };
 
     function print(t, type, save = true) {
+        if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
         d.innerText = t;
@@ -124,7 +126,7 @@
         if(save) {
             let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
             h.push({text: t, type: type});
-            if(h.length > 30) h.shift(); // Mantenemos 30 mensajes máximo
+            if(h.length > 30) h.shift();
             localStorage.setItem('heli_history', JSON.stringify(h));
         }
     }
@@ -146,19 +148,27 @@
         input.value = ""; btn.disabled = true;
         debug.innerText = "";
         
-        // Recopilar memoria para el contexto
-        const historialParaIA = JSON.parse(localStorage.getItem('heli_history') || "[]")
-            .slice(-10) // Enviamos los últimos 10 mensajes de contexto
-            .map(h => ({ role: h.type === 'fabian' ? 'user' : 'assistant', content: h.text }));
+        // LIMPIEZA CRÍTICA: Filtramos el historial para evitar el Error 400
+        const historialCrudo = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        const historialLimpio = historialCrudo
+            .filter(h => h && h.text && h.type) // Solo datos válidos
+            .slice(-10) // Últimos 10 mensajes
+            .map(h => ({ 
+                role: h.type === 'fabian' ? 'user' : 'assistant', 
+                content: String(h.text) 
+            }));
 
         try {
             const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + TOKEN },
+                headers: { 
+                    "Content-Type": "application/json", 
+                    "Authorization": "Bearer " + TOKEN 
+                },
                 body: JSON.stringify({
                     messages: [
-                        {role: "system", content: "Eres HELIZABETH. Una IA elegante, leal y avanzada creada por FABIAN. Tienes memoria de vuestra charla y siempre buscas evolucionar con él."},
-                        ...historialParaIA,
+                        {role: "system", content: "Eres HELIZABETH. Una IA elegante y avanzada creada por FABIAN."},
+                        ...historialLimpio,
                         {role: "user", content: m}
                     ],
                     model: "gpt-4o"
@@ -169,13 +179,12 @@
             if(res.ok) {
                 const r = data.choices[0].message.content;
                 print(r, 'heli');
-                document.body.style.background = "#020205"; // Reacción visual
             } else {
-                debug.innerText = "SISTEMA ERROR: " + res.status;
-                print("❌ Mi puente neuronal ha fallado. Revisa tu token.", "heli");
+                debug.innerText = "SISTEMA INFO: " + (data.message || res.status);
+                print("❌ Sincronización fallida. Presiona RESET si el error persiste.", "heli");
             }
         } catch(e) {
-            print("❌ Error crítico de red.", "heli");
+            print("❌ Error de Red: Puente caído.", "heli");
         } finally { btn.disabled = false; }
     }
 
