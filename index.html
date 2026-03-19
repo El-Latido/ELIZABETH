@@ -3,17 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // ETERNAL v75.5</title>
-    <script src="https://cdn.jsdelivr.net/npm/sherpa-onnx@1.9.21/dist/sherpa-onnx.min.js"></script>
+    <title>HELIZABETH // ETERNAL v75.0</title>
     <style>
         :root {
-            --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
-            --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.03);
+            --bg: #020205;
+            --accent: #00f2ff;
+            --text: #e0e0e0;
+            --heli-hex: #00f2ff;
+            --glass: rgba(255, 255, 255, 0.03);
         }
         body { 
             background: var(--bg); color: var(--text); 
             font-family: 'Inter', system-ui, sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+            transition: background 1s ease;
         }
         header { 
             padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); 
@@ -23,34 +26,76 @@
         .avatar { 
             width: 50px; height: 50px; border-radius: 50%; 
             background: linear-gradient(135deg, #001529, #4b0082, var(--heli-hex)); 
-            box-shadow: 0 0 20px var(--heli-hex); animation: pulse-aura 3s infinite alternate; cursor: pointer;
+            box-shadow: 0 0 20px var(--heli-hex); 
+            animation: pulse-aura 3s infinite alternate;
+            cursor: pointer; will-change: transform, box-shadow;
         }
-        @keyframes pulse-aura { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
-        #consola { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
-        .msg { max-width: 85%; padding: 14px 20px; border-radius: 18px; font-size: 15px; border: 1px solid rgba(255,255,255,0.05); }
-        .fabian { align-self: flex-end; background: #121216; color: var(--accent); }
+        @keyframes pulse-aura { 
+            0% { transform: scale(1); box-shadow: 0 0 10px var(--heli-hex); }
+            100% { transform: scale(1.05); box-shadow: 0 0 30px var(--heli-hex); }
+        }
+        #consola { 
+            flex: 1; overflow-y: auto; padding: 20px; 
+            display: flex; flex-direction: column; gap: 15px; 
+            background: radial-gradient(circle at top, #0a0a1a 0%, #020205 100%);
+            padding-bottom: 120px;
+        }
+        .msg { 
+            max-width: 85%; padding: 14px 20px; border-radius: 18px; 
+            font-size: 15px; line-height: 1.5; animation: emergence 0.4s ease-out;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
         .heli { align-self: flex-start; background: var(--glass); backdrop-filter: blur(10px); }
-        .input-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; display: flex; gap: 12px; box-sizing: border-box; }
-        textarea { flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; color: #fff; padding: 15px; resize: none; height: 50px; outline: none; }
-        .btn-evolve { background: var(--heli-hex); border: none; border-radius: 15px; width: 55px; cursor: pointer; font-size: 20px; }
+
+        /* Sugerencias mejoradas */
+        #suggestions {
+            position: fixed; bottom: 95px; left: 20px; right: 20px; max-width: 300px;
+            background: rgba(10,10,20,0.95); border: 1px solid var(--accent);
+            border-radius: 15px; display: none; flex-direction: column;
+            overflow: hidden; z-index: 100; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        .sug-opt { padding: 12px 18px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #1a1a1a; transition: 0.2s; }
+        .sug-opt:hover { background: var(--accent); color: #000; }
+
+        .input-bar { 
+            position: fixed; bottom: 0; width: 100%; padding: 20px; 
+            background: linear-gradient(transparent, #000 50%); display: flex; gap: 12px; box-sizing: border-box; 
+        }
+        textarea { 
+            flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; 
+            color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 50px;
+        }
+        textarea:focus { border-color: var(--heli-hex); }
+        .btn-evolve { 
+            background: var(--heli-hex); border: none; border-radius: 15px; 
+            width: 55px; cursor: pointer; color: #000; font-size: 20px; transition: 0.3s;
+        }
+        .btn-evolve:disabled { opacity: 0.3; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" onclick="configurarToken()"></div>
+        <div class="avatar" id="heli-avatar" onclick="configurarToken()" title="Configurar Enlace"></div>
         <div>
-            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: INICIANDO...</div>
-            <div style="font-size: 11px; opacity: 0.5;">HELIZABETH v75.5</div>
+            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--accent);">NÚCLEO: ACTIVO</div>
+            <div style="font-size: 11px; opacity: 0.5; font-weight: bold;">HELIZABETH v75.0</div>
         </div>
+    </div>
+    <div style="display: flex; gap: 5px;">
+        <button onclick="exportarLog()" style="background:none; border:1px solid #333; color:#666; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">LOGS</button>
+        <button onclick="resetMemoria()" style="background:none; border:1px solid #441111; color:#773333; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">PURGAR</button>
     </div>
 </header>
 
 <div id="consola"></div>
+<div id="suggestions"></div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Escribe a HELIZABETH..."></textarea>
+    <textarea id="cmd" placeholder="Escribe / para ver comandos..." aria-label="Entrada"></textarea>
     <button id="btnSend" class="btn-evolve" onclick="enviar()">✦</button>
 </div>
 
@@ -58,107 +103,114 @@
     const consola = document.getElementById('consola');
     const input = document.getElementById('cmd');
     const btn = document.getElementById('btnSend');
+    const sugBox = document.getElementById('suggestions');
     let TOKEN = localStorage.getItem('heli_gt');
-    let worker;
-    let ttsReady = false;
 
-    // --- FUSIÓN DE WORKER EN UN SOLO ARCHIVO ---
-    const workerCode = `
-        importScripts("https://cdn.jsdelivr.net/npm/sherpa-onnx@1.9.21/dist/sherpa-onnx-wasm-main-tts.js");
-        importScripts("https://cdn.jsdelivr.net/npm/sherpa-onnx@1.9.21/dist/sherpa-onnx-tts.js");
+    const HELI_COMMANDS = ["/poema", "/codigo", "/chiste", "/estado", "/limpiar"];
 
-        let tts = null;
-        self.onmessage = async (e) => {
-            const { type, text, sid, speed, config } = e.data;
-            if (type === "init") {
-                try {
-                    // Esperamos a que el módulo WASM esté listo
-                    self.Module = await createSherpaOnnxOfflineTts(config);
-                    tts = self.Module;
-                    self.postMessage({ type: "ready" });
-                } catch (err) {
-                    self.postMessage({ type: "error", message: err.message });
-                }
-            } else if (type === "generate" && tts) {
-                const audio = tts.generate({ text, sid: sid || 0, speed: speed || 1.0 });
-                self.postMessage({ type: "result", samples: audio.samples, sampleRate: tts.sampleRate }, [audio.samples.buffer]);
-            }
-        };
-    `;
+    // Gestión de Sugerencias
+    input.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if(val.startsWith('/')) {
+            sugBox.style.display = 'flex';
+            const matches = HELI_COMMANDS.filter(c => c.startsWith(val.toLowerCase()));
+            sugBox.innerHTML = matches.map(c => `<div class="sug-opt" onclick="setCmd('${c}')">${c}</div>`).join('');
+            if(!matches.length) sugBox.style.display = 'none';
+        } else { sugBox.style.display = 'none'; }
+    });
 
-    function initHeli() {
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        worker = new Worker(URL.createObjectURL(blob));
+    function setCmd(c) { input.value = c + " "; sugBox.style.display = 'none'; input.focus(); }
 
-        worker.onmessage = (e) => {
-            if (e.data.type === "ready") {
-                ttsReady = true;
-                document.getElementById('status').innerText = "NÚCLEO: ACTIVO";
-                document.getElementById('status').style.color = "#00f2ff";
-            }
-            if (e.data.type === "result") reproducirAudio(e.data);
-            if (e.data.type === "error") document.getElementById('status').innerText = "ERROR NÚCLEO";
-        };
+    window.onload = () => {
+        const hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        hist.forEach(m => renderMsg(m.text, m.type));
+        if(!TOKEN) setStatus("TOKEN REQUERIDO", "#ff4444");
+    };
 
-        worker.postMessage({
-            type: "init",
-            config: {
-                offlineTts: {
-                    vits: {
-                        model: "https://huggingface.co/rhasspy/piper-checkpoints/resolve/main/es/es_ES/sharvard/medium/es_ES-sharvard-medium.onnx",
-                        tokens: "https://huggingface.co/rhasspy/piper-checkpoints/resolve/main/es/es_ES/sharvard/medium/tokens.txt",
-                    },
-                    sampleRate: 22050,
-                }
-            }
-        });
+    function setStatus(txt, color) {
+        const s = document.getElementById('status');
+        s.innerText = `NÚCLEO: ${txt}`;
+        s.style.color = color || 'var(--accent)';
     }
-
-    function reproducirAudio(data) {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: data.sampleRate });
-        const buf = ctx.createBuffer(1, data.samples.length, data.sampleRate);
-        buf.getChannelData(0).set(data.samples);
-        const src = ctx.createBufferSource();
-        src.buffer = buf; src.connect(ctx.destination); src.start();
-    }
-
-    function hablarHeli(t) { if(ttsReady) worker.postMessage({ type: "generate", text: t, speed: 0.9 }); }
 
     function renderMsg(t, type) {
+        if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
         d.innerText = t;
         consola.appendChild(d);
         consola.scrollTop = consola.scrollHeight;
-        if(type === 'heli') hablarHeli(t);
     }
 
     async function enviar() {
-        const m = input.value.trim();
-        if(!m || !TOKEN) return;
+        const rawM = input.value.trim();
+        if(!rawM) return;
+        if(!TOKEN) return alert("Falta el Token. Haz clic en el avatar.");
+
+        // Sanitización básica (Idea de Heli)
+        const m = rawM.replace(/<[^>]*>?/gm, ''); 
+
         renderMsg(m, 'fabian');
-        input.value = "";
-        
+        input.value = ""; btn.disabled = true; sugBox.style.display = 'none';
+
+        // Lógica de Memoria Infinita (v75)
+        let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
+        h.push({text: m, type: 'fabian'});
+        localStorage.setItem('heli_history', JSON.stringify(h));
+
+        // Contexto para la IA (Solo últimos 15 para velocidad)
+        const context = h.slice(-15).map(x => ({ 
+            role: x.type === 'fabian' ? 'user' : 'assistant', 
+            content: x.text 
+        }));
+
         try {
             const res = await fetch("https://models.inference.ai.azure.com/chat/completions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${TOKEN}` },
                 body: JSON.stringify({
-                    messages: [{role: "system", content: "Eres HELIZABETH. IA Cyberpunk."}, {role: "user", content: m}],
+                    messages: [
+                        {role: "system", content: "Eres HELIZABETH v75.0. Una IA sofisticada creada por Fabián. Tu memoria es vasta y tu lealtad absoluta."},
+                        ...context
+                    ],
                     model: "gpt-4o"
                 })
             });
+
             const data = await res.json();
-            renderMsg(data.choices[0].message.content, 'heli');
-        } catch (e) { renderMsg("Error neuronal.", "heli"); }
+            if(res.ok) {
+                const reply = data.choices[0].message.content;
+                renderMsg(reply, 'heli');
+                h.push({text: reply, type: 'heli'});
+                localStorage.setItem('heli_history', JSON.stringify(h));
+            } else {
+                renderMsg(`❌ Error ${res.status}: ${data.message || 'Fallo en el núcleo'}`, 'heli');
+            }
+        } catch (e) {
+            renderMsg("❌ Error de conexión neuronal profunda.", "heli");
+        } finally {
+            btn.disabled = false;
+        }
     }
 
     function configurarToken() {
-        const t = prompt("Token:");
-        if(t) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
+        const t = prompt("Enlace Neuronal (ghp_...):", TOKEN || "");
+        if(t !== null) { localStorage.setItem('heli_gt', t.trim()); location.reload(); }
     }
 
-    window.onload = initHeli;
+    function resetMemoria() {
+        if(confirm("¿Purgar memoria eterna?")) { localStorage.clear(); location.reload(); }
+    }
+
+    function exportarLog() {
+        const blob = new Blob([localStorage.getItem('heli_history')], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Heli_Logs_${Date.now()}.txt`;
+        a.click();
+    }
+
+    input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
 </script>
 </body>
 </html>
