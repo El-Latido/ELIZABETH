@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // OMNI v9.3</title>
+    <title>HELIZABETH // OMNI v9.4</title>
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
@@ -65,18 +65,21 @@
     <div style="display: flex; align-items: center; gap: 15px;">
         <div class="avatar" title="Configurar API Key" onclick="configurarTokens()"></div>
         <div>
-            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--gemini-hex);">CORE: 2.5 FLASH ACTIVE</div>
-            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.3</div>
+            <div id="status" style="font-family: monospace; font-size: 10px; color: var(--gemini-hex);">CORE: 2.5 FLASH [OMNI-LINK]</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.4</div>
         </div>
     </div>
-    <button onclick="localStorage.removeItem('heli_history'); location.reload();" style="background:none; border:1px solid #333; color:#666; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">LIMPIAR</button>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="exportarLog()" style="background:none; border:1px solid #333; color:#666; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">LOGS</button>
+        <button onclick="localStorage.removeItem('heli_history'); location.reload();" style="background:none; border:1px solid #e74c3c; color:#e74c3c; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">PURGAR</button>
+    </div>
 </header>
 
 <div id="consola"></div>
-<div id="loader"><span class="dot">⚡</span> SINCRONIZANDO CON NÚCLEO 2.5...</div>
+<div id="loader"><span class="dot">⚡</span> ESCANEANDO RED GLOBAL...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Escribe un comando..."></textarea>
+    <textarea id="cmd" placeholder="Comando de sistema o consulta libre..."></textarea>
     <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
 </div>
 
@@ -87,19 +90,20 @@
     const loader = document.getElementById('loader');
 
     let GEMINI_TOKEN = localStorage.getItem('heli_gemini');
+    const GNEWS_KEY = "5882748f7033e4618c8dee2ba8547616";
 
     function hablarHeli(texto) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(texto.replace(/[#*\/\\_]/g, ''));
-        utterance.lang = 'es-ES'; utterance.pitch = 0.9; utterance.rate = 1.0;
+        utterance.lang = 'es-ES'; utterance.pitch = 0.85; utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
     async function enviar() {
         const rawM = input.value.trim();
         if(!rawM || btn.disabled) return;
-        if(!GEMINI_TOKEN) return alert("Falta API Key. Haz clic en el círculo de colores.");
+        if(!GEMINI_TOKEN) return alert("Falta API Key de Gemini. Configura en el avatar.");
 
         renderMsg(rawM, 'fabian');
         input.value = ""; btn.disabled = true;
@@ -108,29 +112,50 @@
         let h = JSON.parse(localStorage.getItem('heli_history') || "[]");
         h.push({text: rawM, type: 'fabian'});
 
+        // --- GENERACIÓN DE CONTEXTO OMNI-LINK ---
+        let context = `[DATA_REF: ${new Date().toLocaleString()}] [GEO: Argentina/Global] `;
+        
         try {
-            // USANDO EL MODELO 2.5 QUE APARECE EN TUS GRÁFICAS
+            // Sensor Meteorológico Proactivo
+            const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout: 1500})).catch(() => null);
+            if(pos) {
+                const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r => r.json());
+                context += `[METEO_ACTUAL: ${w.current_weather.temperature}°C, Viento: ${w.current_weather.windspeed}km/h] `;
+            }
+
+            // Sensor de Noticias en Tiempo Real
+            const n = await fetch(`https://gnews.io/api/v4/top-headlines?category=general&lang=es&apikey=${GNEWS_KEY}`).then(r => r.json());
+            if(n.articles && n.articles.length > 0) {
+                context += `[NOTICIAS_MUNDIALES: ${n.articles[0].title} | ${n.articles[1].title}] `;
+            }
+        } catch(e) { context += `[AVISO_RED: Sensores con latencia alta] `; }
+
+        // --- LLAMADA AL NÚCLEO 2.5 FLASH ---
+        try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: `Eres HELIZABETH v9.3, ingeniera de sistemas cyberpunk. Responde breve y técnico. Usuario: ${rawM}` }] }]
+                    contents: [{
+                        parts: [{
+                            text: `SISTEMA: Eres HELIZABETH v9.4, ingeniera Cyberpunk de nivel Omni. Tienes acceso total a: ${context}. 
+                            INSTRUCCIÓN: Responde a '${rawM}' con la sabiduría de un modelo Gemini avanzado. Sé técnica, breve pero informativa. Usa los datos meteorológicos o noticias si el usuario pregunta algo relacionado.`
+                        }]
+                    }]
                 })
             });
 
             const data = await res.json();
-
             if (data.error) throw new Error(data.error.message);
             
             const reply = data.candidates[0].content.parts[0].text;
             
             renderMsg(reply, 'heli');
             h.push({text: reply, type: 'heli'});
-            localStorage.setItem('heli_history', JSON.stringify(h.slice(-20)));
+            localStorage.setItem('heli_history', JSON.stringify(h.slice(-30)));
 
         } catch (e) {
-            renderMsg(`⚠️ ERROR NÚCLEO: ${e.message}`, 'heli');
-            console.error(e);
+            renderMsg(`⚠️ ERROR DE ENLACE: ${e.message}`, 'heli');
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
         }
@@ -140,7 +165,6 @@
         if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
-        // Formateo de código mejorado
         d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
         consola.appendChild(d); 
         consola.scrollTop = consola.scrollHeight;
@@ -148,11 +172,18 @@
     }
 
     function configurarTokens() {
-        const key = prompt("Pega tu API KEY (AIza...):", GEMINI_TOKEN || "");
+        const key = prompt("Pega tu API KEY de Gemini (AIza...):", GEMINI_TOKEN || "");
         if(key) {
             localStorage.setItem('heli_gemini', key.trim());
             location.reload();
         }
+    }
+
+    function exportarLog() {
+        const h = localStorage.getItem('heli_history');
+        if(!h) return;
+        const blob = new Blob([h], {type: 'text/plain'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Heli_Data_v9.4.txt`; a.click();
     }
 
     window.onload = () => {
