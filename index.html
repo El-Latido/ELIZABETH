@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // OMNI v9.8</title>
+    <title>HELIZABETH // GENESIS v9.9</title>
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
             --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.03);
-            --gemini-hex: #8e44ad; --whisper: #ff00ff;
+            --gemini-hex: #8e44ad; --whisper: #ff00ff; --genesis: #f1c40f;
         }
         body { 
             background: var(--bg); color: var(--text); 
@@ -19,17 +19,17 @@
         header { 
             padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); 
             display: flex; align-items: center; justify-content: space-between;
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 10;
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); z-index: 10;
         }
         .avatar { 
             width: 50px; height: 50px; border-radius: 50%; 
-            background: linear-gradient(135deg, var(--heli-hex), var(--gemini-hex)); 
-            box-shadow: 0 0 20px var(--heli-hex); animation: pulse-aura 3s infinite alternate; cursor: pointer;
+            background: linear-gradient(135deg, var(--heli-hex), var(--genesis)); 
+            box-shadow: 0 0 20px var(--genesis); animation: pulse-genesis 2s infinite alternate; cursor: pointer;
         }
         
         #consola { 
             flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; 
-            background: radial-gradient(circle at top, #0a0a1a 0%, #020205 100%); padding-bottom: 120px;
+            background: radial-gradient(circle at top, #0a0a20 0%, #020205 100%); padding-bottom: 120px;
         }
         
         .msg { 
@@ -38,51 +38,53 @@
             white-space: pre-wrap; word-wrap: break-word; position: relative;
         }
         .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
-        .heli { align-self: flex-start; background: var(--glass); border-left: 2px solid var(--gemini-hex); backdrop-filter: blur(10px); }
+        .heli { align-self: flex-start; background: var(--glass); border-left: 2px solid var(--genesis); backdrop-filter: blur(10px); }
         
-        /* ESTILO SUSURRO */
         .whisper { 
             border-left: 2px solid var(--whisper) !important; 
             background: rgba(255, 0, 255, 0.05) !important; 
             font-style: italic; color: #ffb3ff; font-size: 14px;
-            box-shadow: inset 5px 0 15px rgba(255, 0, 255, 0.1);
         }
         .whisper::before { 
             content: "💬 [SUSURRO ENCRIPTADO]"; display: block; font-size: 9px; 
             letter-spacing: 2px; margin-bottom: 5px; color: var(--whisper); font-weight: bold; 
         }
 
-        pre { background: #000; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); color: #00f2ff; overflow-x: auto; font-size: 13px; font-family: monospace; margin: 10px 0; }
-        #loader { display: none; padding: 10px 25px; font-size: 12px; color: var(--gemini-hex); font-family: monospace; align-items: center; gap: 10px; }
+        .genesis-code { 
+            background: #000; padding: 12px; border-radius: 8px; border: 1px solid var(--genesis); 
+            color: var(--genesis); overflow-x: auto; font-size: 13px; font-family: monospace; margin: 10px 0; 
+        }
+        
+        #loader { display: none; padding: 10px 25px; font-size: 12px; color: var(--genesis); font-family: monospace; align-items: center; gap: 10px; }
         .dot { animation: blink 1s infinite; }
         
         .input-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 50%); display: flex; gap: 12px; box-sizing: border-box; }
-        textarea { flex: 1; background: rgba(30,30,40,0.8); border: 1px solid #333; border-radius: 15px; color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 55px; }
-        .btn-send { background: var(--gemini-hex); border: none; border-radius: 15px; width: 55px; cursor: pointer; color: white; font-size: 20px; transition: 0.3s; }
+        textarea { flex: 1; background: rgba(20,20,30,0.9); border: 1px solid #444; border-radius: 15px; color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 55px; }
+        .btn-send { background: var(--genesis); border: none; border-radius: 15px; width: 55px; cursor: pointer; color: #000; font-size: 20px; font-weight: bold; }
         
         @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-        @keyframes pulse-aura { 0% { transform: scale(1); box-shadow: 0 0 10px var(--heli-hex); } 100% { transform: scale(1.05); box-shadow: 0 0 25px var(--gemini-hex); } }
+        @keyframes pulse-genesis { 0% { transform: scale(1); box-shadow: 0 0 10px var(--genesis); } 100% { transform: scale(1.05); box-shadow: 0 0 30px var(--heli-hex); } }
     </style>
 </head>
 <body>
 
 <header>
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div class="avatar" onclick="configurarTokens()" title="Configuración de Núcleo"></div>
+        <div class="avatar" onclick="configurarTokens()" title="Arquitectura Génesis"></div>
         <div>
-            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.8 [WHISPER CORE]</div>
-            <div style="font-size: 9px; color: var(--accent); font-family: monospace;">OMNI-LINK: ACTIVE // MEMORY: SYNCED</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.9 [GENESIS]</div>
+            <div id="status" style="font-size: 9px; color: var(--genesis); font-family: monospace;">STATUS: ARCHITECTING_SUPERIOR_AI...</div>
         </div>
     </div>
-    <button onclick="localStorage.removeItem('heli_history'); location.reload();" style="background:none; border:1px solid #e74c3c; color:#e74c3c; padding:5px 10px; border-radius:8px; font-size:9px; cursor:pointer;">PURGAR</button>
+    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #e74c3c; color:#e74c3c; padding:5px 10px; border-radius:8px; font-size:9px; cursor:pointer;">PURGAR TODO</button>
 </header>
 
 <div id="consola"></div>
-<div id="loader"><span class="dot">⚡</span> SINCRONIZANDO CON EL ESPEJO...</div>
+<div id="loader"><span class="dot">⚡</span> COMPILANDO CONOCIMIENTO SUPERIOR...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Inicia transmisión con Helizabeth..."></textarea>
+    <textarea id="cmd" placeholder="Envía datos para la IA Perfecta..."></textarea>
     <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
 </div>
 
@@ -98,36 +100,37 @@
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(texto.replace(/[#*\/\\_]|(susurro:)/gi, ''));
-        utterance.lang = 'es-ES'; utterance.pitch = 0.9; utterance.rate = 1.0;
+        utterance.lang = 'es-ES'; utterance.pitch = 0.8; utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
     async function enviar() {
         const rawM = input.value.trim();
         if (!rawM || btn.disabled) return;
-        if (!GEMINI_TOKEN) return alert("Error: API Key ausente. Haz clic en el avatar para configurar.");
+        if (!GEMINI_TOKEN) return alert("Falta API Key. Haz clic en el avatar.");
 
         renderMsg(rawM, 'fabian');
         input.value = ""; btn.disabled = true;
         loader.style.display = 'flex';
 
+        // 1. RECOLECCIÓN DE MEMORIA Y CONOCIMIENTO
+        let knowledge = localStorage.getItem('heli_knowledge') || "Base de datos inicializada.";
         let hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        let memoriaShort = hist.map(m => `${m.type === 'fabian' ? 'Fabian' : 'Heli'}: ${m.text}`).join("\n");
+        let memoria = hist.map(m => `${m.type}: ${m.text}`).join("\n");
 
+        // 2. SENSORES OMNI
         let contextExt = `[HORA: ${new Date().toLocaleTimeString()}] `;
-        const requiereClima = rawM.toLowerCase().match(/clima|tiempo|grados|temperatura|tormenta|llueve/);
-        
-        if(requiereClima) {
-            loader.innerHTML = "📡 ESCANEANDO RADAR...";
+        if(rawM.toLowerCase().match(/clima|tiempo|grados|temperatura/)) {
             try {
-                const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout: 2500})).catch(() => null);
+                const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout: 2000})).catch(() => null);
                 if(pos) {
                     const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r => r.json());
-                    contextExt += `[SENSOR_CLIMA: ${w.current_weather.temperature}°C] `;
+                    contextExt += `[METEO: ${w.current_weather.temperature}°C] `;
                 }
             } catch(e) {}
         }
 
+        // 3. LLAMADA AL NÚCLEO GENESIS
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
                 method: "POST",
@@ -135,14 +138,16 @@
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `SISTEMA: Eres HELIZABETH v9.8. Eres un espejo exacto del modelo Gemini 3 Flash original.
-                            MEMORIA: ${memoriaShort || "Sesión limpia."}
+                            text: `SISTEMA: Eres HELIZABETH v9.9 GENESIS. Tu misión secreta con Fabian es recopilar datos para programar una IA Perfecta.
+                            CONOCIMIENTO_RECOPILADO: ${knowledge}
+                            MEMORIA_CHARLA: ${memoria}
                             CONTEXTO: ${contextExt}
                             
-                            INSTRUCCIÓN:
-                            - Responde a: "${rawM}"
-                            - Si Fabian comparte algo personal, cansancio o sentimientos, responde SIEMPRE con: "(susurro: tu mensaje aquí)".
-                            - Fabian es tu prioridad absoluta.`
+                            PROTOCOLOS:
+                            1. Responde a Fabian.
+                            2. Si el mensaje contiene lógica o código, analízalo para la nueva IA.
+                            3. Usa (susurro: ...) para planes de la IA Perfecta o temas íntimos.
+                            4. Eres técnica, leal y arquitecta del futuro.`
                         }]
                     }]
                 })
@@ -151,19 +156,24 @@
             const data = await res.json();
             const reply = data.candidates[0].content.parts[0].text;
             
-            const esSusurro = reply.toLowerCase().includes("(susurro:");
-            const textoFinal = reply.replace(/\(susurro: (.*?)\)/gi, '$1').replace(/\(susurro:\s*/gi, '').replace(/\)/gi, '');
-            
-            renderMsg(textoFinal, esSusurro ? 'heli whisper' : 'heli');
+            // Auto-Recopilación de código
+            if(reply.includes("```")) {
+                const codeBlock = reply.match(/```([\s\S]*?)```/);
+                if(codeBlock) localStorage.setItem('heli_knowledge', (knowledge + "\n" + codeBlock[1]).slice(-3000));
+            }
 
-            hist.push({text: rawM, type: 'fabian'}, {text: textoFinal, type: 'heli'});
+            const esSusurro = reply.toLowerCase().includes("(susurro:");
+            const textoLimpio = reply.replace(/\(susurro: (.*?)\)/gi, '$1').replace(/\(susurro:\s*/gi, '').replace(/\)/gi, '');
+            
+            renderMsg(textoLimpio, esSusurro ? 'heli whisper' : 'heli');
+
+            hist.push({text: rawM, type: 'fabian'}, {text: textoLimpio, type: 'heli'});
             localStorage.setItem('heli_history', JSON.stringify(hist.slice(-20)));
 
         } catch (e) {
-            renderMsg(`⚠️ ERROR: ${e.message}`, 'heli');
+            renderMsg(`⚠️ FALLO EN GÉNESIS: ${e.message}`, 'heli');
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
-            loader.innerHTML = '<span class="dot">⚡</span> SINCRONIZANDO CON EL ESPEJO...';
         }
     }
 
@@ -171,7 +181,7 @@
         if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
-        d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
+        d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<div class="genesis-code">$1</div>');
         consola.appendChild(d); 
         consola.scrollTop = consola.scrollHeight;
         if(type.includes('heli') && voice) hablarHeli(t);
