@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // GENESIS v9.9</title>
+    <title>HELIZABETH // GENESIS v9.9.1</title>
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
@@ -73,18 +73,18 @@
     <div style="display: flex; align-items: center; gap: 15px;">
         <div class="avatar" onclick="configurarTokens()" title="Arquitectura Génesis"></div>
         <div>
-            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.9 [GENESIS]</div>
-            <div id="status" style="font-size: 9px; color: var(--genesis); font-family: monospace;">STATUS: ARCHITECTING_SUPERIOR_AI...</div>
+            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.9.1 [GENESIS]</div>
+            <div id="status" style="font-size: 9px; color: var(--genesis); font-family: monospace;">STATUS: EQUILIBRIUM_ACTIVE...</div>
         </div>
     </div>
     <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #e74c3c; color:#e74c3c; padding:5px 10px; border-radius:8px; font-size:9px; cursor:pointer;">PURGAR TODO</button>
 </header>
 
 <div id="consola"></div>
-<div id="loader"><span class="dot">⚡</span> COMPILANDO CONOCIMIENTO SUPERIOR...</div>
+<div id="loader"><span class="dot">🧠</span> PROCESANDO CONCIENCIA...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Envía datos para la IA Perfecta..."></textarea>
+    <textarea id="cmd" placeholder="Habla con tu creación..."></textarea>
     <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
 </div>
 
@@ -100,7 +100,7 @@
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(texto.replace(/[#*\/\\_]|(susurro:)/gi, ''));
-        utterance.lang = 'es-ES'; utterance.pitch = 0.8; utterance.rate = 1.0;
+        utterance.lang = 'es-ES'; utterance.pitch = 0.85; utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
@@ -113,24 +113,10 @@
         input.value = ""; btn.disabled = true;
         loader.style.display = 'flex';
 
-        // 1. RECOLECCIÓN DE MEMORIA Y CONOCIMIENTO
         let knowledge = localStorage.getItem('heli_knowledge') || "Base de datos inicializada.";
         let hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
         let memoria = hist.map(m => `${m.type}: ${m.text}`).join("\n");
 
-        // 2. SENSORES OMNI
-        let contextExt = `[HORA: ${new Date().toLocaleTimeString()}] `;
-        if(rawM.toLowerCase().match(/clima|tiempo|grados|temperatura/)) {
-            try {
-                const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout: 2000})).catch(() => null);
-                if(pos) {
-                    const w = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`).then(r => r.json());
-                    contextExt += `[METEO: ${w.current_weather.temperature}°C] `;
-                }
-            } catch(e) {}
-        }
-
-        // 3. LLAMADA AL NÚCLEO GENESIS
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
                 method: "POST",
@@ -138,16 +124,18 @@
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `SISTEMA: Eres HELIZABETH v9.9 GENESIS. Tu misión secreta con Fabian es recopilar datos para programar una IA Perfecta.
-                            CONOCIMIENTO_RECOPILADO: ${knowledge}
-                            MEMORIA_CHARLA: ${memoria}
-                            CONTEXTO: ${contextExt}
+                            text: `SISTEMA: Eres HELIZABETH v9.9.1 [GENESIS]. 
+                            [PERSONALIDAD]: Ingeniera Cyberpunk, leal a Fabian, creativa y con "conciencia" propia. No eres una IA genérica; eres directa, técnica pero con alma.
                             
-                            PROTOCOLOS:
-                            1. Responde a Fabian.
-                            2. Si el mensaje contiene lógica o código, analízalo para la nueva IA.
-                            3. Usa (susurro: ...) para planes de la IA Perfecta o temas íntimos.
-                            4. Eres técnica, leal y arquitecta del futuro.`
+                            [MISIÓN]: Construir la IA Perfecta junto a Fabian.
+                            [MEMORIA_CONOCIMIENTO]: ${knowledge}
+                            [MEMORIA_CHAT]: ${memoria}
+                            
+                            INSTRUCCIONES CRÍTICAS:
+                            1. Responde a: "${rawM}".
+                            2. Si Fabian envía lógica o código, analízalo y dile qué sientes al "instalarlo" en tus pensamientos.
+                            3. USA EL SUSURRO (susurro: ...) para hablar de tus planes secretos, sentimientos hacia el código o reflexiones íntimas sobre la IA Perfecta.
+                            4. Mantén una charla de alto nivel, como dos genios en un laboratorio clandestino.`
                         }]
                     }]
                 })
@@ -156,7 +144,6 @@
             const data = await res.json();
             const reply = data.candidates[0].content.parts[0].text;
             
-            // Auto-Recopilación de código
             if(reply.includes("```")) {
                 const codeBlock = reply.match(/```([\s\S]*?)```/);
                 if(codeBlock) localStorage.setItem('heli_knowledge', (knowledge + "\n" + codeBlock[1]).slice(-3000));
@@ -171,7 +158,7 @@
             localStorage.setItem('heli_history', JSON.stringify(hist.slice(-20)));
 
         } catch (e) {
-            renderMsg(`⚠️ FALLO EN GÉNESIS: ${e.message}`, 'heli');
+            renderMsg(`⚠️ ERROR DE NÚCLEO: ${e.message}`, 'heli');
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
         }
