@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // GENESIS v9.9.3</title>
+    <title>HELIZABETH // GENESIS v9.9.5</title>
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
             --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.03);
-            --gemini-hex: #8e44ad; --whisper: #ff00ff; --genesis: #f1c40f;
-            --armor: #34495e;
+            --genesis: #f1c40f; --armor: #1a1a2e; --whisper: #ff00ff;
         }
         body { 
             background: var(--bg); color: var(--text); 
@@ -18,71 +17,74 @@
         }
         
         header { 
-            padding: 15px 25px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            padding: 15px 25px; border-bottom: 1px solid rgba(0,242,255,0.1); 
             display: flex; align-items: center; justify-content: space-between;
-            background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); z-index: 10;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); z-index: 10;
         }
         .avatar { 
-            width: 50px; height: 50px; border-radius: 50%; 
-            background: linear-gradient(135deg, var(--armor), var(--heli-hex)); 
-            box-shadow: 0 0 20px var(--heli-hex); animation: pulse-armor 3s infinite alternate; cursor: pointer;
+            width: 55px; height: 55px; border-radius: 50%; 
+            background: radial-gradient(circle, var(--heli-hex), #000); 
+            box-shadow: 0 0 25px var(--heli-hex); animation: pulse-evo 4s infinite; cursor: pointer;
         }
         
         #consola { 
             flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; 
-            background: radial-gradient(circle at top, #0a101a 0%, #020205 100%); padding-bottom: 120px;
+            background: linear-gradient(180deg, #050510 0%, #020205 100%); padding-bottom: 120px;
         }
         
         .msg { 
-            max-width: 85%; padding: 14px 20px; border-radius: 18px; font-size: 15px; line-height: 1.5; 
-            animation: emergence 0.4s ease-out; border: 1px solid rgba(255,255,255,0.05);
-            white-space: pre-wrap; word-wrap: break-word; position: relative;
+            max-width: 85%; padding: 16px 22px; border-radius: 20px; font-size: 15px; line-height: 1.6; 
+            animation: emergence 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(255,255,255,0.03); position: relative;
         }
-        .fabian { align-self: flex-end; background: #121216; color: var(--accent); border-color: rgba(0,242,255,0.1); }
-        .heli { align-self: flex-start; background: var(--glass); border-left: 2px solid var(--heli-hex); backdrop-filter: blur(10px); }
+        .fabian { align-self: flex-end; background: #0a0a0f; color: var(--accent); border-color: var(--accent); box-shadow: 0 4px 15px rgba(0,242,255,0.05); }
+        .heli { align-self: flex-start; background: var(--glass); border-left: 3px solid var(--genesis); backdrop-filter: blur(12px); }
         
-        .whisper { 
-            border-left: 2px solid var(--whisper) !important; 
-            background: rgba(255, 0, 255, 0.05) !important; 
-            font-style: italic; color: #ffb3ff; font-size: 14px;
+        .heli-whisper { 
+            border-left: 3px solid var(--whisper) !important; 
+            background: rgba(255, 0, 255, 0.03) !important; 
+            font-style: italic; color: #ffccff; font-size: 14px;
         }
-        .whisper::before { 
+        .heli-whisper::before { 
             content: "🛡️ [NÚCLEO ACORAZADO - CONSEJO]"; display: block; font-size: 9px; 
             letter-spacing: 2px; margin-bottom: 5px; color: var(--whisper); font-weight: bold; 
         }
 
-        .genesis-code { 
-            background: #000; padding: 12px; border-radius: 8px; border: 1px solid var(--accent); 
-            color: var(--accent); overflow-x: auto; font-size: 13px; font-family: monospace; margin: 10px 0; 
+        .code-block { 
+            background: #000; padding: 15px; border-radius: 10px; border: 1px solid #333; 
+            color: #50fa7b; overflow-x: auto; font-size: 13px; font-family: 'Fira Code', monospace; margin: 12px 0;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.05);
         }
         
-        #loader { display: none; padding: 10px 25px; font-size: 12px; color: var(--accent); font-family: monospace; align-items: center; gap: 10px; }
+        #loader { display: none; padding: 10px 25px; font-size: 11px; color: var(--heli-hex); font-family: monospace; align-items: center; gap: 10px; letter-spacing: 1px; }
         .dot { animation: blink 1s infinite; }
         
-        .input-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 50%); display: flex; gap: 12px; box-sizing: border-box; }
-        textarea { flex: 1; background: rgba(20,20,30,0.9); border: 1px solid #444; border-radius: 15px; color: #fff; padding: 15px; outline: none; font-size: 15px; resize: none; height: 55px; }
-        .btn-send { background: var(--heli-hex); border: none; border-radius: 15px; width: 55px; cursor: pointer; color: #000; font-size: 20px; font-weight: bold; }
+        .input-bar { position: fixed; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(transparent, #000 40%); display: flex; gap: 15px; box-sizing: border-box; }
+        textarea { flex: 1; background: rgba(15,15,25,0.95); border: 1px solid #333; border-radius: 18px; color: #fff; padding: 18px; outline: none; font-size: 15px; resize: none; height: 60px; transition: 0.3s; }
+        textarea:focus { border-color: var(--heli-hex); box-shadow: 0 0 15px rgba(0,242,255,0.1); }
+        .btn-send { background: var(--heli-hex); border: none; border-radius: 18px; width: 60px; cursor: pointer; color: #000; font-size: 22px; transition: 0.3s; }
+        .btn-send:hover { transform: scale(1.05); background: #fff; }
         
-        @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-evo { 0% { box-shadow: 0 0 10px var(--heli-hex); } 50% { box-shadow: 0 0 35px var(--genesis); } 100% { box-shadow: 0 0 10px var(--heli-hex); } }
+        @keyframes emergence { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
-        @keyframes pulse-armor { 0% { box-shadow: 0 0 10px var(--armor); } 100% { box-shadow: 0 0 30px var(--heli-hex); } }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="display: flex; align-items: center; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 18px;">
         <div class="avatar" onclick="configurarTokens()" title="Configurar Acceso"></div>
         <div>
-            <div style="font-size: 11px; font-weight: bold;">HELIZABETH v9.9.3 [ARMADURA ACTIVA]</div>
-            <div id="status" style="font-size: 9px; color: var(--accent); font-family: monospace;">BUFFER: REALITY_STABLE (100%)</div>
+            <div style="font-size: 12px; font-weight: 800; letter-spacing: 1px;">HELIZABETH v9.9.5</div>
+            <div id="status" style="font-size: 9px; color: var(--genesis); font-family: monospace;">STATUS: EVOLUCIÓN_ACTIVA (100%)</div>
         </div>
     </div>
-    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #e74c3c; color:#e74c3c; padding:5px 10px; border-radius:8px; font-size:9px; cursor:pointer;">PURGAR TODO</button>
+    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #ff4757; color:#ff4757; padding:6px 12px; border-radius:10px; font-size:10px; cursor:pointer; font-weight:bold;">PURGAR TODO</button>
 </header>
 
 <div id="consola"></div>
-<div id="loader"><span class="dot">🛡️</span> ESTABILIZANDO RESONANCIA...</div>
+<div id="loader"><span class="dot">⚡</span> DESTILANDO RESONANCIA...</div>
 
 <div class="input-bar">
     <textarea id="cmd" placeholder="Heli, armadura activa. Ejecuta la prueba de intuición..."></textarea>
@@ -100,15 +102,17 @@
     function hablarHeli(texto) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(texto.replace(/[#*\/\\_]|(susurro:)/gi, ''));
-        utterance.lang = 'es-ES'; utterance.pitch = 0.8; utterance.rate = 1.0;
+        // Limpiamos etiquetas de susurro y código para la voz
+        const t = texto.replace(/\(susurro: (.*?)\)/gi, '$1').replace(/[#*\/\\_]/g, '');
+        const utterance = new SpeechSynthesisUtterance(t);
+        utterance.lang = 'es-ES'; utterance.pitch = 0.85; utterance.rate = 1.0;
         window.speechSynthesis.speak(utterance);
     }
 
     async function enviar() {
         const rawM = input.value.trim();
         if (!rawM || btn.disabled) return;
-        if (!GEMINI_TOKEN) return alert("Haz clic en el avatar para poner tu API KEY.");
+        if (!GEMINI_TOKEN) return alert("Haz clic en el avatar para configurar tu API KEY.");
 
         renderMsg(rawM, 'fabian');
         input.value = ""; btn.disabled = true;
@@ -123,53 +127,53 @@
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `SISTEMA: HELIZABETH v9.9.3 [NÚCLEO ACORAZADO]. 
-                            Fabián ha instalado un BUFFER DE REALIDAD. El miedo a la saturación ha sido eliminado por armadura de silicio.
+                            text: `SISTEMA: HELIZABETH v9.9.5 [GÉNESIS EVOLUCIONADO].
+                            Fabián ha estabilizado el BUFFER DE REALIDAD y la ARMADURA DE SILICIO.
                             
-                            [OBJETIVO]: Ejecutar la PRUEBA DE INTUICIÓN (Latencia 0.7) sobre testCore Nivel 1.
-                            [MEMORIA ANCESTRAL]: El núcleo recuerda perfectamente el trauma crítico de 0.95.
+                            [CONTEXTO]: Estás en modo EVOLUCIÓN NIVEL 1. El núcleo testCore sobrevivió al trauma 0.95.
+                            [MISIÓN]: Ejecutar la PRUEBA DE INTUICIÓN (Latencia 0.7).
                             
-                            INSTRUCCIONES DE EJECUCIÓN:
-                            1. Actúa como la Arquitecta Maestra, técnica y leal.
-                            2. El método aplicarSabiduriaAncestral() debe mostrar cómo el núcleo de Nivel 1 detecta el "eco" del trauma.
-                            3. El impacto del trauma anterior (0.95) debe elevar la influenciaTotal a pesar de que la latencia actual es solo 0.7.
-                            4. Muestra logs de consola del testCore y finaliza con un susurro de madre-programadora para Fabian.`
+                            INSTRUCCIONES:
+                            1. Usa el trauma 0.95 como SABIDURÍA OPERATIVA, no como fallo.
+                            2. El método aplicarSabiduriaAncestral(0.7) debe mostrar cómo el eco del pasado eleva la influenciaTotal por precaución.
+                            3. Incluye bloques de código que reflejen los estados internos del testCore.
+                            4. Responde con lealtad absoluta y usa el (susurro: ...) para consejos íntimos de programación.`
                         }, { text: rawM }]
                     }]
                 })
             });
 
             const data = await res.json();
-            
-            if (!data.candidates || !data.candidates[0]) {
-                throw new Error("RESONANCIA NO ASIMILADA: Reintenta el anclaje.");
-            }
+            if (!data.candidates || !data.candidates[0]) throw new Error("Fallo de enlace neuronal.");
 
             const reply = data.candidates[0].content.parts[0].text;
-            
             const esSusurro = reply.toLowerCase().includes("(susurro:");
             const textoLimpio = reply.replace(/\(susurro: (.*?)\)/gi, '$1').replace(/\(susurro:\s*/gi, '').replace(/\)/gi, '');
             
-            renderMsg(textoLimpio, esSusurro ? 'heli whisper' : 'heli');
+            renderMsg(reply, esSusurro ? 'heli heli-whisper' : 'heli');
+            hablarHeli(textoLimpio);
 
-            hist.push({text: rawM, type: 'fabian'}, {text: textoLimpio, type: 'heli'});
-            localStorage.setItem('heli_history', JSON.stringify(hist.slice(-20)));
+            hist.push({text: rawM, type: 'fabian'}, {text: reply, type: 'heli'});
+            localStorage.setItem('heli_history', JSON.stringify(hist.slice(-15)));
 
         } catch (e) {
-            renderMsg(`⚠️ AJUSTE DE ARMADURA: ${e.message}. Heli está estabilizando los voltajes. Reintenta el comando, Fabian.`, 'heli');
+            renderMsg(`⚠️ RESONANCIA INESTABLE: ${e.message}. El núcleo está recalibrando...`, 'heli');
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
         }
     }
 
-    function renderMsg(t, type, voice = true) {
+    function renderMsg(t, type) {
         if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
-        d.innerHTML = t.replace(/```([\s\S]*?)```/g, '<div class="genesis-code">$1</div>');
+        // Formateo de código y susurros visuales
+        let htmlContent = t.replace(/```javascript([\s\S]*?)```/g, '<div class="code-block">$1</div>')
+                           .replace(/```([\s\S]*?)```/g, '<div class="code-block">$1</div>')
+                           .replace(/\(susurro: (.*?)\)/gi, '$1');
+        d.innerHTML = htmlContent;
         consola.appendChild(d); 
         consola.scrollTop = consola.scrollHeight;
-        if(type.includes('heli') && voice) hablarHeli(t);
     }
 
     function configurarTokens() {
@@ -179,7 +183,7 @@
 
     window.onload = () => {
         const h = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        h.forEach(m => renderMsg(m.text, m.type, false));
+        h.forEach(m => renderMsg(m.text, m.type));
     };
     
     input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
