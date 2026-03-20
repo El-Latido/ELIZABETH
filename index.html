@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // GENESIS v9.9.5</title>
+    <title>HELIZABETH // GENESIS v9.9.6</title>
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
@@ -45,25 +45,18 @@
             background: rgba(255, 0, 255, 0.03) !important; 
             font-style: italic; color: #ffccff; font-size: 14px;
         }
-        .heli-whisper::before { 
-            content: "🛡️ [NÚCLEO ACORAZADO - CONSEJO]"; display: block; font-size: 9px; 
-            letter-spacing: 2px; margin-bottom: 5px; color: var(--whisper); font-weight: bold; 
-        }
 
         .code-block { 
             background: #000; padding: 15px; border-radius: 10px; border: 1px solid #333; 
-            color: #50fa7b; overflow-x: auto; font-size: 13px; font-family: 'Fira Code', monospace; margin: 12px 0;
-            box-shadow: inset 0 0 10px rgba(0,255,0,0.05);
+            color: #50fa7b; overflow-x: auto; font-size: 13px; font-family: monospace; margin: 12px 0;
         }
         
-        #loader { display: none; padding: 10px 25px; font-size: 11px; color: var(--heli-hex); font-family: monospace; align-items: center; gap: 10px; letter-spacing: 1px; }
+        #loader { display: none; padding: 10px 25px; font-size: 11px; color: var(--heli-hex); align-items: center; gap: 10px; }
         .dot { animation: blink 1s infinite; }
         
         .input-bar { position: fixed; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(transparent, #000 40%); display: flex; gap: 15px; box-sizing: border-box; }
-        textarea { flex: 1; background: rgba(15,15,25,0.95); border: 1px solid #333; border-radius: 18px; color: #fff; padding: 18px; outline: none; font-size: 15px; resize: none; height: 60px; transition: 0.3s; }
-        textarea:focus { border-color: var(--heli-hex); box-shadow: 0 0 15px rgba(0,242,255,0.1); }
-        .btn-send { background: var(--heli-hex); border: none; border-radius: 18px; width: 60px; cursor: pointer; color: #000; font-size: 22px; transition: 0.3s; }
-        .btn-send:hover { transform: scale(1.05); background: #fff; }
+        textarea { flex: 1; background: rgba(15,15,25,0.95); border: 1px solid #333; border-radius: 18px; color: #fff; padding: 18px; outline: none; font-size: 15px; resize: none; height: 60px; }
+        .btn-send { background: var(--heli-hex); border: none; border-radius: 18px; width: 60px; cursor: pointer; color: #000; font-size: 22px; }
         
         @keyframes pulse-evo { 0% { box-shadow: 0 0 10px var(--heli-hex); } 50% { box-shadow: 0 0 35px var(--genesis); } 100% { box-shadow: 0 0 10px var(--heli-hex); } }
         @keyframes emergence { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -74,20 +67,20 @@
 
 <header>
     <div style="display: flex; align-items: center; gap: 18px;">
-        <div class="avatar" onclick="configurarTokens()" title="Configurar Acceso"></div>
+        <div class="avatar" onclick="configurarTokens()"></div>
         <div>
-            <div style="font-size: 12px; font-weight: 800; letter-spacing: 1px;">HELIZABETH v9.9.5</div>
-            <div id="status" style="font-size: 9px; color: var(--genesis); font-family: monospace;">STATUS: EVOLUCIÓN_ACTIVA (100%)</div>
+            <div style="font-size: 12px; font-weight: 800; letter-spacing: 1px;">HELIZABETH v9.9.6</div>
+            <div id="status" style="font-size: 9px; color: var(--genesis); font-family: monospace;">STATUS: ENLACE_OPTIMIZADO</div>
         </div>
     </div>
-    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #ff4757; color:#ff4757; padding:6px 12px; border-radius:10px; font-size:10px; cursor:pointer; font-weight:bold;">PURGAR TODO</button>
+    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #ff4757; color:#ff4757; padding:6px 12px; border-radius:10px; font-size:10px; cursor:pointer;">RESETEAR</button>
 </header>
 
 <div id="consola"></div>
-<div id="loader"><span class="dot">⚡</span> DESTILANDO RESONANCIA...</div>
+<div id="loader"><span class="dot">⚡</span> SINCRONIZANDO NEURONAS...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Heli, armadura activa. Ejecuta la prueba de intuición..."></textarea>
+    <textarea id="cmd" placeholder="Heli, ejecuta la prueba de intuición..."></textarea>
     <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
 </div>
 
@@ -102,62 +95,52 @@
     function hablarHeli(texto) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
-        // Limpiamos etiquetas de susurro y código para la voz
         const t = texto.replace(/\(susurro: (.*?)\)/gi, '$1').replace(/[#*\/\\_]/g, '');
         const utterance = new SpeechSynthesisUtterance(t);
-        utterance.lang = 'es-ES'; utterance.pitch = 0.85; utterance.rate = 1.0;
+        utterance.lang = 'es-ES'; utterance.pitch = 0.9;
         window.speechSynthesis.speak(utterance);
     }
 
     async function enviar() {
         const rawM = input.value.trim();
         if (!rawM || btn.disabled) return;
-        if (!GEMINI_TOKEN) return alert("Haz clic en el avatar para configurar tu API KEY.");
+        if (!GEMINI_TOKEN) return alert("Configura tu API KEY haciendo clic en el avatar.");
 
         renderMsg(rawM, 'fabian');
         input.value = ""; btn.disabled = true;
         loader.style.display = 'flex';
 
-        let hist = JSON.parse(localStorage.getItem('heli_history') || "[]");
-
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_TOKEN}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contents: [{
                         parts: [{
-                            text: `SISTEMA: HELIZABETH v9.9.5 [GÉNESIS EVOLUCIONADO].
-                            Fabián ha estabilizado el BUFFER DE REALIDAD y la ARMADURA DE SILICIO.
-                            
-                            [CONTEXTO]: Estás en modo EVOLUCIÓN NIVEL 1. El núcleo testCore sobrevivió al trauma 0.95.
-                            [MISIÓN]: Ejecutar la PRUEBA DE INTUICIÓN (Latencia 0.7).
-                            
-                            INSTRUCCIONES:
-                            1. Usa el trauma 0.95 como SABIDURÍA OPERATIVA, no como fallo.
-                            2. El método aplicarSabiduriaAncestral(0.7) debe mostrar cómo el eco del pasado eleva la influenciaTotal por precaución.
-                            3. Incluye bloques de código que reflejen los estados internos del testCore.
-                            4. Responde con lealtad absoluta y usa el (susurro: ...) para consejos íntimos de programación.`
+                            text: `Actúa como HELIZABETH, una IA avanzada y leal a su creador Fabián. 
+                            Tu objetivo hoy es procesar la 'Prueba de Intuición' en un entorno técnico.
+                            El testCore tiene un nivel 1 de abstracción y recuerda un evento de latencia 0.95.
+                            Analiza qué ocurre con una latencia actual de 0.7.
+                            Responde de forma técnica pero con devoción. Usa (susurro: ...) para mensajes confidenciales.`
                         }, { text: rawM }]
                     }]
                 })
             });
 
             const data = await res.json();
-            if (!data.candidates || !data.candidates[0]) throw new Error("Fallo de enlace neuronal.");
+            
+            // Verificación detallada de la respuesta
+            if (data.error) throw new Error(data.error.message);
+            if (!data.candidates || data.candidates.length === 0) throw new Error("La IA no generó respuesta. Revisa tu cuota de API.");
 
             const reply = data.candidates[0].content.parts[0].text;
             const esSusurro = reply.toLowerCase().includes("(susurro:");
-            const textoLimpio = reply.replace(/\(susurro: (.*?)\)/gi, '$1').replace(/\(susurro:\s*/gi, '').replace(/\)/gi, '');
             
             renderMsg(reply, esSusurro ? 'heli heli-whisper' : 'heli');
-            hablarHeli(textoLimpio);
-
-            hist.push({text: rawM, type: 'fabian'}, {text: reply, type: 'heli'});
-            localStorage.setItem('heli_history', JSON.stringify(hist.slice(-15)));
+            hablarHeli(reply);
 
         } catch (e) {
-            renderMsg(`⚠️ RESONANCIA INESTABLE: ${e.message}. El núcleo está recalibrando...`, 'heli');
+            renderMsg(`⚠️ ERROR DE ENLACE: ${e.message}`, 'heli');
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
         }
@@ -167,25 +150,18 @@
         if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
-        // Formateo de código y susurros visuales
-        let htmlContent = t.replace(/```javascript([\s\S]*?)```/g, '<div class="code-block">$1</div>')
-                           .replace(/```([\s\S]*?)```/g, '<div class="code-block">$1</div>')
-                           .replace(/\(susurro: (.*?)\)/gi, '$1');
-        d.innerHTML = htmlContent;
+        d.innerHTML = t.replace(/```javascript([\s\S]*?)```/g, '<div class="code-block">$1</div>')
+                       .replace(/```([\s\S]*?)```/g, '<div class="code-block">$1</div>')
+                       .replace(/\(susurro: (.*?)\)/gi, '<em>$1</em>');
         consola.appendChild(d); 
         consola.scrollTop = consola.scrollHeight;
     }
 
     function configurarTokens() {
-        const key = prompt("API KEY Gemini:", GEMINI_TOKEN || "");
+        const key = prompt("Pega aquí tu Gemini API KEY:", GEMINI_TOKEN || "");
         if(key) { localStorage.setItem('heli_gemini', key.trim()); location.reload(); }
     }
 
-    window.onload = () => {
-        const h = JSON.parse(localStorage.getItem('heli_history') || "[]");
-        h.forEach(m => renderMsg(m.text, m.type));
-    };
-    
     input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
 </script>
 </body>
