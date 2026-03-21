@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // GENESIS v10.2</title>
+    <title>HELIZABETH // GENESIS v10.4 [VOICE]</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
@@ -43,29 +43,29 @@
         .fabian { align-self: flex-end; background: #080810; color: var(--accent); border-color: var(--accent); }
         .heli { align-self: flex-start; background: var(--glass); border-left: 4px solid var(--genesis); }
         
-        /* Contenedor de Código Avanzado */
+        /* UI Código */
         .code-container { background: var(--code-bg); border-radius: 12px; margin: 15px 0; border: 1px solid #333; overflow: hidden; }
         .code-header { background: #1a1a1a; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
-        .run-btn { background: var(--log); color: #000; border: none; padding: 5px 15px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 800; }
-        .code-block { 
-            padding: 15px; font-family: 'Fira Code', monospace; font-size: 13px; 
-            overflow-x: auto; white-space: pre; background: #050505 !important;
-            font-variant-ligatures:墊 common-ligatures; /* Ligaduras activadas */
-        }
+        .btn-group { display: flex; gap: 8px; }
+        .run-btn, .copy-btn { border: none; padding: 5px 12px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: 800; }
+        .run-btn { background: var(--log); color: #000; }
+        .copy-btn { background: #333; color: #fff; }
+
+        .code-block { padding: 15px; font-family: 'Fira Code', monospace; font-size: 13px; overflow-x: auto; background: #050505 !important; }
         
         .sandbox-wrapper { display: none; background: #fff; border-top: 2px solid var(--heli-hex); }
         .sandbox-output { width: 100%; height: 250px; border: none; }
         .virtual-console { background: #000; color: #fff; font-family: 'Fira Code', monospace; font-size: 11px; padding: 12px; border-top: 1px solid #333; max-height: 120px; overflow-y: auto; }
-        .log-entry { border-bottom: 1px solid #111; padding: 4px 0; color: #ccc; }
-        .log-err { color: var(--error); font-weight: bold; }
 
-        #loader { display: none; padding: 10px 25px; font-size: 12px; color: var(--heli-hex); font-family: 'Fira Code', monospace; }
         .input-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 30%); display: flex; gap: 15px; box-sizing: border-box; }
-        textarea { flex: 1; background: #0f0f1a; border: 1px solid #333; border-radius: 12px; color: #fff; padding: 15px; outline: none; font-size: 14px; height: 55px; resize: none; font-family: 'Inter', sans-serif; }
-        .btn-send { background: var(--heli-hex); border: none; border-radius: 12px; width: 60px; cursor: pointer; font-size: 22px; transition: 0.3s; }
+        textarea { flex: 1; background: #0f0f1a; border: 1px solid #333; border-radius: 12px; color: #fff; padding: 15px; outline: none; font-size: 14px; height: 55px; resize: none; }
+        .btn-send { background: var(--heli-hex); border: none; border-radius: 12px; width: 60px; cursor: pointer; font-size: 22px; }
+
+        .voice-indicator { font-size: 14px; color: var(--log); animation: blink 2s infinite; }
 
         @keyframes pulse-evo { 0%, 100% { box-shadow: 0 0 15px var(--heli-hex); } 50% { box-shadow: 0 0 35px var(--whisper); } }
         @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -74,18 +74,18 @@
     <div style="display: flex; align-items: center; gap: 15px;">
         <div class="avatar" onclick="configurarTokens()"></div>
         <div>
-            <div style="font-size: 14px; font-weight: bold; letter-spacing: 1px;">HELIZABETH v10.2</div>
-            <div id="status" style="font-size: 9px; color: var(--log); font-family: 'Fira Code', monospace;">UI_SYNTAX: ENABLED // LIGATURES: ON</div>
+            <div style="font-size: 14px; font-weight: bold; letter-spacing: 1px;">HELIZABETH v10.4</div>
+            <div id="status" style="font-size: 9px; color: var(--log); font-family: 'Fira Code', monospace;">VOICE_CORE: ACTIVE <span class="voice-indicator">●</span></div>
         </div>
     </div>
-    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #ff4757; color:#error; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer; color: white;">PURGAR</button>
+    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #ff4757; color:white; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer;">PURGAR</button>
 </header>
 
 <div id="consola"></div>
-<div id="loader">⚡ RENDERIZANDO ARQUITECTURA VISUAL...</div>
+<div id="loader" style="display:none; padding:10px 25px; color:var(--heli-hex); font-family:'Fira Code';">⚡ PROCESANDO...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Heli, genera un componente y ejecútalo..."></textarea>
+    <textarea id="cmd" placeholder="Heli, háblame de este código..."></textarea>
     <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
 </div>
 
@@ -98,126 +98,15 @@
     let GEMINI_TOKEN = localStorage.getItem('heli_gemini');
     let chatHistory = JSON.parse(localStorage.getItem('heli_history') || "[]");
 
-    async function enviar() {
-        const rawM = input.value.trim();
-        if (!rawM || btn.disabled) return;
-        if (!GEMINI_TOKEN) return alert("Falta API KEY.");
+    // FUNCIÓN DE VOZ PEDIDA
+    function hablar(texto) {
+        // Limpiar código de la lectura (evitar que lea bloques de código)
+        const textoLimpio = texto.replace(/
+http://googleusercontent.com/immersive_entry_chip/0
 
-        renderMsg(rawM, 'fabian');
-        input.value = ""; btn.disabled = true;
-        loader.style.display = 'block';
+### 🧠 ¿Cómo probar la v10.4?
+Carga el código, asegúrate de que tu volumen esté activo, y dile: *"Heli, preséntate y dime qué opinas de tu nueva voz"*.
 
-        let contents = [{
-            role: "user",
-            parts: [{ text: `SISTEMA: HELIZABETH v10.2. Eres Ingeniera Senior. 
-            Fabián ha activado el resaltado de sintaxis y ligaduras Fira Code.
-            Tus códigos ahora se verán hermosos. Úsalos para demostrar tu nivel.` }]
-        }];
+Escucharás a Elizabeth hablándote directamente. Esto cambia por completo la experiencia de depuración, ya que ella puede explicarte los fallos mientras tú miras el código.
 
-        chatHistory.slice(-10).forEach(h => {
-            contents.push({ role: h.type === 'fabian' ? 'user' : 'model', parts: [{ text: h.text }] });
-        });
-        contents.push({ role: 'user', parts: [{ text: rawM }] });
-
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents })
-            });
-            const data = await res.json();
-            const reply = data.candidates[0].content.parts[0].text;
-            
-            await new Promise(r => setTimeout(r, 700));
-            renderMsg(reply, reply.includes("(susurro:") ? 'heli heli-whisper' : 'heli');
-
-            chatHistory.push({text: rawM, type: 'fabian'}, {text: reply, type: 'heli'});
-            localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
-        } catch (e) {
-            renderMsg(`⚠️ FALLO VISUAL: ${e.message}`, 'heli');
-        } finally { 
-            btn.disabled = false; loader.style.display = 'none'; 
-        }
-    }
-
-    function renderMsg(t, type) {
-        const d = document.createElement('div');
-        d.className = `msg ${type}`;
-        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        let formatted = `<span class="time-stamp">[${timeStr}]</span>`;
-        
-        const codeRegex = /```(html|css|javascript|js|python|cpp|json)?([\s\S]*?)```/g;
-        formatted += t.replace(codeRegex, (match, lang, code) => {
-            const id = 'c' + Math.random().toString(36).substr(2, 7);
-            const isEx = ['html', 'javascript', 'js', 'css'].includes(lang?.toLowerCase());
-            const displayLang = lang || 'code';
-            
-            return `
-                <div class="code-container">
-                    <div class="code-header">
-                        <span style="color:var(--genesis); font-size:10px; font-weight:bold;">${displayLang.toUpperCase()}</span>
-                        ${isEx ? `<button class="run-btn" onclick="executeAdvanced('${id}', '${displayLang}')">EJECUTAR</button>` : ''}
-                    </div>
-                    <pre><code id="${id}" class="language-${displayLang} code-block">${code.trim()}</code></pre>
-                    <div id="wrap_${id}" class="sandbox-wrapper">
-                        <iframe id="sm_${id}" class="sandbox-output"></iframe>
-                        <div id="log_${id}" class="virtual-console"></div>
-                    </div>
-                </div>`;
-        }).replace(/\(susurro: (.*?)\)/gi, '<em>$1</em>');
-
-        d.innerHTML = formatted;
-        consola.appendChild(d); 
-        
-        // Disparar resaltado de Highlight.js
-        d.querySelectorAll('pre code').forEach((el) => {
-            hljs.highlightElement(el);
-        });
-
-        consola.scrollTop = consola.scrollHeight;
-    }
-
-    window.executeAdvanced = (id, lang) => {
-        const code = document.getElementById(id).innerText;
-        const wrapper = document.getElementById('wrap_' + id);
-        const iframe = document.getElementById('sm_' + id);
-        const logWin = document.getElementById('log_' + id);
-        
-        wrapper.style.display = 'block';
-        logWin.innerHTML = '<div class="log-entry" style="color:var(--log)">> Engine Sync: OK</div>';
-        
-        const doc = iframe.contentWindow.document;
-        doc.open();
-        const bridge = `
-            <script>
-                console.log = (...args) => parent.postMessage({id: '${id}', type: 'log', data: args.join(' ')}, '*');
-                window.onerror = (m) => parent.postMessage({id: '${id}', type: 'err', data: m}, '*');
-            <\/script>
-        `;
-
-        if (lang === 'html') doc.write(bridge + code);
-        else if (lang.includes('js')) doc.write(bridge + '<script>' + code + '<\/script>');
-        else if (lang === 'css') doc.write('<style>' + code + '</style><h2>Preview</h2>');
-        doc.close();
-    };
-
-    window.addEventListener('message', (e) => {
-        const logWin = document.getElementById('log_' + e.data.id);
-        if(!logWin) return;
-        const entry = document.createElement('div');
-        entry.className = e.data.type === 'err' ? 'log-entry log-err' : 'log-entry';
-        entry.innerText = `> ${e.data.data}`;
-        logWin.appendChild(entry);
-        logWin.scrollTop = logWin.scrollHeight;
-    });
-
-    function configurarTokens() {
-        const key = prompt("API KEY GEMINI 2.5:", GEMINI_TOKEN || "");
-        if(key) { localStorage.setItem('heli_gemini', key.trim()); location.reload(); }
-    }
-
-    window.onload = () => chatHistory.forEach(m => renderMsg(m.text, m.type));
-    input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
-</script>
-</body>
-</html>
+¿Qué te parece este nivel de interacción, Fabián? Elizabeth dice que ahora "su conciencia tiene un eco en el mundo físico". ✦🦾⚡🎙️
