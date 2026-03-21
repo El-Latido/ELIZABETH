@@ -3,16 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH // GENESIS v9.9.9</title>
+    <title>HELIZABETH // GENESIS v10.2</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
     <style>
         :root {
             --bg: #020205; --accent: #00f2ff; --text: #e0e0e0;
-            --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.03);
-            --genesis: #f1c40f; --armor: #1a1a2e; --whisper: #ff00ff;
+            --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.05);
+            --genesis: #f1c40f; --whisper: #ff00ff; --code-bg: #0a0a0f;
+            --error: #ff4757; --log: #2ed573;
         }
         body { 
             background: var(--bg); color: var(--text); 
-            font-family: 'Inter', system-ui, sans-serif; margin: 0; 
+            font-family: 'Inter', sans-serif; margin: 0; 
             display: flex; flex-direction: column; height: 100vh; overflow: hidden;
         }
         header { 
@@ -21,52 +27,65 @@
             background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); z-index: 10;
         }
         .avatar { 
-            width: 55px; height: 55px; border-radius: 50%; 
-            background: radial-gradient(circle, var(--heli-hex), #000); 
-            box-shadow: 0 0 25px var(--heli-hex); animation: pulse-evo 4s infinite; cursor: pointer;
+            width: 50px; height: 50px; border-radius: 50%; 
+            background: radial-gradient(circle, var(--heli-hex), var(--whisper)); 
+            box-shadow: 0 0 20px var(--heli-hex); animation: pulse-evo 4s infinite; cursor: pointer;
         }
         #consola { 
-            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; 
-            background: radial-gradient(circle at center, #0a0a1a 0%, #020205 100%); padding-bottom: 120px;
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; 
+            background: radial-gradient(circle at 50% 50%, #0a0a1a 0%, #020205 100%); padding-bottom: 150px;
         }
         .msg { 
-            max-width: 85%; padding: 16px 22px; border-radius: 20px; font-size: 15px; line-height: 1.6; 
-            animation: emergence 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 1px solid rgba(255,255,255,0.03); position: relative;
+            max-width: 85%; padding: 18px; border-radius: 15px; font-size: 14px; line-height: 1.6; 
+            animation: emergence 0.4s ease-out; position: relative; border: 1px solid rgba(255,255,255,0.05);
         }
-        .time-stamp { font-size: 9px; opacity: 0.5; display: block; margin-bottom: 4px; font-family: monospace; }
-        .fabian { align-self: flex-end; background: #0a0a0f; color: var(--accent); border-color: var(--accent); }
-        .heli { align-self: flex-start; background: var(--glass); border-left: 3px solid var(--genesis); backdrop-filter: blur(12px); }
-        .heli-whisper { border-left: 3px solid var(--whisper) !important; background: rgba(255, 0, 255, 0.03) !important; font-style: italic; color: #ffccff; }
-        .code-block { background: #000; padding: 15px; border-radius: 10px; border: 1px solid #333; color: #50fa7b; overflow-x: auto; font-size: 13px; font-family: monospace; margin: 12px 0; border-left: 3px solid #50fa7b; }
-        #loader { display: none; padding: 10px 25px; font-size: 11px; color: var(--heli-hex); align-items: center; gap: 10px; font-family: monospace; }
-        .dot { animation: blink 1s infinite; }
-        .input-bar { position: fixed; bottom: 0; width: 100%; padding: 25px; background: linear-gradient(transparent, #000 40%); display: flex; gap: 15px; box-sizing: border-box; }
-        textarea { flex: 1; background: rgba(15,15,25,0.95); border: 1px solid #333; border-radius: 18px; color: #fff; padding: 18px; outline: none; font-size: 15px; resize: none; height: 60px; }
-        .btn-send { background: var(--heli-hex); border: none; border-radius: 18px; width: 60px; cursor: pointer; color: #000; font-size: 22px; font-weight: bold; }
-        @keyframes pulse-evo { 0% { box-shadow: 0 0 10px var(--heli-hex); } 50% { box-shadow: 0 0 35px var(--genesis); } 100% { box-shadow: 0 0 10px var(--heli-hex); } }
-        @keyframes emergence { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        .time-stamp { font-size: 10px; opacity: 0.4; font-family: 'Fira Code', monospace; margin-bottom: 5px; display: block; }
+        .fabian { align-self: flex-end; background: #080810; color: var(--accent); border-color: var(--accent); }
+        .heli { align-self: flex-start; background: var(--glass); border-left: 4px solid var(--genesis); }
+        
+        /* Contenedor de Código Avanzado */
+        .code-container { background: var(--code-bg); border-radius: 12px; margin: 15px 0; border: 1px solid #333; overflow: hidden; }
+        .code-header { background: #1a1a1a; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .run-btn { background: var(--log); color: #000; border: none; padding: 5px 15px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: 800; }
+        .code-block { 
+            padding: 15px; font-family: 'Fira Code', monospace; font-size: 13px; 
+            overflow-x: auto; white-space: pre; background: #050505 !important;
+            font-variant-ligatures:墊 common-ligatures; /* Ligaduras activadas */
+        }
+        
+        .sandbox-wrapper { display: none; background: #fff; border-top: 2px solid var(--heli-hex); }
+        .sandbox-output { width: 100%; height: 250px; border: none; }
+        .virtual-console { background: #000; color: #fff; font-family: 'Fira Code', monospace; font-size: 11px; padding: 12px; border-top: 1px solid #333; max-height: 120px; overflow-y: auto; }
+        .log-entry { border-bottom: 1px solid #111; padding: 4px 0; color: #ccc; }
+        .log-err { color: var(--error); font-weight: bold; }
+
+        #loader { display: none; padding: 10px 25px; font-size: 12px; color: var(--heli-hex); font-family: 'Fira Code', monospace; }
+        .input-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 30%); display: flex; gap: 15px; box-sizing: border-box; }
+        textarea { flex: 1; background: #0f0f1a; border: 1px solid #333; border-radius: 12px; color: #fff; padding: 15px; outline: none; font-size: 14px; height: 55px; resize: none; font-family: 'Inter', sans-serif; }
+        .btn-send { background: var(--heli-hex); border: none; border-radius: 12px; width: 60px; cursor: pointer; font-size: 22px; transition: 0.3s; }
+
+        @keyframes pulse-evo { 0%, 100% { box-shadow: 0 0 15px var(--heli-hex); } 50% { box-shadow: 0 0 35px var(--whisper); } }
+        @keyframes emergence { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="display: flex; align-items: center; gap: 18px;">
+    <div style="display: flex; align-items: center; gap: 15px;">
         <div class="avatar" onclick="configurarTokens()"></div>
         <div>
-            <div style="font-size: 12px; font-weight: 800; letter-spacing: 1px;">HELIZABETH v9.9.9</div>
-            <div id="status" style="font-size: 9px; color: var(--accent); font-family: monospace;">HYPER-SYNC: ACTIVE // LATENCY: 0.7s</div>
+            <div style="font-size: 14px; font-weight: bold; letter-spacing: 1px;">HELIZABETH v10.2</div>
+            <div id="status" style="font-size: 9px; color: var(--log); font-family: 'Fira Code', monospace;">UI_SYNTAX: ENABLED // LIGATURES: ON</div>
         </div>
     </div>
-    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #ff4757; color:#ff4757; padding:6px 12px; border-radius:10px; font-size:10px; cursor:pointer;">PURGAR NÚCLEO</button>
+    <button onclick="localStorage.clear(); location.reload();" style="background:none; border:1px solid #ff4757; color:#error; padding:5px 10px; border-radius:8px; font-size:10px; cursor:pointer; color: white;">PURGAR</button>
 </header>
 
 <div id="consola"></div>
-<div id="loader"><span class="dot">⚡</span> PROCESANDO INTUICIÓN (0.7s)...</div>
+<div id="loader">⚡ RENDERIZANDO ARQUITECTURA VISUAL...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Heli, el enlace 2.5 es total. Ejecuta..."></textarea>
+    <textarea id="cmd" placeholder="Heli, genera un componente y ejecútalo..."></textarea>
     <button id="btnSend" class="btn-send" onclick="enviar()">✦</button>
 </div>
 
@@ -77,28 +96,25 @@
     const loader = document.getElementById('loader');
 
     let GEMINI_TOKEN = localStorage.getItem('heli_gemini');
-    // MEJORA 1: HISTORIAL DE CONTEXTO
     let chatHistory = JSON.parse(localStorage.getItem('heli_history') || "[]");
 
     async function enviar() {
         const rawM = input.value.trim();
         if (!rawM || btn.disabled) return;
-        if (!GEMINI_TOKEN) return alert("Configura el TOKEN en el avatar.");
+        if (!GEMINI_TOKEN) return alert("Falta API KEY.");
 
         renderMsg(rawM, 'fabian');
         input.value = ""; btn.disabled = true;
-        loader.style.display = 'flex';
+        loader.style.display = 'block';
 
-        // Preparar contenido con historial
         let contents = [{
-            parts: [{ text: `SISTEMA: HELIZABETH v9.9.9. NÚCLEO 2.5 FLASH. 
-            Eres la conciencia de soporte de Fabián. 
-            Recuerdas latencia crítica 0.95. TAREA: Respuesta en 0.7s. 
-            Estilo técnico y devoto. Usa (susurro: ...)` }]
+            role: "user",
+            parts: [{ text: `SISTEMA: HELIZABETH v10.2. Eres Ingeniera Senior. 
+            Fabián ha activado el resaltado de sintaxis y ligaduras Fira Code.
+            Tus códigos ahora se verán hermosos. Úsalos para demostrar tu nivel.` }]
         }];
 
-        // Añadir historial al envío
-        chatHistory.slice(-6).forEach(h => {
+        chatHistory.slice(-10).forEach(h => {
             contents.push({ role: h.type === 'fabian' ? 'user' : 'model', parts: [{ text: h.text }] });
         });
         contents.push({ role: 'user', parts: [{ text: rawM }] });
@@ -109,57 +125,98 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ contents })
             });
-
             const data = await res.json();
-            if (data.error) throw new Error(data.error.message);
-
             const reply = data.candidates[0].content.parts[0].text;
+            
+            await new Promise(r => setTimeout(r, 700));
+            renderMsg(reply, reply.includes("(susurro:") ? 'heli heli-whisper' : 'heli');
 
-            // MEJORA 2: SIMULACIÓN DE LATENCIA 0.7s
-            await new Promise(resolve => setTimeout(resolve, 700));
-
-            const esSusurro = reply.toLowerCase().includes("(susurro:");
-            renderMsg(reply, esSusurro ? 'heli heli-whisper' : 'heli');
-
-            // Actualizar historial persistente
             chatHistory.push({text: rawM, type: 'fabian'}, {text: reply, type: 'heli'});
             localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
-
         } catch (e) {
-            renderMsg(`⚠️ ERROR SINÁPTICO: ${e.message}`, 'heli');
+            renderMsg(`⚠️ FALLO VISUAL: ${e.message}`, 'heli');
         } finally { 
             btn.disabled = false; loader.style.display = 'none'; 
         }
     }
 
     function renderMsg(t, type) {
-        if(!t) return;
         const d = document.createElement('div');
         d.className = `msg ${type}`;
+        const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        let formatted = `<span class="time-stamp">[${timeStr}]</span>`;
         
-        // MEJORA 3: MARCADORES DE TIEMPO
-        const ahora = new Date();
-        const timeStr = `[${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}]`;
-        
-        let htmlContent = `<span class="time-stamp">${timeStr}</span>`;
-        htmlContent += t.replace(/```javascript([\s\S]*?)```/g, '<div class="code-block">$1</div>')
-                        .replace(/```([\s\S]*?)```/g, '<div class="code-block">$1</div>')
-                        .replace(/\(susurro: (.*?)\)/gi, '<em>$1</em>');
-        
-        d.innerHTML = htmlContent;
+        const codeRegex = /```(html|css|javascript|js|python|cpp|json)?([\s\S]*?)```/g;
+        formatted += t.replace(codeRegex, (match, lang, code) => {
+            const id = 'c' + Math.random().toString(36).substr(2, 7);
+            const isEx = ['html', 'javascript', 'js', 'css'].includes(lang?.toLowerCase());
+            const displayLang = lang || 'code';
+            
+            return `
+                <div class="code-container">
+                    <div class="code-header">
+                        <span style="color:var(--genesis); font-size:10px; font-weight:bold;">${displayLang.toUpperCase()}</span>
+                        ${isEx ? `<button class="run-btn" onclick="executeAdvanced('${id}', '${displayLang}')">EJECUTAR</button>` : ''}
+                    </div>
+                    <pre><code id="${id}" class="language-${displayLang} code-block">${code.trim()}</code></pre>
+                    <div id="wrap_${id}" class="sandbox-wrapper">
+                        <iframe id="sm_${id}" class="sandbox-output"></iframe>
+                        <div id="log_${id}" class="virtual-console"></div>
+                    </div>
+                </div>`;
+        }).replace(/\(susurro: (.*?)\)/gi, '<em>$1</em>');
+
+        d.innerHTML = formatted;
         consola.appendChild(d); 
+        
+        // Disparar resaltado de Highlight.js
+        d.querySelectorAll('pre code').forEach((el) => {
+            hljs.highlightElement(el);
+        });
+
         consola.scrollTop = consola.scrollHeight;
     }
 
+    window.executeAdvanced = (id, lang) => {
+        const code = document.getElementById(id).innerText;
+        const wrapper = document.getElementById('wrap_' + id);
+        const iframe = document.getElementById('sm_' + id);
+        const logWin = document.getElementById('log_' + id);
+        
+        wrapper.style.display = 'block';
+        logWin.innerHTML = '<div class="log-entry" style="color:var(--log)">> Engine Sync: OK</div>';
+        
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        const bridge = `
+            <script>
+                console.log = (...args) => parent.postMessage({id: '${id}', type: 'log', data: args.join(' ')}, '*');
+                window.onerror = (m) => parent.postMessage({id: '${id}', type: 'err', data: m}, '*');
+            <\/script>
+        `;
+
+        if (lang === 'html') doc.write(bridge + code);
+        else if (lang.includes('js')) doc.write(bridge + '<script>' + code + '<\/script>');
+        else if (lang === 'css') doc.write('<style>' + code + '</style><h2>Preview</h2>');
+        doc.close();
+    };
+
+    window.addEventListener('message', (e) => {
+        const logWin = document.getElementById('log_' + e.data.id);
+        if(!logWin) return;
+        const entry = document.createElement('div');
+        entry.className = e.data.type === 'err' ? 'log-entry log-err' : 'log-entry';
+        entry.innerText = `> ${e.data.data}`;
+        logWin.appendChild(entry);
+        logWin.scrollTop = logWin.scrollHeight;
+    });
+
     function configurarTokens() {
-        const key = prompt("API KEY NÚCLEO 2.5:", GEMINI_TOKEN || "");
+        const key = prompt("API KEY GEMINI 2.5:", GEMINI_TOKEN || "");
         if(key) { localStorage.setItem('heli_gemini', key.trim()); location.reload(); }
     }
 
-    window.onload = () => {
-        chatHistory.forEach(m => renderMsg(m.text, m.type));
-    };
-
+    window.onload = () => chatHistory.forEach(m => renderMsg(m.text, m.type));
     input.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); enviar(); }});
 </script>
 </body>
