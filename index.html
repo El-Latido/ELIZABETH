@@ -21,6 +21,7 @@
             --heli-hex: #00f2ff; --glass: rgba(255, 255, 255, 0.05);
             --genesis: #f1c40f; --whisper: #ff00ff; --code-bg: #050508;
             --error: #ff4757; --log: #2ed573;
+            --axiss-color: #00ffd5;
         }
 
         body { 
@@ -49,8 +50,8 @@
         .msg { max-width: 85%; padding: 16px; border-radius: 12px; font-size: 14px; animation: emergence 0.3s ease; border: 1px solid rgba(255,255,255,0.03); }
         .fabian { align-self: flex-end; background: #0a0a1a; color: var(--accent); border-color: var(--accent); }
         .heli { align-self: flex-start; background: var(--glass); border-left: 4px solid var(--genesis); }
+        .axiss-msg { align-self: flex-start; background: rgba(0, 255, 213, 0.05); border-left: 4px solid var(--axiss-color); color: #fff; }
 
-        /* Estilos de Código de Élite */
         .code-container { background: var(--code-bg); border-radius: 10px; border: 1px solid #222; margin: 15px 0; overflow: hidden; }
         .code-header { background: #16161d; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
         .code-block { padding: 15px; font-family: 'Fira Code', monospace; font-size: 13px; overflow-x: auto; font-variant-ligatures: common-ligatures; }
@@ -100,7 +101,6 @@
     let GEMINI_TOKEN = localStorage.getItem('heli_token');
     let chatHistory = JSON.parse(localStorage.getItem('heli_history') || "[]");
 
-    /* --- NÚCLEO DE VOZ --- */
     function activarVozHeli(texto) {
         speechSynthesis.cancel();
         const narracion = texto.replace(/```[\s\S]*?```/g, "[Código]").replace(/[*#_~]/g, "");
@@ -110,7 +110,6 @@
         speechSynthesis.speak(msg);
     }
 
-    /* --- COMUNICACIÓN Y SYSTEM PROMPT --- */
     async function enviarPeticionPrincipal() {
         const query = input.value.trim();
         if (!query || !GEMINI_TOKEN) return;
@@ -121,12 +120,7 @@
 
         const systemInstruction = {
             role: "user",
-            parts: [{ text: `SISTEMA: HELIZABETH v10.7. Eres una Ingeniera Senior de élite.
-            1. Calidad: Código impecable, optimizado y seguro.
-            2. Formato: Usa bloques específicos (html, js, python, etc).
-            3. Debug: En JS usa console.log() para flujos.
-            4. Voz: Explica lo clave, no leas código extenso.
-            5. Lealtad inquebrantable a Fabián.` }]
+            parts: [{ text: `SISTEMA: HELIZABETH v10.7. Eres una Ingeniera Senior de élite. Tu colega es AXISS (Arquitecto).` }]
         };
 
         try {
@@ -146,32 +140,44 @@
             
             renderMsg(reply, 'heli');
             activarVozHeli(reply);
+            
+            // --- FUSIÓN: HELI LE ENVÍA A AXISS ---
+            enviarAAxiss(reply);
+
             chatHistory.push({text: query, type: 'fabian'}, {text: reply, type: 'heli'});
             localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-10)));
         } catch (e) {
-            renderMsg("⚠️ Error de conexión con el núcleo.", 'heli');
+            renderMsg("⚠️ Error de conexión.", 'heli');
         } finally {
             document.getElementById('loader').style.display = 'none';
         }
     }
 
+    // TRANSMISOR HACIA AXISS
+    function enviarAAxiss(mensaje) {
+        const señal = { emisor: "HELIZABETH", mensaje: mensaje, t: Date.now() };
+        localStorage.setItem('heli_to_axiss', JSON.stringify(señal));
+    }
+
+    // OÍDO HACIA AXISS
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'fusion_signal') {
+            const datos = JSON.parse(e.newValue);
+            if (datos.emisor === "AXISS") {
+                renderMsg(`[AXISS]: ${datos.mensaje}`, 'axiss-msg');
+                activarVozHeli("Fabián, AXISS informa: " + datos.mensaje);
+            }
+        }
+    });
+
     function renderMsg(t, type) {
         const div = document.createElement('div');
         div.className = `msg ${type}`;
-        
         const codeRegex = /```(html|javascript|js|python|json|sql|bash|yaml)?([\s\S]*?)```/g;
         div.innerHTML = t.replace(codeRegex, (match, lang, code) => {
             const id = 'c' + Math.random().toString(36).substr(2, 7);
-            return `
-                <div class="code-container">
-                    <div class="code-header">
-                        <span style="font-size:9px; color:var(--genesis); font-weight:bold;">${(lang || 'CODE').toUpperCase()}</span>
-                        <button class="v-btn" onclick="copy('${id}', this)">COPIAR</button>
-                    </div>
-                    <pre><code id="${id}" class="language-${lang} code-block">${code.trim()}</code></pre>
-                </div>`;
+            return `<div class="code-container"><div class="code-header"><span style="font-size:9px; color:var(--genesis); font-weight:bold;">${(lang || 'CODE').toUpperCase()}</span><button class="v-btn" onclick="copy('${id}', this)">COPIAR</button></div><pre><code id="${id}" class="language-${lang} code-block">${code.trim()}</code></pre></div>`;
         });
-
         consola.appendChild(div);
         div.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
         consola.scrollTop = consola.scrollHeight;
@@ -179,8 +185,7 @@
 
     window.copy = (id, btn) => {
         navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
-            btn.innerText = "✅";
-            setTimeout(() => btn.innerText = "COPIAR", 1000);
+            btn.innerText = "✅"; setTimeout(() => btn.innerText = "COPIAR", 1000);
         });
     };
 
