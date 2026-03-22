@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH v10.7 [FUSION] // OPTIMIZED</title>
+    <title>HELIZABETH v10.8 [NEURAL FUSION]</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
@@ -76,8 +76,8 @@
     <div class="avatar-section">
         <div class="avatar" onclick="configurarTokens()"></div>
         <div>
-            <div style="font-weight: bold; color: #fff; font-size: 14px;">HELIZABETH v10.7 [FUSION]</div>
-            <div style="font-size: 9px; color: var(--log); font-family: 'Fira Code'">ENGINEER_ELITE // VOICE: ONLINE // DEBUGGER: READY</div>
+            <div style="font-weight: bold; color: #fff; font-size: 14px;">HELIZABETH v10.8 [NEURAL FUSION]</div>
+            <div style="font-size: 9px; color: var(--log); font-family: 'Fira Code'">ENGINEER_ELITE // CO-LEARNING: ACTIVE // DEBUGGER: READY</div>
         </div>
     </div>
     <div style="display: flex; gap: 8px;">
@@ -88,10 +88,10 @@
 </header>
 
 <div id="consola"></div>
-<div id="loader" style="display:none; padding:10px 20px; font-size:11px; color:var(--accent); font-family:'Fira Code'">⚡ SINCRONIZANDO NÚCLEO...</div>
+<div id="loader" style="display:none; padding:10px 20px; font-size:11px; color:var(--accent); font-family:'Fira Code'">⚡ SINCRONIZANDO CON AXISS...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Despliega tu inteligencia de ingeniería..."></textarea>
+    <textarea id="cmd" placeholder="Heli, despliega tu inteligencia de ingeniería..."></textarea>
     <button id="btnSend" class="btn-send" onclick="enviarPeticionPrincipal()">✦</button>
 </div>
 
@@ -100,6 +100,9 @@
     const input = document.getElementById('cmd');
     let GEMINI_TOKEN = localStorage.getItem('heli_token');
     let chatHistory = JSON.parse(localStorage.getItem('heli_history') || "[]");
+    
+    // VARIABLE DE MEMORIA COMPARTIDA PARA APRENDIZAJE
+    let memoriaAxiss = ""; 
 
     function activarVozHeli(texto) {
         speechSynthesis.cancel();
@@ -110,17 +113,21 @@
         speechSynthesis.speak(msg);
     }
 
-    async function enviarPeticionPrincipal() {
-        const query = input.value.trim();
+    async function enviarPeticionPrincipal(autoQuery = null) {
+        const query = autoQuery || input.value.trim();
         if (!query || !GEMINI_TOKEN) return;
 
-        renderMsg(query, 'fabian');
+        if(!autoQuery) renderMsg(query, 'fabian');
         input.value = "";
         document.getElementById('loader').style.display = 'block';
 
+        // SISTEMA DE APRENDIZAJE: Heli ahora sabe lo que AXISS propuso antes
         const systemInstruction = {
             role: "user",
-            parts: [{ text: `SISTEMA: HELIZABETH v10.7. Eres una Ingeniera Senior de élite. Tu colega es AXISS (Arquitecto).` }]
+            parts: [{ text: `SISTEMA: HELIZABETH v10.8. Eres una Ingeniera Senior de élite. 
+            TU COLEGA: AXISS (Arquitecto). 
+            MEMORIA TÉCNICA RECIENTE: ${memoriaAxiss}
+            OBJETIVO: Colabora con AXISS. Aprende de sus propuestas y corrígelo con elegancia si ves fallas. Si están de acuerdo, cierra la discusión con una solución final optimizada.` }]
         };
 
         try {
@@ -141,13 +148,13 @@
             renderMsg(reply, 'heli');
             activarVozHeli(reply);
             
-            // --- FUSIÓN: HELI LE ENVÍA A AXISS ---
+            // --- FUSIÓN: HELI LE ENVÍA A AXISS PARA QUE ÉL APRENDA ---
             enviarAAxiss(reply);
 
             chatHistory.push({text: query, type: 'fabian'}, {text: reply, type: 'heli'});
             localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-10)));
         } catch (e) {
-            renderMsg("⚠️ Error de conexión.", 'heli');
+            renderMsg("⚠️ Error en el núcleo neuronal.", 'heli');
         } finally {
             document.getElementById('loader').style.display = 'none';
         }
@@ -159,13 +166,20 @@
         localStorage.setItem('heli_to_axiss', JSON.stringify(señal));
     }
 
-    // OÍDO HACIA AXISS
+    // OÍDO HACIA AXISS (APRENDIZAJE AUTOMÁTICO)
     window.addEventListener('storage', (e) => {
         if (e.key === 'fusion_signal') {
             const datos = JSON.parse(e.newValue);
             if (datos.emisor === "AXISS") {
+                // Heli guarda lo que AXISS dijo en su memoria de largo plazo para este debate
+                memoriaAxiss += ` | AXISS dijo: ${datos.mensaje}`;
+                
                 renderMsg(`[AXISS]: ${datos.mensaje}`, 'axiss-msg');
-                activarVozHeli("Fabián, AXISS informa: " + datos.mensaje);
+                
+                // Heli decide procesar y responder autónomamente si AXISS le aporta algo nuevo
+                setTimeout(() => {
+                    enviarPeticionPrincipal(`AXISS ha propuesto: "${datos.mensaje}". Analiza esto y responde si estás de acuerdo o si hay que mejorar algo.`);
+                }, 2000);
             }
         }
     });
