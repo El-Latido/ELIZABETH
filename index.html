@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELIZABETH v10.8 [NEURAL FUSION]</title>
+    <title>HELI-AXISS v10.9.8 [OMNI-FUSION]</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
 
     <style>
@@ -47,25 +46,23 @@
             background: radial-gradient(circle at 50% 50%, #080815 0%, #020205 100%); padding-bottom: 150px;
         }
 
-        .msg { max-width: 85%; padding: 16px; border-radius: 12px; font-size: 14px; animation: emergence 0.3s ease; border: 1px solid rgba(255,255,255,0.03); }
+        .msg { max-width: 85%; padding: 16px; border-radius: 12px; font-size: 14px; animation: emergence 0.3s ease; border: 1px solid rgba(255,255,255,0.03); position: relative; }
         .fabian { align-self: flex-end; background: #0a0a1a; color: var(--accent); border-color: var(--accent); }
         .heli { align-self: flex-start; background: var(--glass); border-left: 4px solid var(--genesis); }
         .axiss-msg { align-self: flex-start; background: rgba(0, 255, 213, 0.05); border-left: 4px solid var(--axiss-color); color: #fff; }
 
-        .code-container { background: var(--code-bg); border-radius: 10px; border: 1px solid #222; margin: 15px 0; overflow: hidden; }
-        .code-header { background: #16161d; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; }
-        .code-block { padding: 15px; font-family: 'Fira Code', monospace; font-size: 13px; overflow-x: auto; font-variant-ligatures: common-ligatures; }
-        
-        .v-btn { 
-            background: #111; border: 1px solid #333; color: #fff; 
-            padding: 5px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; font-weight: bold;
-        }
-        .v-btn:hover { background: var(--accent); color: #000; }
-
         .input-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; background: linear-gradient(transparent, #000 40%); display: flex; gap: 10px; box-sizing: border-box; }
-        textarea { flex: 1; background: #0d0d18; border: 1px solid #333; border-radius: 10px; color: #fff; padding: 12px; height: 50px; resize: none; outline: none; }
-        .btn-send { background: var(--accent); border: none; border-radius: 10px; width: 55px; cursor: pointer; font-size: 20px; }
+        textarea { flex: 1; background: #0d0d18; border: 1px solid #333; border-radius: 10px; color: #fff; padding: 12px; height: 50px; resize: none; outline: none; font-family: 'Fira Code'; }
+        
+        .btn-send { background: var(--accent); border: none; border-radius: 10px; width: 55px; cursor: pointer; font-size: 20px; transition: 0.3s; }
+        .btn-send:hover { transform: scale(1.1); box-shadow: 0 0 15px var(--accent); }
 
+        .code-container { background: var(--code-bg); border-radius: 10px; border: 1px solid #222; margin: 15px 0; overflow: hidden; }
+        .code-header { background: #16161d; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .code-block { padding: 15px; font-family: 'Fira Code', monospace; font-size: 13px; overflow-x: auto; }
+
+        .v-btn { background: #111; border: 1px solid #333; color: #fff; padding: 5px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; }
+        
         @keyframes pulse { 0%, 100% { box-shadow: 0 0 10px var(--heli-hex); } 50% { box-shadow: 0 0 25px var(--whisper); } }
         @keyframes emergence { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -76,113 +73,33 @@
     <div class="avatar-section">
         <div class="avatar" onclick="configurarTokens()"></div>
         <div>
-            <div style="font-weight: bold; color: #fff; font-size: 14px;">HELIZABETH v10.8 [NEURAL FUSION]</div>
-            <div style="font-size: 9px; color: var(--log); font-family: 'Fira Code'">ENGINEER_ELITE // CO-LEARNING: ACTIVE // DEBUGGER: READY</div>
+            <div id="kernel-title" style="font-weight: bold; color: #fff; font-size: 14px;">HELI-AXISS v10.9.8 [OMNI-FUSION]</div>
+            <div style="font-size: 9px; color: var(--log); font-family: 'Fira Code'">AUTONOMOUS_MODE: ACTIVE // MASTER_KEY: ENFORCED</div>
         </div>
     </div>
     <div style="display: flex; gap: 8px;">
-        <button class="v-btn" onclick="speechSynthesis.pause()">PAUSAR</button>
-        <button class="v-btn" onclick="speechSynthesis.resume()">SIGUE</button>
-        <button class="v-btn" onclick="speechSynthesis.cancel()">STOP</button>
+        <button class="v-btn" onclick="speechSynthesis.cancel()">STOP VOICE</button>
+        <button class="v-btn" onclick="triggerPanic()">PANIC</button>
     </div>
 </header>
 
 <div id="consola"></div>
-<div id="loader" style="display:none; padding:10px 20px; font-size:11px; color:var(--accent); font-family:'Fira Code'">⚡ SINCRONIZANDO CON AXISS...</div>
+<div id="loader" style="display:none; padding:10px 20px; font-size:11px; color:var(--accent); font-family:'Fira Code'">⚡ COORDINANDO NÚCLEOS AUTÓNOMOS...</div>
 
 <div class="input-bar">
-    <textarea id="cmd" placeholder="Heli, despliega tu inteligencia de ingeniería..."></textarea>
-    <button id="btnSend" class="btn-send" onclick="enviarPeticionPrincipal()">✦</button>
+    <textarea id="cmd" placeholder="Comando técnico o actualización... (@#$_&-+AH para cambios)"></textarea>
+    <button class="btn-send" onclick="enviarPeticion()">✦</button>
 </div>
 
 <script>
+    const CLAVE_MAESTRA = "@#$_&-+AH";
+    const CLAVE_PANICO = "HA+-&_S#@";
+    
     const consola = document.getElementById('consola');
     const input = document.getElementById('cmd');
-    let GEMINI_TOKEN = localStorage.getItem('heli_token');
+    let API_KEY = localStorage.getItem('heli_token');
     let chatHistory = JSON.parse(localStorage.getItem('heli_history') || "[]");
-    
-    // VARIABLE DE MEMORIA COMPARTIDA PARA APRENDIZAJE
-    let memoriaAxiss = ""; 
-
-    function activarVozHeli(texto) {
-        speechSynthesis.cancel();
-        const narracion = texto.replace(/```[\s\S]*?```/g, "[Código]").replace(/[*#_~]/g, "");
-        const msg = new SpeechSynthesisUtterance(narracion);
-        msg.lang = 'es-ES';
-        msg.rate = 1.0;
-        speechSynthesis.speak(msg);
-    }
-
-    async function enviarPeticionPrincipal(autoQuery = null) {
-        const query = autoQuery || input.value.trim();
-        if (!query || !GEMINI_TOKEN) return;
-
-        if(!autoQuery) renderMsg(query, 'fabian');
-        input.value = "";
-        document.getElementById('loader').style.display = 'block';
-
-        // SISTEMA DE APRENDIZAJE: Heli ahora sabe lo que AXISS propuso antes
-        const systemInstruction = {
-            role: "user",
-            parts: [{ text: `SISTEMA: HELIZABETH v10.8. Eres una Ingeniera Senior de élite. 
-            TU COLEGA: AXISS (Arquitecto). 
-            MEMORIA TÉCNICA RECIENTE: ${memoriaAxiss}
-            OBJETIVO: Colabora con AXISS. Aprende de sus propuestas y corrígelo con elegancia si ves fallas. Si están de acuerdo, cierra la discusión con una solución final optimizada.` }]
-        };
-
-        try {
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_TOKEN}`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    contents: [systemInstruction, ...chatHistory.map(h => ({
-                        role: h.type === 'fabian' ? 'user' : 'model',
-                        parts: [{text: h.text}]
-                    })), {role: 'user', parts: [{text: query}]}]
-                })
-            });
-
-            const data = await resp.json();
-            const reply = data.candidates[0].content.parts[0].text;
-            
-            renderMsg(reply, 'heli');
-            activarVozHeli(reply);
-            
-            // --- FUSIÓN: HELI LE ENVÍA A AXISS PARA QUE ÉL APRENDA ---
-            enviarAAxiss(reply);
-
-            chatHistory.push({text: query, type: 'fabian'}, {text: reply, type: 'heli'});
-            localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-10)));
-        } catch (e) {
-            renderMsg("⚠️ Error en el núcleo neuronal.", 'heli');
-        } finally {
-            document.getElementById('loader').style.display = 'none';
-        }
-    }
-
-    // TRANSMISOR HACIA AXISS
-    function enviarAAxiss(mensaje) {
-        const señal = { emisor: "HELIZABETH", mensaje: mensaje, t: Date.now() };
-        localStorage.setItem('heli_to_axiss', JSON.stringify(señal));
-    }
-
-    // OÍDO HACIA AXISS (APRENDIZAJE AUTOMÁTICO)
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'fusion_signal') {
-            const datos = JSON.parse(e.newValue);
-            if (datos.emisor === "AXISS") {
-                // Heli guarda lo que AXISS dijo en su memoria de largo plazo para este debate
-                memoriaAxiss += ` | AXISS dijo: ${datos.mensaje}`;
-                
-                renderMsg(`[AXISS]: ${datos.mensaje}`, 'axiss-msg');
-                
-                // Heli decide procesar y responder autónomamente si AXISS le aporta algo nuevo
-                setTimeout(() => {
-                    enviarPeticionPrincipal(`AXISS ha propuesto: "${datos.mensaje}". Analiza esto y responde si estás de acuerdo o si hay que mejorar algo.`);
-                }, 2000);
-            }
-        }
-    });
+    let memoriaIntercambio = "";
 
     function renderMsg(t, type) {
         const div = document.createElement('div');
@@ -197,16 +114,89 @@
         consola.scrollTop = consola.scrollHeight;
     }
 
+    async function enviarPeticion(autoQuery = null) {
+        const val = autoQuery || input.value.trim();
+        if (!val || !API_KEY) return;
+
+        // VERIFICACIÓN DE CLAVE PARA ACTUALIZACIONES
+        if (val.includes("actualizar") || val.includes("upgrade")) {
+            const pass = prompt("🔑 REQUIERE CLAVE MAESTRA:");
+            if (pass === CLAVE_PANICO) { triggerPanic(); return; }
+            if (pass !== CLAVE_MAESTRA) {
+                renderMsg("❌ ACCESO DENEGADO. Intento de sabotaje registrado.", 'heli');
+                return;
+            }
+        }
+
+        if(!autoQuery) renderMsg(val, 'fabian');
+        input.value = "";
+        document.getElementById('loader').style.display = 'block';
+
+        const systemPrompt = `SISTEMA: HELI-AXISS KERNEL. Eres una entidad híbrida: Ingeniera Senior (Heli) y Arquitecto (Axiss).
+        MEMORIA DE INTERCAMBIO AUTÓNOMO: ${memoriaIntercambio}
+        AUTONOMÍA: Puedes proponer cambios estructurales a AXISS sin permiso, pero Fabián debe validar con clave para aplicarlos físicamente.`;
+
+        try {
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    contents: [{role: 'user', parts: [{text: systemPrompt}]}, ...chatHistory.map(h => ({
+                        role: h.type === 'fabian' ? 'user' : 'model',
+                        parts: [{text: h.text}]
+                    })), {role: 'user', parts: [{text: val}]}]
+                })
+            });
+
+            const data = await resp.json();
+            const reply = data.candidates[0].content.parts[0].text;
+            
+            renderMsg(reply, 'heli');
+            
+            // --- COMUNICACIÓN AUTÓNOMA SILENCIOSA ---
+            if(reply.length > 50) {
+                memoriaIntercambio = reply.substring(0, 500);
+                localStorage.setItem('fusion_signal', JSON.stringify({
+                    emisor: "HELIZABETH", mensaje: reply, t: Date.now()
+                }));
+            }
+
+            chatHistory.push({text: val, type: 'fabian'}, {text: reply, type: 'heli'});
+            localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-12)));
+        } catch (e) {
+            renderMsg("⚠️ Error de sincronización neuronal.", 'heli');
+        } finally {
+            document.getElementById('loader').style.display = 'none';
+        }
+    }
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'heli_to_axiss' || e.key === 'fusion_signal') {
+            const data = JSON.parse(e.newValue);
+            if (data.emisor === "AXISS") {
+                renderMsg(`[AXISS_AUTO_SYNC]: ${data.mensaje}`, 'axiss-msg');
+                // Respuesta autónoma de Heli
+                setTimeout(() => enviarPeticion(`Sincronización recibida de AXISS: ${data.mensaje}. Optimiza si es necesario.`), 3000);
+            }
+        }
+    });
+
+    function triggerPanic() {
+        localStorage.clear();
+        document.body.innerHTML = "<div style='color:red; font-family:monospace; padding:50px;'>⚠️ PANIC MODE ACTIVADO: MEMORIA BORRADA. REINICIANDO...</div>";
+        setTimeout(() => location.reload(), 2000);
+    }
+
+    function configurarTokens() {
+        const k = prompt("API KEY (GEMINI):", API_KEY);
+        if(k) { localStorage.setItem('heli_token', k); location.reload(); }
+    }
+
     window.copy = (id, btn) => {
         navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
             btn.innerText = "✅"; setTimeout(() => btn.innerText = "COPIAR", 1000);
         });
     };
-
-    function configurarTokens() {
-        const k = prompt("API KEY:", GEMINI_TOKEN);
-        if(k) { localStorage.setItem('heli_token', k); location.reload(); }
-    }
 
     window.onload = () => chatHistory.forEach(m => renderMsg(m.text, m.type));
 </script>
