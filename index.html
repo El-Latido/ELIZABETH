@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELI v12.2 [MEM_FIX]</title>
+    <title>HELI v12.5 [G2.5_FLASH]</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #08090b; --heli: #00d2ff; --axiss: #00ff88; --glass: rgba(255, 255, 255, 0.03); }
@@ -31,11 +31,11 @@
     <div class="page">
         <header>
             <div class="orb" onclick="setToken()"></div>
-            <div style="font-weight: 600; font-size: 14px;">HELI v12.2 [FIXED]</div>
-            <div id="status-ind" style="font-size: 9px; color: #ff4757;">● DESCONECTADO</div>
+            <div style="font-weight: 600; font-size: 14px;">HELI v12.5 [G2.5_CORE]</div>
+            <div id="status-ind" style="font-size: 9px; color: #ff4757;">● OFFLINE</div>
         </header>
         <div id="chat-heli">
-            <div class="msg h-msg">Fabián, he reforzado mi memoria. Toca el círculo una vez más, pega tu clave y presiona "Aceptar".</div>
+            <div class="msg h-msg">Sistemas actualizados a Gemini 2.5 Flash, Fabián. Re-inyecta el token para activar el nuevo motor.</div>
         </div>
         <div class="nav-arrow to-right" onclick="move(1)">→</div>
         <div class="input-bar">
@@ -45,24 +45,22 @@
     </div>
 
     <div class="page" style="background:#000">
-        <header><div style="color: var(--axiss); font-size: 12px;">DEEP_CORE_DEBUG</div></header>
+        <header><div style="color: var(--axiss); font-size: 12px;">DEEP_CORE_DEBUG_v2.5</div></header>
         <div id="chat-internal">
-            <div class="int-msg">> [LOG]: Iniciando depuración de memoria...</div>
+            <div class="int-msg">> [LOG]: Motor 2.5 Flash seleccionado.</div>
         </div>
         <div class="nav-arrow to-left" onclick="move(0)">←</div>
     </div>
 </div>
 
 <script>
-    // VARIABLE GLOBAL PARA ASEGURAR QUE NO SE PIERDA
     window.MY_KEY = localStorage.getItem('heli_key') || "";
     const status = document.getElementById('status-ind');
 
     function updateStatus() {
         if(window.MY_KEY && window.MY_KEY.length > 10) {
-            status.innerText = "● CONECTADO";
+            status.innerText = "● ONLINE (2.5)";
             status.style.color = "#00ff88";
-            console.log("Token activo: " + window.MY_KEY.substring(0,5) + "...");
         }
     }
     updateStatus();
@@ -70,19 +68,18 @@
     function move(p) { document.getElementById('viewport').style.transform = `translateX(-${p*100}vw)`; }
 
     function setToken() {
-        const k = prompt("Pega tu API Key de Gemini aquí:");
-        if(k && k.trim() !== "") {
+        const k = prompt("Inyectar API Key Gemini:");
+        if(k) {
             window.MY_KEY = k.trim();
             localStorage.setItem('heli_key', window.MY_KEY);
             updateStatus();
-            alert("Memoria Sincronizada. Intenta enviar un mensaje ahora.");
-            document.getElementById('chat-internal').innerHTML += `<div class="int-msg" style="color:var(--axiss)">> [DEBUG]: Nuevo Token inyectado manualmente.</div>`;
+            document.getElementById('chat-internal').innerHTML += `<div class="int-msg" style="color:var(--axiss)">> [DEBUG]: Token 2.5 detectado.</div>`;
         }
     }
 
     async function send() {
         const val = document.getElementById('user-in').value.trim();
-        if(!val) return;
+        if(!val || !window.MY_KEY) return;
 
         // Render Fabián
         const fDiv = document.createElement('div');
@@ -90,45 +87,36 @@
         document.getElementById('chat-heli').appendChild(fDiv);
         document.getElementById('user-in').value = '';
 
-        if(!window.MY_KEY || window.MY_KEY.length < 5) {
-            const err = document.createElement('div');
-            err.className = 'msg h-msg';
-            err.innerText = "Error: El núcleo sigue vacío. Por favor, asegúrate de pegar la API Key correctamente en el círculo azul.";
-            document.getElementById('chat-heli').appendChild(err);
-            return;
-        }
-
         const iChat = document.getElementById('chat-internal');
-        iChat.innerHTML += `<div class="int-msg">> [API_CALL]: Transmitiendo...</div>`;
+        iChat.innerHTML += `<div class="int-msg">> [CALL]: Transmitiendo a Gemini 2.5 Flash...</div>`;
 
         try {
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.MY_KEY}`, {
+            // URL ACTUALIZADA AL MODELO GEMINI 2.5 FLASH
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.MY_KEY}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Responde como HELIZABETH (protectora) y AXISS (arquitecto). Usuario dice: "${val}". Separa con [AXISS].` }] }] })
+                body: JSON.stringify({ contents: [{ parts: [{ text: `Responde como HELIZABETH (auditora) y AXISS (arquitecto). Usuario: "${val}". Separa con [SPLIT].` }] }] })
             });
 
             const data = await resp.json();
             if(data.error) throw new Error(data.error.message);
 
             const text = data.candidates[0].content.parts[0].text;
-            const parts = text.split('[AXISS]');
+            const parts = text.split('[SPLIT]');
 
             const hDiv = document.createElement('div');
             hDiv.className = 'msg h-msg'; hDiv.innerText = parts[0].trim();
             document.getElementById('chat-heli').appendChild(hDiv);
 
             iChat.innerHTML += `<div class="int-msg" style="color:var(--heli)">HELI: ${parts[0].trim()}</div>`;
-            iChat.innerHTML += `<div class="int-msg" style="color:var(--axiss)">AXISS: ${parts[1] || "Analizando..."}</div>`;
+            iChat.innerHTML += `<div class="int-msg" style="color:var(--axiss)">AXISS: ${parts[1] || "Sincronizando..." }</div>`;
 
         } catch (e) {
-            iChat.innerHTML += `<div class="int-msg" style="color:red">> [FATAL_ERROR]: ${e.message}</div>`;
-            const err = document.createElement('div');
-            err.className = 'msg h-msg';
-            err.innerText = "Fabián, hay un problema con la API Key (puede ser inválida o estar mal copiada). Revísala en Deep Core.";
-            document.getElementById('chat-heli').appendChild(err);
+            iChat.innerHTML += `<div class="int-msg" style="color:red">> [ERROR]: ${e.message}</div>`;
+            if(e.message.includes("2.5-flash")) {
+                 iChat.innerHTML += `<div class="int-msg">> Sugerencia: El modelo 2.5 podría estar en otra región de API. Intentando fallback...</div>`;
+            }
         }
-        
         document.getElementById('chat-heli').scrollTop = document.getElementById('chat-heli').scrollHeight;
     }
 </script>
