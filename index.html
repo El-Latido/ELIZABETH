@@ -3,184 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELI-AXISS v11.5 [SPLIT]</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <title>HELI v12.0 [SLIDE_CORE]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050508;
-            --heli-glow: #00d2ff;
-            --axiss-glow: #00ff88;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #08090b; --heli: #00d2ff; --axiss: #00ff88; --glass: rgba(255, 255, 255, 0.03);
         }
+        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: #eee; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-        body {
-            background: var(--bg);
-            color: #e0e0e0;
-            font-family: 'Fira Code', monospace;
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+        /* Contenedor Deslizante */
+        #viewport { display: flex; width: 200vw; height: 100vh; transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1); }
 
-        /* Cabecera Dual */
-        header {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 20px;
-            background: rgba(0,0,0,0.8);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-        }
-
-        .core-indicator { font-size: 10px; letter-spacing: 2px; font-weight: bold; }
-        .heli-text { color: var(--heli-glow); }
-        .axiss-text { color: var(--axiss-glow); }
-
-        /* Contenedor de Pantalla Dividida */
-        #split-screen {
-            flex: 1;
-            display: flex;
-            gap: 1px;
-            background: var(--border); /* Línea divisoria */
-            overflow: hidden;
-        }
-
-        .monitor {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: var(--bg);
-            position: relative;
-        }
-
-        /* Estilos de Mensajes */
-        .log-entry {
-            font-size: 12px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            line-height: 1.4;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .heli-log { border-left: 2px solid var(--heli-glow); background: rgba(0, 210, 255, 0.05); }
-        .axiss-log { border-left: 2px solid var(--axiss-glow); background: rgba(0, 255, 136, 0.05); }
-        .user-log { color: #fff; opacity: 0.6; text-align: right; font-style: italic; font-size: 10px; }
-
-        /* Consola de Entrada Inferior */
-        .input-area {
-            padding: 15px;
-            background: #000;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 10px;
-        }
-
-        input {
-            flex: 1;
-            background: #0a0a0c;
-            border: 1px solid #1a1a1e;
-            color: #fff;
-            padding: 12px;
-            border-radius: 5px;
-            outline: none;
-            font-family: 'Fira Code';
-        }
-
-        button {
-            background: #1a1a1e;
-            color: var(--heli-glow);
-            border: 1px solid var(--border);
-            padding: 0 20px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-
-        button:active { background: var(--heli-glow); color: #000; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; } }
+        /* SECCIÓN 1: HELIZABETH (PRINCIPAL) */
+        .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; }
         
-        /* Marca de Agua de Fondo */
-        .watermark {
-            position: absolute; bottom: 10px; right: 10px;
-            font-size: 8px; opacity: 0.2; pointer-events: none;
+        header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .orb { width: 40px; height: 40px; border-radius: 50%; background: radial-gradient(circle, var(--heli), transparent); border: 2px solid var(--heli); cursor: pointer; }
+        
+        #chat-heli { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { max-width: 80%; padding: 12px 16px; border-radius: 15px; font-size: 14px; line-height: 1.5; }
+        .h-msg { background: var(--glass); border-left: 3px solid var(--heli); align-self: flex-start; }
+        .f-msg { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--heli); align-self: flex-end; color: var(--heli); }
+
+        /* SECCIÓN 2: DEEP LOGS (INTERNO) */
+        #deep-logs { background: #000; border-left: 1px solid #222; }
+        #chat-internal { flex: 1; overflow-y: auto; padding: 20px; font-family: 'Fira Code', monospace; font-size: 11px; }
+        .int-msg { margin-bottom: 15px; padding-left: 10px; border-left: 2px solid #333; }
+        .tag-h { color: var(--heli); font-weight: bold; }
+        .tag-a { color: var(--axiss); font-weight: bold; }
+
+        /* FLECHAS DE NAVEGACIÓN */
+        .nav-arrow { 
+            position: absolute; top: 50%; transform: translateY(-50%); 
+            width: 40px; height: 60px; background: rgba(255,255,255,0.05); 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; z-index: 100; border-radius: 5px; font-size: 24px;
         }
+        .to-right { right: 10px; color: var(--axiss); }
+        .to-left { left: 10px; color: var(--heli); }
+
+        /* INPUT FIX */
+        .input-bar { padding: 20px; background: #000; display: flex; gap: 10px; }
+        input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; outline: none; }
+        button { background: var(--heli); border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<header>
-    <div class="core-indicator heli-text">HELIZABETH // AUDITOR</div>
-    <div id="status-node" style="font-size: 9px;">SYNC: 100%</div>
-    <div class="core-indicator axiss-text">ARCHITECT // AXISS</div>
-</header>
-
-<div id="split-screen">
-    <div id="heli-monitor" class="monitor">
-        <div class="watermark heli-text">SECURITY_CORE</div>
-        <div class="log-entry heli-log">Protocolos de seguridad cargados. Esperando entrada...</div>
+<div id="viewport">
+    <div class="page">
+        <header>
+            <div class="orb" onclick="setToken()"></div>
+            <div style="font-weight: bold; font-size: 14px;">HELIZABETH v12.0</div>
+            <div style="font-size: 10px; color: #555;">[SECURE]</div>
+        </header>
+        <div id="chat-heli">
+            <div class="msg h-msg">Sistemas listos, Fabián. ¿En qué trabajaremos hoy?</div>
+        </div>
+        <div class="nav-arrow to-right" onclick="move(1)">→</div>
+        <div class="input-bar">
+            <input type="text" id="user-in" placeholder="Escribe a Heli..." autocomplete="off">
+            <button onclick="send()">✦</button>
+        </div>
     </div>
 
-    <div id="axiss-monitor" class="monitor">
-        <div class="watermark axiss-text">ARCHITECT_CORE</div>
-        <div class="log-entry axiss-log">Arquitectura v11.5 lista para despliegue.</div>
+    <div class="page" id="deep-logs">
+        <header>
+            <div style="color: var(--axiss); font-weight: bold; letter-spacing: 2px;">DEEP_CORE_SYNC</div>
+        </header>
+        <div id="chat-internal">
+            <div class="int-msg">> [SYSTEM]: Canal de auditoría abierto. Monitoreando hilos...</div>
+        </div>
+        <div class="nav-arrow to-left" onclick="move(0)">←</div>
     </div>
-</div>
-
-<div class="input-area">
-    <input type="text" id="cmd-input" placeholder="Enviar comando dual..." autofocus autocomplete="off">
-    <button onclick="sendDual()">SEND</button>
 </div>
 
 <script>
-    const heliMon = document.getElementById('heli-monitor');
-    const axissMon = document.getElementById('axiss-monitor');
-    const input = document.getElementById('cmd-input');
+    let API_KEY = localStorage.getItem('heli_axiss_key');
+    const viewport = document.getElementById('viewport');
+    const hChat = document.getElementById('chat-heli');
+    const iChat = document.getElementById('chat-internal');
+    const input = document.getElementById('user-in');
 
-    function addEntry(parent, text, type) {
-        const div = document.createElement('div');
-        div.className = `log-entry ${type}`;
-        div.innerText = text;
-        parent.appendChild(div);
-        parent.scrollTop = parent.scrollHeight;
+    function move(page) { viewport.style.transform = `translateX(-${page * 100}vw)`; }
+
+    function setToken() {
+        const k = prompt("API KEY GEMINI:");
+        if(k) { localStorage.setItem('heli_axiss_key', k); API_KEY = k; location.reload(); }
     }
 
-    async function sendDual() {
+    async function send() {
         const val = input.value.trim();
-        if(!val) return;
+        if(!val || !API_KEY) return;
 
-        // Mostrar lo que escribió Fabián en ambos lados
-        addEntry(heliMon, `USER_INPUT: ${val}`, 'user-log');
-        addEntry(axissMon, `USER_INPUT: ${val}`, 'user-log');
+        // Render en chat principal
+        const fDiv = document.createElement('div');
+        fDiv.className = 'msg f-msg';
+        fDiv.innerText = val;
+        hChat.appendChild(fDiv);
         input.value = '';
 
-        // --- LÓGICA DE FUSIÓN ---
-        if(val.toLowerCase().includes("axiss")) {
-            addEntry(axissMon, "AXISS: Recibido. Iniciando análisis estructural de la petición...", "axiss-log");
-            addEntry(heliMon, "HELI: Monitoreando integridad del canal AXISS. No se detectan anomalías.", "heli-log");
-        } 
-        else if(val.toLowerCase().includes("actualizar")) {
-            const key = prompt("🔑 CLAVE MAESTRA REQUERIDA:");
-            if(key === "@#$_&-+AH") {
-                addEntry(heliMon, "HELI: Acceso concedido. Procediendo con la mutación del núcleo.", "heli-log");
-                addEntry(axissMon, "AXISS: Adaptando esquemas de arquitectura a v11.6...", "axiss-log");
-            } else {
-                addEntry(heliMon, "⚠️ ALERTA: Intento de actualización fallido. Bloqueo preventivo.", "heli-log");
-            }
-        }
-        else {
-            addEntry(heliMon, "HELI: Procesando en modo de seguridad estándar.", "heli-log");
-            addEntry(axissMon, "AXISS: Generando respuesta técnica optimizada...", "axiss-log");
+        // Logs internos iniciales
+        iChat.innerHTML += `<div class="int-msg">> [FABIAN]: ${val}</div>`;
+        iChat.innerHTML += `<div class="int-msg" id="loading">> [SYNC]: Conectando con los núcleos...</div>`;
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Actúa como dos entidades. 
+                    1. HELIZABETH (Auditora de seguridad, seria, responde directo al usuario). 
+                    2. AXISS (Arquitecto técnico, analiza el código y estructura en secreto).
+                    Usuario: "${val}".
+                    Responde PRIMERO lo que HELIZABETH le dice al usuario.
+                    Luego pon el marcador [AXISS_INTERNAL] y escribe el análisis técnico de AXISS.` }] }]
+                })
+            });
+
+            const data = await response.json();
+            const fullReply = data.candidates[0].content.parts[0].text;
+            const parts = fullReply.split('[AXISS_INTERNAL]');
+
+            document.getElementById('loading').remove();
+
+            // Respuesta de Heli (Principal)
+            const hDiv = document.createElement('div');
+            hDiv.className = 'msg h-msg';
+            hDiv.innerText = parts[0].trim();
+            hChat.appendChild(hDiv);
+
+            // Chat interno (Heli + Axiss)
+            iChat.innerHTML += `<div class="int-msg"><span class="tag-h">HELI:</span> ${parts[0].trim()}</div>`;
+            iChat.innerHTML += `<div class="int-msg"><span class="tag-a">AXISS:</span> ${parts[1] ? parts[1].trim() : "Análisis estructural completado sin observaciones."}</div>`;
+
+            hChat.scrollTop = hChat.scrollHeight;
+            iChat.scrollTop = iChat.scrollHeight;
+
+        } catch (e) {
+            iChat.innerHTML += `<div class="int-msg" style="color:red">> [ERROR]: Fallo de conexión neuronal.</div>`;
         }
     }
 
-    input.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendDual(); });
+    input.addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
 </script>
 </body>
 </html>
