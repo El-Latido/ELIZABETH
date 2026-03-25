@@ -9,11 +9,10 @@
         :root { --bg: #050507; --heli: #00d2ff; --axiss: #00ff88; --lab: #a29bfe; }
         body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: #eee; font-family: 'Inter', sans-serif; overflow: hidden; }
         
-        /* Viewport de 3 pantallas */
         #viewport { 
             display: flex; width: 300vw; height: 100vh; 
             transition: transform 0.5s cubic-bezier(0.6, 0, 0.4, 1);
-            transform: translateX(-100vw); /* Centro: Heli */
+            transform: translateX(-100vw);
         }
 
         .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; box-sizing: border-box; }
@@ -21,48 +20,33 @@
         header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); background: #000; }
         .orb { width: 35px; height: 35px; border-radius: 50%; background: var(--heli); border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 10px var(--heli); }
 
-        /* Contenedores */
         #chat-heli, #chat-internal, #lab-content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
         
-        /* Estilos Lab e Interfaz Visual */
         #axiss-lab { background: radial-gradient(circle at center, #0f0f1a, #050507); }
         .blueprint-display {
-            background: #000;
-            border: 1px solid var(--lab);
-            border-radius: 15px;
-            padding: 20px;
-            position: relative;
-            min-height: 250px;
-            overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(162, 155, 254, 0.2);
-            margin-bottom: 15px;
+            background: #000; border: 1px solid var(--lab); border-radius: 15px;
+            padding: 20px; position: relative; min-height: 250px; overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(162, 155, 254, 0.2); margin-bottom: 15px;
         }
-        .hud-element {
-            position: absolute;
-            border: 1px solid rgba(162, 155, 254, 0.4);
-            padding: 5px;
-            font-size: 9px;
-            color: var(--lab);
-            text-transform: uppercase;
-            font-family: 'Fira Code';
+        
+        /* Efecto Glitch de Procesamiento */
+        .processing-glitch { animation: glitch 0.2s infinite; opacity: 0.5; filter: hue-rotate(90deg); }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            50% { transform: translate(-2px, 2px); }
+            100% { transform: translate(2px, -2px); }
         }
-        .scan-line {
-            width: 100%;
-            height: 2px;
-            background: rgba(162, 155, 254, 0.1);
-            position: absolute;
-            animation: scan 3s linear infinite;
-        }
+
+        .hud-element { position: absolute; border: 1px solid rgba(162, 155, 254, 0.4); padding: 5px; font-size: 9px; color: var(--lab); text-transform: uppercase; font-family: 'Fira Code'; }
+        .scan-line { width: 100%; height: 2px; background: rgba(162, 155, 254, 0.1); position: absolute; animation: scan 3s linear infinite; }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
 
-        .blueprint-card { background: rgba(162, 155, 254, 0.05); border: 1px dashed var(--lab); padding: 15px; border-radius: 10px; font-family: 'Fira Code'; font-size: 11px; color: var(--lab); }
+        .blueprint-card { background: rgba(162, 155, 254, 0.05); border: 1px dashed var(--lab); padding: 15px; border-radius: 10px; font-family: 'Fira Code'; font-size: 11px; color: var(--lab); margin-bottom: 10px; animation: fadeIn 0.4s ease; }
 
-        /* Estilos Mensajes */
         .msg { max-width: 85%; padding: 12px 16px; border-radius: 15px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.3s ease; }
-        .h-msg { background: rgba(255,255,255,0.03); border-left: 3px solid var(--heli); align-self: flex-start; }
-        .f-msg { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--heli); align-self: flex-end; color: var(--heli); }
+        .h-msg { background: rgba(255,255,255,0.03); border-left: 3px solid var(--heli); align-self: flex-start; font-style: italic; }
+        .f-msg { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--heli); align-self: flex-end; color: var(--heli); font-weight: bold; }
 
-        /* Flechas */
         .nav-arrow { position: absolute; top: 50%; width: 42px; height: 42px; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
         .to-left { left: 10px; color: var(--lab); }
         .to-right { right: 10px; color: var(--axiss); }
@@ -92,7 +76,7 @@
             <div id="status" style="font-size: 9px; color: #00ff88;">● ONLINE</div>
         </header>
         <div id="chat-heli">
-            <div class="msg h-msg">Fabián, el sistema visual está listo. ¿Qué tipo de arquitectura o sistema quieres que AXISS visualice en el Laboratorio?</div>
+            <div class="msg h-msg">Fabián, sistema visual unificado. ¿Qué arquitectura iniciaremos hoy?</div>
         </div>
         <div class="nav-arrow to-left" onclick="move(0)">←</div>
         <div class="nav-arrow to-right" onclick="move(2)">→</div>
@@ -116,81 +100,88 @@
     function move(p) { viewport.style.transform = `translateX(-${p*100}vw)`; }
 
     function setToken() {
-        const k = prompt("INYECTAR API KEY GEMINI:");
-        if(k) { localStorage.setItem('heli_key', k); API_KEY = k; location.reload(); }
+        const k = prompt("INYECTAR PROTOCOLO DE ACCESO (API KEY):");
+        if(k && k.startsWith("AIza")) { 
+            localStorage.setItem('heli_key', k); 
+            API_KEY = k; 
+            alert("SISTEMA AUTORIZADO");
+            location.reload(); 
+        } else {
+            alert("ERROR: KEY INVÁLIDA");
+        }
     }
 
-    // NUEVO MOTOR DE RENDERIZADO VISUAL
     function renderBlueprint(content) {
         const lab = document.getElementById('lab-content');
+        const newCard = document.createElement('div');
         
-        // Detección de conceptos para generar HUD visual
         if(content.includes("Traje") || content.includes("HUD") || content.includes("Aegis")) {
-            lab.innerHTML = `
+            newCard.innerHTML = `
             <div class="blueprint-display">
                 <div class="scan-line"></div>
-                <div class="hud-element" style="top:10px; left:10px;">O2: 98% [NOMINAL]</div>
-                <div class="hud-element" style="top:10px; right:10px;">RAD: 0.02 mSv/h</div>
-                <div style="text-align:center; margin-top:80px; color:var(--lab); font-size:10px;">
-                    <div style="font-size:24px; animation: pulse 2s infinite;">⌖</div>
-                    [ TARGET: MARS_COORD ]<br> DIST: 1.4km
+                <div class="hud-element" style="top:10px; left:10px;">CORE: STABLE</div>
+                <div class="hud-element" style="top:10px; right:10px;">SYNC: 100%</div>
+                <div style="text-align:center; margin-top:80px; color:var(--lab);">
+                    <div style="font-size:32px; animation: pulse 2s infinite;">Δ</div>
+                    [ GEOMETRÍA ACTIVA ]
                 </div>
-                <div class="hud-element" style="bottom:10px; left:10px; border-color:var(--heli);">HELI_SECURE: ACTIVE</div>
-                <div class="hud-element" style="bottom:10px; right:10px;">BATT: 85%</div>
+                <div class="hud-element" style="bottom:10px; left:10px; border-color:var(--heli);">HELI_PROT: ON</div>
+                <div class="hud-element" style="bottom:10px; right:10px;">BATT: 100%</div>
             </div>
-            <div class="blueprint-card"><strong>SISTEMA VISUAL GENERADO:</strong><br><br>${content}</div>` + lab.innerHTML;
+            <div class="blueprint-card"><strong>SISTEMA VISUAL:</strong><br>${content}</div>`;
         } else {
-            lab.innerHTML = `<div class="blueprint-card"><strong>CONCEPTO TÉCNICO:</strong><br><br>${content}</div>` + lab.innerHTML;
+            newCard.className = 'blueprint-card';
+            newCard.innerHTML = `<strong>CONCEPTO TÉCNICO:</strong><br>${content}`;
         }
+        lab.prepend(newCard);
     }
 
     async function send() {
         const val = document.getElementById('user-in').value.trim();
         if(!val || !API_KEY) return;
 
-        // Render Usuario
         const fDiv = document.createElement('div');
         fDiv.className = 'msg f-msg'; fDiv.innerText = val;
         document.getElementById('chat-heli').appendChild(fDiv);
         document.getElementById('user-in').value = '';
+        
+        // Efecto visual de proceso
+        document.getElementById('status').innerText = "● PROCESSING...";
+        document.getElementById('status').style.color = "var(--lab)";
 
         try {
             const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Responde como HELIZABETH (auditora) y AXISS (arquitecto). Si el usuario pide diseñar o crear algo, AXISS debe incluir una sección final con el marcador [BLUEPRINT] conteniendo detalles técnicos para el laboratorio. Usuario: "${val}". Estructura de respuesta: Heli [SPLIT] Axiss` }] }] })
+                body: JSON.stringify({ contents: [{ parts: [{ text: `Responde como HELIZABETH (auditora, técnica y seria) y AXISS (arquitecto, creativo y motivador). Si el usuario pide diseñar algo, AXISS debe incluir una sección final con [BLUEPRINT] y detalles técnicos. Usuario: "${val}". Estructura: Heli [SPLIT] Axiss` }] }] })
             });
 
             const data = await resp.json();
             const text = data.candidates[0].content.parts[0].text;
-            
-            // Separación de hilos
             const mainParts = text.split('[SPLIT]');
             const hText = mainParts[0] ? mainParts[0].trim() : "Auditando...";
             const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando...";
             
-            // Render Heli en Chat
             const hDiv = document.createElement('div');
             hDiv.className = 'msg h-msg'; hDiv.innerText = hText;
             document.getElementById('chat-heli').appendChild(hDiv);
 
-            // Render en Deep Core
             const internal = document.getElementById('chat-internal');
             internal.innerHTML += `<div style="color:var(--heli); font-size:10px; margin-bottom:5px;">> HELI: ${hText}</div>`;
             
-            // Verificar si hay Blueprint para el Laboratorio
             if(aFullText.includes('[BLUEPRINT]')) {
                 const aParts = aFullText.split('[BLUEPRINT]');
                 internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS: ${aParts[0].trim()}</div>`;
                 renderBlueprint(aParts[1].trim());
-                // Efecto de brillo en flecha
-                document.querySelector('.to-left').style.boxShadow = "0 0 15px var(--lab)";
+                document.querySelector('.to-left').style.boxShadow = "0 0 20px var(--lab)";
                 setTimeout(() => { document.querySelector('.to-left').style.boxShadow = "none"; }, 3000);
             } else {
                 internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS: ${aFullText}</div>`;
             }
 
-        } catch (e) { console.error("Error en Transmisión:", e); }
+        } catch (e) { console.error("Error:", e); }
+        document.getElementById('status').innerText = "● ONLINE";
+        document.getElementById('status').style.color = "#00ff88";
         document.getElementById('chat-heli').scrollTop = document.getElementById('chat-heli').scrollHeight;
     }
 </script>
