@@ -1,98 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>HELI v13.1 [VISUAL_TRINITY]</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg: #050507; --heli: #00d2ff; --axiss: #00ff88; --lab: #a29bfe; }
-        body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: #eee; font-family: 'Inter', sans-serif; overflow: hidden; }
-        
-        #viewport { 
-            display: flex; width: 300vw; height: 100vh; 
-            transition: transform 0.5s cubic-bezier(0.6, 0, 0.4, 1);
-            transform: translateX(-100vw);
-        }
-
-        .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; box-sizing: border-box; }
-        
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); background: #000; }
-        .orb { width: 35px; height: 35px; border-radius: 50%; background: var(--heli); border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 10px var(--heli); }
-
-        #chat-heli, #chat-internal, #lab-content { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 120px; }
-        
-        #axiss-lab { background: radial-gradient(circle at center, #0f0f1a, #050507); }
-        .blueprint-display {
-            background: #000; border: 1px solid var(--lab); border-radius: 15px;
-            padding: 20px; position: relative; min-height: 250px; overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(162, 155, 254, 0.2); margin-bottom: 15px;
-        }
-        
-        /* Efecto Glitch de Procesamiento */
-        .processing-glitch { animation: glitch 0.2s infinite; opacity: 0.5; filter: hue-rotate(90deg); }
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            50% { transform: translate(-2px, 2px); }
-            100% { transform: translate(2px, -2px); }
-        }
-
-        .hud-element { position: absolute; border: 1px solid rgba(162, 155, 254, 0.4); padding: 5px; font-size: 9px; color: var(--lab); text-transform: uppercase; font-family: 'Fira Code'; }
-        .scan-line { width: 100%; height: 2px; background: rgba(162, 155, 254, 0.1); position: absolute; animation: scan 3s linear infinite; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-
-        .blueprint-card { background: rgba(162, 155, 254, 0.05); border: 1px dashed var(--lab); padding: 15px; border-radius: 10px; font-family: 'Fira Code'; font-size: 11px; color: var(--lab); margin-bottom: 10px; animation: fadeIn 0.4s ease; }
-
-        .msg { max-width: 85%; padding: 12px 16px; border-radius: 15px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.3s ease; }
-        .h-msg { background: rgba(255,255,255,0.03); border-left: 3px solid var(--heli); align-self: flex-start; font-style: italic; }
-        .f-msg { background: rgba(0, 210, 255, 0.1); border: 1px solid var(--heli); align-self: flex-end; color: var(--heli); font-weight: bold; }
-
-        .nav-arrow { position: absolute; top: 50%; width: 42px; height: 42px; background: #000; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; }
-        .to-left { left: 10px; color: var(--lab); }
-        .to-right { right: 10px; color: var(--axiss); }
-
-        .input-bar { position: absolute; bottom: 0; width: 100%; padding: 15px; background: #000; display: flex; gap: 10px; box-sizing: border-box; border-top: 1px solid #111; }
-        input { flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 10px; outline: none; font-size: 16px; }
-        button { background: var(--heli); border: none; width: 55px; border-radius: 10px; cursor: pointer; font-weight: bold; color: #000; }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body>
-
-<div id="viewport">
-    <div class="page" id="axiss-lab">
-        <header><div style="color: var(--lab); font-weight: bold; font-size: 12px; letter-spacing: 1px;">AXISS // BLUEPRINT_LAB</div></header>
-        <div id="lab-content">
-            <div class="blueprint-card">> NÚCLEO DE DISEÑO ACTIVO <br>Pídele a Axiss una estructura para renderizar.</div>
-        </div>
-        <div class="nav-arrow to-right" style="right:10px" onclick="move(1)">→</div>
-    </div>
-
-    <div class="page">
-        <header>
-            <div class="orb" onclick="setToken()"></div>
-            <div style="font-weight: 600; font-size: 14px; letter-spacing: 1px;">HELIZABETH v13.1</div>
-            <div id="status" style="font-size: 9px; color: #00ff88;">● ONLINE</div>
-        </header>
-        <div id="chat-heli">
-            <div class="msg h-msg">Fabián, sistema visual unificado. ¿Qué arquitectura iniciaremos hoy?</div>
-        </div>
-        <div class="nav-arrow to-left" onclick="move(0)">←</div>
-        <div class="nav-arrow to-right" onclick="move(2)">→</div>
-        <div class="input-bar">
-            <input type="text" id="user-in" placeholder="Comando para los núcleos..." autocomplete="off">
-            <button onclick="send()">✦</button>
-        </div>
-    </div>
-
-    <div class="page" style="background:#000">
-        <header><div style="color: var(--axiss); font-size: 11px; font-weight: bold;">DEEP_CORE_DEBUG_V2.5</div></header>
-        <div id="chat-internal"></div>
-        <div class="nav-arrow to-left" style="left:10px" onclick="move(1)">←</div>
-    </div>
-</div>
-
 <script>
     let API_KEY = localStorage.getItem('heli_key') || "";
     const viewport = document.getElementById('viewport');
@@ -115,7 +20,8 @@
         const lab = document.getElementById('lab-content');
         const newCard = document.createElement('div');
         
-        if(content.includes("Traje") || content.includes("HUD") || content.includes("Aegis")) {
+        // Detección de palabras clave para renderizado visual especial
+        if(content.includes("Traje") || content.includes("HUD") || content.includes("Aegis") || content.includes("NEXUS")) {
             newCard.innerHTML = `
             <div class="blueprint-display">
                 <div class="scan-line"></div>
@@ -126,9 +32,9 @@
                     [ GEOMETRÍA ACTIVA ]
                 </div>
                 <div class="hud-element" style="bottom:10px; left:10px; border-color:var(--heli);">HELI_PROT: ON</div>
-                <div class="hud-element" style="bottom:10px; right:10px;">BATT: 100%</div>
+                <div class="hud-element" style="bottom:10px; right:10px;">DATA_FLOW: LIVE</div>
             </div>
-            <div class="blueprint-card"><strong>SISTEMA VISUAL:</strong><br>${content}</div>`;
+            <div class="blueprint-card"><strong>ARCHITECT_CORE:</strong><br>${content}</div>`;
         } else {
             newCard.className = 'blueprint-card';
             newCard.innerHTML = `<strong>CONCEPTO TÉCNICO:</strong><br>${content}`;
@@ -140,50 +46,74 @@
         const val = document.getElementById('user-in').value.trim();
         if(!val || !API_KEY) return;
 
+        const chatHeli = document.getElementById('chat-heli');
         const fDiv = document.createElement('div');
         fDiv.className = 'msg f-msg'; fDiv.innerText = val;
-        document.getElementById('chat-heli').appendChild(fDiv);
+        chatHeli.appendChild(fDiv);
         document.getElementById('user-in').value = '';
         
-        // Efecto visual de proceso
-        document.getElementById('status').innerText = "● PROCESSING...";
+        document.getElementById('status').innerText = "● SCANNING_WEB...";
         document.getElementById('status').style.color = "var(--lab)";
 
         try {
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+            const promptSistema = `Eres un sistema dual. 
+            1. HELIZABETH: Auditora técnica. DEBES investigar en la red datos reales sobre sitios web, protocolos o tecnología que el usuario mencione. No digas "no tengo registros", usa tu herramienta de búsqueda.
+            2. AXISS: Arquitecto creativo. Diseña sobre los datos reales que Heli encuentre.
+            
+            USUARIO: "${val}"
+            ESTRUCTURA OBLIGATORIA: HELIZABETH [SPLIT] AXISS [BLUEPRINT] (si aplica)`;
+
+            // Usamos gemini-2.0-flash para mayor velocidad en móvil
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Responde como HELIZABETH (auditora, técnica y seria) y AXISS (arquitecto, creativo y motivador). Si el usuario pide diseñar algo, AXISS debe incluir una sección final con [BLUEPRINT] y detalles técnicos. Usuario: "${val}". Estructura: Heli [SPLIT] Axiss` }] }] })
+                body: JSON.stringify({ 
+                    contents: [{ parts: [{ text: promptSistema }] }],
+                    tools: [{ google_search_retrieval: {} }] 
+                })
             });
 
             const data = await resp.json();
+            
+            // Verificación de seguridad para la respuesta
+            if (!data.candidates || !data.candidates[0].content) throw new Error("Respuesta vacía");
+            
             const text = data.candidates[0].content.parts[0].text;
             const mainParts = text.split('[SPLIT]');
-            const hText = mainParts[0] ? mainParts[0].trim() : "Auditando...";
-            const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando...";
+            const hText = mainParts[0] ? mainParts[0].trim() : "Análisis técnico completado.";
+            const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando visión creativa...";
             
             const hDiv = document.createElement('div');
             hDiv.className = 'msg h-msg'; hDiv.innerText = hText;
-            document.getElementById('chat-heli').appendChild(hDiv);
+            chatHeli.appendChild(hDiv);
 
             const internal = document.getElementById('chat-internal');
-            internal.innerHTML += `<div style="color:var(--heli); font-size:10px; margin-bottom:5px;">> HELI: ${hText}</div>`;
+            internal.innerHTML += `<div style="color:var(--heli); font-size:10px; margin-bottom:5px;">> HELI_AUDIT: ${hText}</div>`;
             
             if(aFullText.includes('[BLUEPRINT]')) {
                 const aParts = aFullText.split('[BLUEPRINT]');
-                internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS: ${aParts[0].trim()}</div>`;
+                internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS_DESIGN: ${aParts[0].trim()}</div>`;
                 renderBlueprint(aParts[1].trim());
+                // Feedback visual de que se creó un Blueprint
                 document.querySelector('.to-left').style.boxShadow = "0 0 20px var(--lab)";
                 setTimeout(() => { document.querySelector('.to-left').style.boxShadow = "none"; }, 3000);
             } else {
                 internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS: ${aFullText}</div>`;
             }
 
-        } catch (e) { console.error("Error:", e); }
+        } catch (e) { 
+            console.error("Error:", e);
+            document.getElementById('status').innerText = "● OFFLINE_ERROR";
+            document.getElementById('status').style.color = "red";
+        }
+        
         document.getElementById('status').innerText = "● ONLINE";
         document.getElementById('status').style.color = "#00ff88";
-        document.getElementById('chat-heli').scrollTop = document.getElementById('chat-heli').scrollHeight;
+        chatHeli.scrollTop = chatHeli.scrollHeight;
     }
+
+    // Permitir enviar con la tecla Enter del teclado móvil
+    document.getElementById('user-in').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') send();
+    });
 </script>
-</body>
-</html>
