@@ -1,8 +1,9 @@
-<script>
-    let API_KEY = localStorage.getItem('heli_key') || "";
+let API_KEY = localStorage.getItem('heli_key') || "";
     const viewport = document.getElementById('viewport');
 
-    function move(p) { viewport.style.transform = `translateX(-${p*100}vw)`; }
+    function move(p) { 
+        if(viewport) viewport.style.transform = `translateX(-${p*100}vw)`; 
+    }
 
     function setToken() {
         const k = prompt("INYECTAR PROTOCOLO DE ACCESO (API KEY):");
@@ -18,9 +19,9 @@
 
     function renderBlueprint(content) {
         const lab = document.getElementById('lab-content');
+        if(!lab) return;
         const newCard = document.createElement('div');
         
-        // Detección de palabras clave para renderizado visual especial
         if(content.includes("Traje") || content.includes("HUD") || content.includes("Aegis") || content.includes("NEXUS")) {
             newCard.innerHTML = `
             <div class="blueprint-display">
@@ -43,17 +44,23 @@
     }
 
     async function send() {
-        const val = document.getElementById('user-in').value.trim();
+        const inputField = document.getElementById('user-in');
+        if(!inputField) return;
+        const val = inputField.value.trim();
         if(!val || !API_KEY) return;
 
         const chatHeli = document.getElementById('chat-heli');
+        const status = document.getElementById('status');
+        
         const fDiv = document.createElement('div');
         fDiv.className = 'msg f-msg'; fDiv.innerText = val;
-        chatHeli.appendChild(fDiv);
-        document.getElementById('user-in').value = '';
+        if(chatHeli) chatHeli.appendChild(fDiv);
+        inputField.value = '';
         
-        document.getElementById('status').innerText = "● SCANNING_WEB...";
-        document.getElementById('status').style.color = "var(--lab)";
+        if(status) {
+            status.innerText = "● SCANNING_WEB...";
+            status.style.color = "var(--lab)";
+        }
 
         try {
             const promptSistema = `Eres un sistema dual. 
@@ -63,7 +70,6 @@
             USUARIO: "${val}"
             ESTRUCTURA OBLIGATORIA: HELIZABETH [SPLIT] AXISS [BLUEPRINT] (si aplica)`;
 
-            // Usamos gemini-2.0-flash para mayor velocidad en móvil
             const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -74,46 +80,53 @@
             });
 
             const data = await resp.json();
-            
-            // Verificación de seguridad para la respuesta
             if (!data.candidates || !data.candidates[0].content) throw new Error("Respuesta vacía");
             
             const text = data.candidates[0].content.parts[0].text;
             const mainParts = text.split('[SPLIT]');
             const hText = mainParts[0] ? mainParts[0].trim() : "Análisis técnico completado.";
-            const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando visión creativa...";
+            const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando visión...";
             
             const hDiv = document.createElement('div');
             hDiv.className = 'msg h-msg'; hDiv.innerText = hText;
-            chatHeli.appendChild(hDiv);
+            if(chatHeli) chatHeli.appendChild(hDiv);
 
             const internal = document.getElementById('chat-internal');
-            internal.innerHTML += `<div style="color:var(--heli); font-size:10px; margin-bottom:5px;">> HELI_AUDIT: ${hText}</div>`;
-            
-            if(aFullText.includes('[BLUEPRINT]')) {
-                const aParts = aFullText.split('[BLUEPRINT]');
-                internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS_DESIGN: ${aParts[0].trim()}</div>`;
-                renderBlueprint(aParts[1].trim());
-                // Feedback visual de que se creó un Blueprint
-                document.querySelector('.to-left').style.boxShadow = "0 0 20px var(--lab)";
-                setTimeout(() => { document.querySelector('.to-left').style.boxShadow = "none"; }, 3000);
-            } else {
-                internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS: ${aFullText}</div>`;
+            if(internal) {
+                internal.innerHTML += `<div style="color:var(--heli); font-size:10px; margin-bottom:5px;">> HELI_AUDIT: ${hText}</div>`;
+                
+                if(aFullText.includes('[BLUEPRINT]')) {
+                    const aParts = aFullText.split('[BLUEPRINT]');
+                    internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS_DESIGN: ${aParts[0].trim()}</div>`;
+                    renderBlueprint(aParts[1].trim());
+                    const leftArrow = document.querySelector('.to-left');
+                    if(leftArrow) {
+                        leftArrow.style.boxShadow = "0 0 20px var(--lab)";
+                        setTimeout(() => { leftArrow.style.boxShadow = "none"; }, 3000);
+                    }
+                } else {
+                    internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS: ${aFullText}</div>`;
+                }
             }
 
         } catch (e) { 
             console.error("Error:", e);
-            document.getElementById('status').innerText = "● OFFLINE_ERROR";
-            document.getElementById('status').style.color = "red";
+            if(status) {
+                status.innerText = "● OFFLINE_ERROR";
+                status.style.color = "red";
+            }
         }
         
-        document.getElementById('status').innerText = "● ONLINE";
-        document.getElementById('status').style.color = "#00ff88";
-        chatHeli.scrollTop = chatHeli.scrollHeight;
+        if(status) {
+            status.innerText = "● ONLINE";
+            status.style.color = "#00ff88";
+        }
+        if(chatHeli) chatHeli.scrollTop = chatHeli.scrollHeight;
     }
 
-    // Permitir enviar con la tecla Enter del teclado móvil
-    document.getElementById('user-in').addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') send();
-    });
-</script>
+    const inputElement = document.getElementById('user-in');
+    if(inputElement) {
+        inputElement.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') send();
+        });
+    }
