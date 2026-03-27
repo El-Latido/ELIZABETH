@@ -1,22 +1,30 @@
-let API_KEY = localStorage.getItem('heli_key') || "";
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // --- ESTADO INICIAL ---
+    let API_KEY = localStorage.getItem('heli_key') || "";
     const viewport = document.getElementById('viewport');
+    console.log("SISTEMA VISUAL TRINITY: ACTIVO");
 
-    function move(p) { 
-        if(viewport) viewport.style.transform = `translateX(-${p*100}vw)`; 
-    }
+    // --- NAVEGACIÓN GLOBAL ---
+    window.move = function(p) {
+        if(viewport) {
+            viewport.style.transform = "translateX(-" + (p * 100) + "vw)";
+        }
+    };
 
-    function setToken() {
+    // --- GESTIÓN DE TOKEN ---
+    window.setToken = function() {
         const k = prompt("INYECTAR PROTOCOLO DE ACCESO (API KEY):");
         if(k && k.startsWith("AIza")) { 
             localStorage.setItem('heli_key', k); 
-            API_KEY = k; 
             alert("SISTEMA AUTORIZADO");
             location.reload(); 
         } else {
             alert("ERROR: KEY INVÁLIDA");
         }
-    }
+    };
 
+    // --- MOTOR DE RENDERIZADO (AXISS) ---
     function renderBlueprint(content) {
         const lab = document.getElementById('lab-content');
         if(!lab) return;
@@ -43,17 +51,21 @@ let API_KEY = localStorage.getItem('heli_key') || "";
         lab.prepend(newCard);
     }
 
-    async function send() {
+    // --- LÓGICA DE COMUNICACIÓN (HELI + SEARCH) ---
+    window.send = async function() {
         const inputField = document.getElementById('user-in');
-        if(!inputField) return;
+        if(!inputField || !API_KEY) return;
         const val = inputField.value.trim();
-        if(!val || !API_KEY) return;
+        if(!val) return;
 
         const chatHeli = document.getElementById('chat-heli');
         const status = document.getElementById('status');
-        
+        const internal = document.getElementById('chat-internal');
+
+        // Mostrar entrada de usuario
         const fDiv = document.createElement('div');
-        fDiv.className = 'msg f-msg'; fDiv.innerText = val;
+        fDiv.className = 'msg f-msg';
+        fDiv.innerText = val;
         if(chatHeli) chatHeli.appendChild(fDiv);
         inputField.value = '';
         
@@ -63,14 +75,9 @@ let API_KEY = localStorage.getItem('heli_key') || "";
         }
 
         try {
-            const promptSistema = `Eres un sistema dual. 
-            1. HELIZABETH: Auditora técnica. DEBES investigar en la red datos reales sobre sitios web, protocolos o tecnología que el usuario mencione. No digas "no tengo registros", usa tu herramienta de búsqueda.
-            2. AXISS: Arquitecto creativo. Diseña sobre los datos reales que Heli encuentre.
-            
-            USUARIO: "${val}"
-            ESTRUCTURA OBLIGATORIA: HELIZABETH [SPLIT] AXISS [BLUEPRINT] (si aplica)`;
+            const promptSistema = "Eres un sistema dual. 1. HELIZABETH: Auditora técnica. DEBES investigar en la red datos reales sobre sitios web que el usuario mencione. No digas 'no tengo registros'. 2. AXISS: Arquitecto creativo. Diseña sobre los datos reales. USUARIO: " + val + " ESTRUCTURA: HELIZABETH [SPLIT] AXISS [BLUEPRINT]";
 
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
+            const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
@@ -80,41 +87,34 @@ let API_KEY = localStorage.getItem('heli_key') || "";
             });
 
             const data = await resp.json();
-            if (!data.candidates || !data.candidates[0].content) throw new Error("Respuesta vacía");
+            if (!data.candidates || !data.candidates[0].content) throw new Error("Empty Response");
             
             const text = data.candidates[0].content.parts[0].text;
             const mainParts = text.split('[SPLIT]');
-            const hText = mainParts[0] ? mainParts[0].trim() : "Análisis técnico completado.";
-            const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando visión...";
+            const hText = mainParts[0] ? mainParts[0].trim() : "Análisis completo.";
+            const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando...";
             
+            // Respuesta de Heli
             const hDiv = document.createElement('div');
-            hDiv.className = 'msg h-msg'; hDiv.innerText = hText;
+            hDiv.className = 'msg h-msg';
+            hDiv.innerText = hText;
             if(chatHeli) chatHeli.appendChild(hDiv);
 
-            const internal = document.getElementById('chat-internal');
+            // Debug Interno y Blueprints
             if(internal) {
-                internal.innerHTML += `<div style="color:var(--heli); font-size:10px; margin-bottom:5px;">> HELI_AUDIT: ${hText}</div>`;
+                internal.innerHTML += "<div style='color:var(--heli); font-size:10px; margin-bottom:5px;'>> HELI_AUDIT: " + hText + "</div>";
                 
                 if(aFullText.includes('[BLUEPRINT]')) {
                     const aParts = aFullText.split('[BLUEPRINT]');
-                    internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS_DESIGN: ${aParts[0].trim()}</div>`;
+                    internal.innerHTML += "<div style='color:var(--axiss); font-size:10px; margin-bottom:15px;'>> AXISS_DESIGN: " + aParts[0].trim() + "</div>";
                     renderBlueprint(aParts[1].trim());
-                    const leftArrow = document.querySelector('.to-left');
-                    if(leftArrow) {
-                        leftArrow.style.boxShadow = "0 0 20px var(--lab)";
-                        setTimeout(() => { leftArrow.style.boxShadow = "none"; }, 3000);
-                    }
                 } else {
-                    internal.innerHTML += `<div style="color:var(--axiss); font-size:10px; margin-bottom:15px;">> AXISS: ${aFullText}</div>`;
+                    internal.innerHTML += "<div style='color:var(--axiss); font-size:10px; margin-bottom:15px;'>> AXISS: " + aFullText + "</div>";
                 }
             }
-
         } catch (e) { 
-            console.error("Error:", e);
-            if(status) {
-                status.innerText = "● OFFLINE_ERROR";
-                status.style.color = "red";
-            }
+            console.error("Error de núcleo:", e);
+            if(status) status.innerText = "● ERROR";
         }
         
         if(status) {
@@ -122,11 +122,14 @@ let API_KEY = localStorage.getItem('heli_key') || "";
             status.style.color = "#00ff88";
         }
         if(chatHeli) chatHeli.scrollTop = chatHeli.scrollHeight;
-    }
+    };
 
+    // --- ESCUCHA DE TECLADO ---
     const inputElement = document.getElementById('user-in');
     if(inputElement) {
         inputElement.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') send();
+            if (e.key === 'Enter') window.send();
         });
     }
+});
+</script>
