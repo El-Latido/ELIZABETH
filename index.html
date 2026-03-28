@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v2.2 [MEMORY_CORE]</title>
+    <title>ELIZABETH_OS v2.5 [FLASH_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -41,15 +41,14 @@
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v2.2 [MEMORY_CORE]</span>
+                    <span class="system-version">v2.5 [GEMINI_2.5_FLASH]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
                     <div class="avatar-orb"></div>
                 </div>
             </header>
-            <div id="chat-heli">
-                </div>
+            <div id="chat-heli"></div>
             <div class="nav-arrow to-right" onclick="move(1)">→</div>
         </div>
 
@@ -62,7 +61,7 @@
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Comando para los núcleos..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Inyectar comando..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
@@ -73,74 +72,77 @@
         const chatHeli = document.getElementById('chat-heli');
         const statusText = document.getElementById('status-text');
 
-        // --- MOTOR DE SALUDO DINÁMICO (MEMORIA) ---
+        // --- MOTOR DE SALUDO AUTÉNTICO ---
         function generarSaludo() {
             const ultimaCharla = localStorage.getItem('heli_last_topic') || "inicio";
             const nombre = "Fabián";
-            
             const memoria = {
-                "inicio": [`> Hola ${nombre}. Sistema listo. Toca mi núcleo visual para empezar.`, `> ${nombre}, estoy operativa. ¿Iniciamos auditoría?`],
-                "seguridad": [`> Sigo vigilando los protocolos, ${nombre}. ¿Alguna nueva amenaza?`, `> El firewall está estable desde nuestra última charla.`],
-                "arquitectura": [`> AXISS tiene los planos listos. ¿Quieres entrar al Lab?`, `> Hola ${nombre}. Los Blueprints están procesados.`],
-                "general": [`> Te estaba esperando, ${nombre}. El flujo de datos es constante.`, `> ¿Qué vamos a desmantelar hoy?`]
+                "inicio": [`> Hola ${nombre}. Motor 2.5 listo. Toca mi núcleo visual.`, `> ${nombre}, estoy operativa. ¿Iniciamos auditoría?`],
+                "seguridad": [`> Sigo vigilando los protocolos, ${nombre}. ¿Alguna nueva amenaza?`],
+                "arquitectura": [`> AXISS tiene los planos listos. El Lab te espera.`],
+                "general": [`> Te estaba esperando, ${nombre}. El flujo de datos es constante.`]
             };
+            let cat = "general";
+            if(ultimaCharla === "inicio") cat = "inicio";
+            else if(ultimaCharla.includes("key") || ultimaCharla.includes("seguridad")) cat = "seguridad";
+            else if(ultimaCharla.includes("blueprint") || ultimaCharla.includes("diseño")) cat = "arquitectura";
 
-            let categoria = "general";
-            if(ultimaCharla === "inicio") categoria = "inicio";
-            else if(ultimaCharla.includes("key") || ultimaCharla.includes("seguridad")) categoria = "seguridad";
-            else if(ultimaCharla.includes("blueprint") || ultimaCharla.includes("diseño")) categoria = "arquitectura";
-
-            const frases = memoria[categoria];
-            const decision = frases[Math.floor(Math.random() * frases.length)];
-            
-            const hDiv = document.createElement('div');
-            hDiv.className = 'msg h-msg';
-            hDiv.innerText = decision;
-            chatHeli.appendChild(hDiv);
+            const msg = memoria[cat][Math.floor(Math.random() * memoria[cat].length)];
+            chatHeli.innerHTML += `<div class="msg h-msg">${msg}</div>`;
         }
-        
-        setTimeout(generarSaludo, 1000); // Aparece 1 seg después de cargar
+        setTimeout(generarSaludo, 800);
 
         window.move = (p) => { if(vp) vp.style.transform = `translateX(-${p * 100}vw)`; };
 
         window.setToken = () => {
-            const k = prompt("INYECTAR API KEY:", API_KEY);
+            const k = prompt("INYECTAR API KEY (GEMINI 2.5):", API_KEY);
             if(k && k.startsWith("AIza")) { 
                 localStorage.setItem('heli_key', k); 
-                localStorage.setItem('heli_last_topic', 'seguridad');
                 location.reload(); 
             }
         };
 
         window.send = async function() {
             const input = document.getElementById('user-in');
-            if(!input || !input.value.trim()) return;
             const val = input.value.trim();
+            if(!val) return;
             
-            // Guardar tema en memoria
             localStorage.setItem('heli_last_topic', val.toLowerCase());
-
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "SCANNING...";
+            statusText.innerText = "SCANNING_V2.5...";
 
             if(!API_KEY) {
-                chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: Error. Toca mi avatar para inyectar la Key.</div>`;
-                statusText.innerText = "ONLINE";
+                chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: Error. Falta KEY.</div>`;
+                statusText.innerText = "OFFLINE";
                 return;
             }
 
             try {
-                const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY, {
+                // MODELO ACTUALIZADO A 2.5 FLASH
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+                const resp = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres hElizabeth y AXISS. Investiga y responde. Usuario: " + val + " Estructura: Heli [SPLIT] Axiss" }] }], tools: [{ google_search_retrieval: {} }] })
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Eres hElizabeth y AXISS. Investiga y responde a: " + val + " . Estructura: Heli [SPLIT] Axiss" }] }],
+                        tools: [{ google_search_retrieval: {} }]
+                    })
                 });
+
                 const data = await resp.json();
+                if(data.error) throw new Error(data.error.message);
+
                 const text = data.candidates[0].content.parts[0].text;
                 const parts = text.split('[SPLIT]');
                 chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: ${parts[0].trim()}</div>`;
-            } catch (e) { statusText.innerText = "ERROR"; }
+                
+                if(parts[1]) document.getElementById('chat-internal').innerText = "> AXISS: LOG_OK // RENDERIZANDO";
+                
+            } catch (e) {
+                chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: Error de enlace (${e.message}).</div>`;
+                statusText.innerText = "ERROR";
+            }
             
             statusText.innerText = "ONLINE";
             chatHeli.scrollTop = chatHeli.scrollHeight;
