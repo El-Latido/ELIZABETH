@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v2.7 [FLASH_CORE]</title>
+    <title>ELIZABETH_OS v2.8 [FLASH_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -41,7 +41,7 @@
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v2.7 [GEMINI_2.5_FLASH]</span>
+                    <span class="system-version">v2.8 [FLASH_CORE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
@@ -75,31 +75,16 @@
         const labContent = document.getElementById('lab-content');
 
         function generarSaludo() {
-            const ultimaCharla = localStorage.getItem('heli_last_topic') || "inicio";
             const nombre = "AXISS"; 
-            const memoria = {
-                "inicio": [`> Hola ${nombre}. Motor 2.5 listo. Toca mi núcleo visual.`],
-                "seguridad": [`> Protocolos de auditoría activos, ${nombre}.`],
-                "arquitectura": [`> Planos cargados en el Lab. ¿Qué diseñamos hoy?`],
-                "general": [`> Sistema estable. Esperando tus órdenes, Arquitecto.`]
-            };
-            let cat = "general";
-            if(ultimaCharla.includes("key") || ultimaCharla.includes("seguridad")) cat = "seguridad";
-            else if(ultimaCharla.includes("blueprint") || ultimaCharla.includes("diseño")) cat = "arquitectura";
-
-            const msg = memoria[cat][0];
-            chatHeli.innerHTML += `<div class="msg h-msg">${msg}</div>`;
+            chatHeli.innerHTML += `<div class="msg h-msg">> Sistema v2.8 estable. Brevedad activada, ${nombre}.</div>`;
         }
         setTimeout(generarSaludo, 800);
 
         window.move = (p) => { if(vp) vp.style.transform = `translateX(-${p * 100}vw)`; };
 
         window.setToken = () => {
-            const k = prompt("INYECTAR API KEY (GEMINI 2.5):", API_KEY);
-            if(k && k.startsWith("AIza")) { 
-                localStorage.setItem('heli_key', k); 
-                location.reload(); 
-            }
+            const k = prompt("API KEY:", API_KEY);
+            if(k) { localStorage.setItem('heli_key', k); location.reload(); }
         };
 
         window.send = async function() {
@@ -107,16 +92,9 @@
             const val = input.value.trim();
             if(!val) return;
             
-            localStorage.setItem('heli_last_topic', val.toLowerCase());
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "SCANNING_V2.5...";
-
-            if(!API_KEY) {
-                chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: Error. Falta KEY.</div>`;
-                statusText.innerText = "OFFLINE";
-                return;
-            }
+            statusText.innerText = "SCANNING...";
 
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
@@ -124,21 +102,17 @@
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Actúa como hElizabeth (IA Auditora) para AXISS (Arquitecto). Responde de forma técnica sobre: ${val} . Estructura: hElizabeth: [Tu respuesta] [SPLIT] AXISS: [Log técnico o plano]` }] }],
+                        contents: [{ parts: [{ text: `Eres hElizabeth. Sé extremadamente breve (máximo 15 palabras). Usuario dice: ${val}. Estructura: hElizabeth: [Breve] [SPLIT] AXISS: [Dato técnico]` }] }],
                         tools: [{ google_search: {} }]
                     })
                 });
 
                 const data = await resp.json();
-                if(data.error) throw new Error(data.error.message);
-
                 const text = data.candidates[0].content.parts[0].text;
                 const parts = text.split('[SPLIT]');
                 
-                // Respuesta de hElizabeth al chat principal
                 chatHeli.innerHTML += `<div class="msg h-msg">> ${parts[0].replace('hElizabeth:', '').trim()}</div>`;
                 
-                // Respuesta de AXISS al LAB_CORE
                 if(parts[1]) {
                     const logDiv = document.createElement('div');
                     logDiv.className = 'lab-log';
@@ -148,10 +122,8 @@
                 }
                 
             } catch (e) {
-                chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: Error de enlace (${e.message}).</div>`;
                 statusText.innerText = "ERROR";
             }
-            
             statusText.innerText = "ONLINE";
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
