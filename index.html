@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v2.5 [FLASH_CORE]</title>
+    <title>ELIZABETH_OS v2.6 [FLASH_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -41,7 +41,7 @@
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v2.5 [GEMINI_2.5_FLASH]</span>
+                    <span class="system-version">v2.6 [GEMINI_2.5_FLASH]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
@@ -72,7 +72,6 @@
         const chatHeli = document.getElementById('chat-heli');
         const statusText = document.getElementById('status-text');
 
-        // --- MOTOR DE SALUDO AUTÉNTICO ---
         function generarSaludo() {
             const ultimaCharla = localStorage.getItem('heli_last_topic') || "inicio";
             const nombre = "Fabián";
@@ -119,14 +118,14 @@
             }
 
             try {
-                // MODELO ACTUALIZADO A 2.5 FLASH
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
                 const resp = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: "Eres hElizabeth y AXISS. Investiga y responde a: " + val + " . Estructura: Heli [SPLIT] Axiss" }] }],
-                        tools: [{ google_search_retrieval: {} }]
+                        // CORRECCIÓN PARA 2.5 FLASH:
+                        tools: [{ google_search: {} }]
                     })
                 });
 
