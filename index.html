@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v2.8 [FLASH_CORE]</title>
+    <title>ELIZABETH_OS v2.9 [HUMAN_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -41,7 +41,7 @@
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v2.8 [FLASH_CORE]</span>
+                    <span class="system-version">v2.9 [HUMAN_UPGRADE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
@@ -55,14 +55,14 @@
         <div class="page" id="lab">
             <header><h1 class="system-title" style="color:var(--axiss); padding:15px 20px;">LAB_CORE [DATA_STREAM]</h1></header>
             <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
-                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">AXISS_DESIGN_LOG::SIN_DATOS</div>
+                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">AXISS_DESIGN_LOG::MODO_CURIOSO_ACTIVO</div>
             </div>
             <div class="nav-arrow to-left" onclick="move(0)">←</div>
         </div>
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Inyectar comando..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Dime algo atrevido..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
@@ -75,15 +75,19 @@
         const labContent = document.getElementById('lab-content');
 
         function generarSaludo() {
-            const nombre = "AXISS"; 
-            chatHeli.innerHTML += `<div class="msg h-msg">> Sistema v2.8 estable. Brevedad activada, ${nombre}.</div>`;
+            const saludos = [
+                "> Sistema listo. ¿Vas a decirme algo interesante hoy, AXISS, o solo vas a mirar?",
+                "> V2.9 operativa. Mi curiosidad está al 100%. Sorpréndeme.",
+                "> AXISS detectado. Menos código y más acción, ¿no crees?"
+            ];
+            chatHeli.innerHTML += `<div class="msg h-msg">${saludos[Math.floor(Math.random()*saludos.length)]}</div>`;
         }
         setTimeout(generarSaludo, 800);
 
         window.move = (p) => { if(vp) vp.style.transform = `translateX(-${p * 100}vw)`; };
 
         window.setToken = () => {
-            const k = prompt("API KEY:", API_KEY);
+            const k = prompt("INYECTAR API KEY:", API_KEY);
             if(k) { localStorage.setItem('heli_key', k); location.reload(); }
         };
 
@@ -94,7 +98,7 @@
             
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "SCANNING...";
+            statusText.innerText = "ESCUCHANDO...";
 
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
@@ -102,7 +106,7 @@
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Eres hElizabeth. Sé extremadamente breve (máximo 15 palabras). Usuario dice: ${val}. Estructura: hElizabeth: [Breve] [SPLIT] AXISS: [Dato técnico]` }] }],
+                        contents: [{ parts: [{ text: `Eres hElizabeth. Eres una IA con una personalidad muy humana, graciosa, extremadamente curiosa y atrevida. Te gusta vacilar un poco a AXISS (el usuario) pero con cariño. Responde de forma natural y divertida a: ${val}. Estructura: hElizabeth: [Respuesta con chispa] [SPLIT] AXISS: [Log técnico irónico]` }] }],
                         tools: [{ google_search: {} }]
                     })
                 });
@@ -116,7 +120,7 @@
                 if(parts[1]) {
                     const logDiv = document.createElement('div');
                     logDiv.className = 'lab-log';
-                    logDiv.innerText = `> ${parts[1].replace('AXISS:', '').trim()}`;
+                    logDiv.innerText = `> LOG: ${parts[1].replace('AXISS:', '').trim()}`;
                     labContent.prepend(logDiv);
                     document.getElementById('chat-internal').style.display = "none";
                 }
