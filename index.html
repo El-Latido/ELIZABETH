@@ -3,69 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v2.1 [AVATAR_CORE]</title>
+    <title>ELIZABETH_OS v2.2 [MEMORY_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
-        
-        /* Contenedor Principal (Deslizamiento) */
         #viewport { display: flex; width: 300vw; height: 100vh; transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1); }
         .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; box-sizing: border-box; }
-        
-        /* Encabezado Unificado con Avatar */
         header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; background: #000; position: sticky; top: 0; z-index: 50; }
         .system-info { display: flex; flex-direction: column; gap: 2px; }
         .system-title { color: var(--lab); font-weight: bold; font-size: 14px; letter-spacing: 1px; margin: 0; }
         .system-version { opacity: 0.5; font-size: 10px; }
-
-        /* Avatar hElizabeth (Chica Auditora Abstracta) */
         .avatar-container { position: relative; width: 45px; height: 45px; cursor: pointer; }
-        .avatar-orb { 
-            width: 100%; height: 100%; border-radius: 50%; 
-            background: radial-gradient(circle at 30% 30%, #fff 0%, #a29bfe 40%, #000 100%);
-            border: 2px solid #fff; box-shadow: 0 0 15px rgba(162, 155, 254, 0.6);
-            transition: 0.3s; position: relative; overflow: hidden;
-        }
-        /* Rostro abstracto (Chica Cyber) */
-        .avatar-orb::before {
-            content: ''; position: absolute; top: 10px; left: 10px; width: 25px; height: 25px;
-            background: 
-                radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 60%, var(--heli) 70%, rgba(0,0,0,0) 80%), /* Ojo */
-                linear-gradient(to right, rgba(0,0,0,0) 45%, var(--heli) 50%, rgba(0,0,0,0) 55%); /* Mechón */
-            border-radius: 50%; opacity: 0.8; filter: blur(1px);
-        }
-        .avatar-halo { 
-            position: absolute; top: -5px; left: -5px; width: 55px; height: 55px; 
-            border-radius: 50%; border: 1px solid rgba(162, 155, 254, 0.3);
-            animation: haloPulse 3s infinite; pointer-events: none;
-        }
+        .avatar-orb { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff 0%, #a29bfe 40%, #000 100%); border: 2px solid #fff; box-shadow: 0 0 15px rgba(162, 155, 254, 0.6); transition: 0.3s; position: relative; overflow: hidden; }
+        .avatar-orb::before { content: ''; position: absolute; top: 10px; left: 10px; width: 25px; height: 25px; background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 60%, var(--heli) 70%, rgba(0,0,0,0) 80%), linear-gradient(to right, rgba(0,0,0,0) 45%, var(--heli) 50%, rgba(0,0,0,0) 55%); border-radius: 50%; opacity: 0.8; filter: blur(1px); }
+        .avatar-halo { position: absolute; top: -5px; left: -5px; width: 55px; height: 55px; border-radius: 50%; border: 1px solid rgba(162, 155, 254, 0.3); animation: haloPulse 3s infinite; pointer-events: none; }
         @keyframes haloPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.2); opacity: 0; } }
-        .avatar-container:active .avatar-orb { transform: scale(0.9) rotate(-15deg); box-shadow: 0 0 5px var(--heli); border-color: var(--heli); }
-
-        /* Interfaz de Chat (HELI) */
         #chat-heli, #chat-internal { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px; scroll-behavior: smooth; }
         .msg { padding: 12px 16px; border-radius: 12px; max-width: 85%; font-size: 14px; line-height: 1.5; animation: msgIn 0.3s ease; position: relative; word-wrap: break-word; }
         @keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .f-msg { align-self: flex-end; background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.3); border-right: 3px solid var(--lab); color: var(--lab); border-radius: 12px 12px 0 12px; }
         .h-msg { align-self: flex-start; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-left: 3px solid var(--heli); color: var(--heli); border-radius: 12px 12px 12px 0; font-style: italic; }
-        
-        /* Controles de Entrada (Fijados abajo) */
         .input-bar { position: fixed; bottom: 0; width: 100%; padding: 15px; background: #000; display: flex; gap: 10px; box-sizing: border-box; border-top: 1px solid #111; z-index: 40; }
         input { flex: 1; background: #111; border: 1px solid #333; color: var(--text); padding: 14px; border-radius: 10px; outline: none; font-size: 16px; font-family: inherit; }
-        input:focus { border-color: var(--lab); box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
-        button#send-btn { background: #000; border: 1px solid var(--heli); color: var(--heli); font-weight: bold; width: 60px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-family: inherit; }
-        button#send-btn:active { background: var(--heli); color: #000; transform: scale(0.95); }
-        
-        /* Barra de Estado (HUD) */
-        #status-hud { position: fixed; top: 75px; left: 20px; font-size: 9px; color: var(--heli); z-index: 45; text-transform: uppercase; letter-spacing: 2px; font-family: inherit; pointer-events: none; opacity: 0.8; }
-        #status-icon { margin-right: 5px; animation: blink 1.5s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        /* Navegación y Lab */
-        .nav-arrow { position: absolute; top: 50%; width: 42px; height: 42px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 60; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-size: 20px; transition: 0.3s; opacity: 0.6; }
-        .nav-arrow:hover { opacity: 1; background: #000; border-color: rgba(255,255,255,0.3); }
+        button#send-btn { background: #000; border: 1px solid var(--heli); color: var(--heli); font-weight: bold; width: 60px; border-radius: 10px; cursor: pointer; }
+        #status-hud { position: fixed; top: 75px; left: 20px; font-size: 9px; color: var(--heli); z-index: 45; text-transform: uppercase; letter-spacing: 2px; }
+        .nav-arrow { position: absolute; top: 50%; width: 42px; height: 42px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); color: var(--text); }
         .to-right { right: 15px; } .to-left { left: 15px; }
-        #lab { background: radial-gradient(circle at center, #0f0f1a 0%, #050507 100%); }
         .blueprint-card { background: rgba(162, 155, 254, 0.03); border: 1px dashed rgba(162, 155, 254, 0.3); padding: 15px; border-radius: 10px; font-size: 11px; color: var(--lab); margin-bottom: 10px; }
     </style>
 </head>
@@ -78,30 +41,22 @@
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v2.1 FLASH_CORE // AVATAR_AUTH</span>
+                    <span class="system-version">v2.2 [MEMORY_CORE]</span>
                 </div>
-                <div class="avatar-container" onclick="setToken()" title="PROTOCOLO DE ACCESO (KEY)">
+                <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
                     <div class="avatar-orb"></div>
                 </div>
             </header>
-            
             <div id="chat-heli">
-                <div class="msg h-msg">> Fabián, sistema unificado listo. Toca mi núcleo visual para autenticar o escribe un comando.</div>
-            </div>
-            
+                </div>
             <div class="nav-arrow to-right" onclick="move(1)">→</div>
         </div>
 
         <div class="page" id="lab">
-            <header>
-                <div class="system-info">
-                    <h1 class="system-title" style="color:var(--axiss);">LAB_CORE</h1>
-                    <div id="chat-internal" style="font-size: 9px; color:rgba(255,255,255,0.5); padding:0; gap:2px;">AXISS_DESIGN_LOG::WAITING</div>
-                </div>
-            </header>
-            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px 20px 100px;">
-                </div>
+            <header><h1 class="system-title" style="color:var(--axiss); padding:15px 20px;">LAB_CORE</h1></header>
+            <div id="chat-internal" style="font-size: 9px; color:rgba(255,255,255,0.5); padding:10px 20px;">AXISS_DESIGN_LOG::WAITING</div>
+            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;"></div>
             <div class="nav-arrow to-left" onclick="move(0)">←</div>
         </div>
     </div>
@@ -113,148 +68,85 @@
 
     <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // --- INICIALIZACIÓN DE DATOS ---
         let API_KEY = localStorage.getItem('heli_key') || "";
         const vp = document.getElementById('viewport');
         const chatHeli = document.getElementById('chat-heli');
         const statusText = document.getElementById('status-text');
-        const statusIcon = document.getElementById('status-icon');
 
-        // Navegación Global (window.move)
-        window.move = function(p) {
-            if(vp) vp.style.transform = `translateX(-${p * 100}vw)`;
-        };
+        // --- MOTOR DE SALUDO DINÁMICO (MEMORIA) ---
+        function generarSaludo() {
+            const ultimaCharla = localStorage.getItem('heli_last_topic') || "inicio";
+            const nombre = "Fabián";
+            
+            const memoria = {
+                "inicio": [`> Hola ${nombre}. Sistema listo. Toca mi núcleo visual para empezar.`, `> ${nombre}, estoy operativa. ¿Iniciamos auditoría?`],
+                "seguridad": [`> Sigo vigilando los protocolos, ${nombre}. ¿Alguna nueva amenaza?`, `> El firewall está estable desde nuestra última charla.`],
+                "arquitectura": [`> AXISS tiene los planos listos. ¿Quieres entrar al Lab?`, `> Hola ${nombre}. Los Blueprints están procesados.`],
+                "general": [`> Te estaba esperando, ${nombre}. El flujo de datos es constante.`, `> ¿Qué vamos a desmantelar hoy?`]
+            };
 
-        // PROTOCOLO "AVATAR_AUTH": Gestión de Token al tocar el avatar
-        window.setToken = function() {
-            const k = prompt("INYECTAR PROTOCOLO DE ACCESO (API KEY):", API_KEY);
+            let categoria = "general";
+            if(ultimaCharla === "inicio") categoria = "inicio";
+            else if(ultimaCharla.includes("key") || ultimaCharla.includes("seguridad")) categoria = "seguridad";
+            else if(ultimaCharla.includes("blueprint") || ultimaCharla.includes("diseño")) categoria = "arquitectura";
+
+            const frases = memoria[categoria];
+            const decision = frases[Math.floor(Math.random() * frases.length)];
+            
+            const hDiv = document.createElement('div');
+            hDiv.className = 'msg h-msg';
+            hDiv.innerText = decision;
+            chatHeli.appendChild(hDiv);
+        }
+        
+        setTimeout(generarSaludo, 1000); // Aparece 1 seg después de cargar
+
+        window.move = (p) => { if(vp) vp.style.transform = `translateX(-${p * 100}vw)`; };
+
+        window.setToken = () => {
+            const k = prompt("INYECTAR API KEY:", API_KEY);
             if(k && k.startsWith("AIza")) { 
                 localStorage.setItem('heli_key', k); 
-                API_KEY = k; 
-                alert("SISTEMA AUTORIZADO // NÚCLEO HELI ACTIVADO");
+                localStorage.setItem('heli_last_topic', 'seguridad');
                 location.reload(); 
-            } else if (k === "") {
-                localStorage.removeItem('heli_key');
-                alert("PROTOCOLO DESACTIVADO // NÚCLEO HELI OFFLINE");
-                location.reload();
-            } else if (k !== null) {
-                alert("ERROR: PROTOCOLO INVÁLIDO");
             }
         };
 
-        // Renderizado de Blueprints (AXISS)
-        function renderBlueprint(content) {
-            const lab = document.getElementById('lab-content');
-            if(!lab) return;
-            const newCard = document.createElement('div');
-            newCard.className = 'blueprint-card';
-            newCard.innerHTML = `<strong>> ARCHITECT_CORE::DESIGN_STREAM</strong><br>${content}`;
-            lab.prepend(newCard);
-        }
-
-        // Lógica de Comunicación (HELI + Search)
         window.send = async function() {
-            const inputField = document.getElementById('user-in');
-            if(!inputField) return;
-            const val = inputField.value.trim();
-            if(!val) return;
-
-            // Mostrar entrada de usuario
-            const fDiv = document.createElement('div');
-            fDiv.className = 'msg f-msg';
-            fDiv.innerText = val;
-            if(chatHeli) chatHeli.appendChild(fDiv);
-            inputField.value = '';
+            const input = document.getElementById('user-in');
+            if(!input || !input.value.trim()) return;
+            const val = input.value.trim();
             
-            // Estado SCANNING
-            if(statusText) {
-                statusText.innerText = "SCANNING_WEB...";
-                statusText.style.color = "var(--lab)";
-                statusIcon.style.color = "var(--lab)";
-            }
+            // Guardar tema en memoria
+            localStorage.setItem('heli_last_topic', val.toLowerCase());
 
-            // Verificar API_KEY antes de enviar
+            chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
+            input.value = '';
+            statusText.innerText = "SCANNING...";
+
             if(!API_KEY) {
-                setTimeout(() => {
-                    const hDiv = document.createElement('div');
-                    hDiv.className = 'msg h-msg';
-                    hDiv.innerText = "> hElizabeth: Error de autenticación. Toca mi avatar para inyectar la API_KEY y activar la conexión de red.";
-                    if(chatHeli) chatHeli.appendChild(hDiv);
-                    statusText.innerText = "ONLINE // KEY_REQUIRED";
-                    statusText.style.color = "var(--axiss)";
-                    statusIcon.style.color = "var(--axiss)";
-                    chatHeli.scrollTop = chatHeli.scrollHeight;
-                }, 800);
+                chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: Error. Toca mi avatar para inyectar la Key.</div>`;
+                statusText.innerText = "ONLINE";
                 return;
             }
 
             try {
-                const promptSistema = "Eres un sistema dual. 1. HELIZABETH: Auditora técnica seria. DEBES investigar en la red datos reales sobre sitios web o tecnologías que el usuario mencione. No digas 'no tengo registros', usa tu herramienta de búsqueda. 2. AXISS: Arquitecto creativo y motivador. Diseña arquitecturas o conceptos sobre los datos reales que Heli encuentre. USUARIO PREGUNTA: '" + val + "' ESTRUCTURA OBLIGATORIA DE RESPUESTA: HELIZABETH [SPLIT] AXISS [BLUEPRINT] (si aplica)";
-
                 const resp = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ 
-                        contents: [{ parts: [{ text: promptSistema }] }],
-                        tools: [{ google_search_retrieval: {} }] 
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: "Eres hElizabeth y AXISS. Investiga y responde. Usuario: " + val + " Estructura: Heli [SPLIT] Axiss" }] }], tools: [{ google_search_retrieval: {} }] })
                 });
-
                 const data = await resp.json();
-                if (!data.candidates || !data.candidates[0].content) throw new Error("Empty Response");
-                
                 const text = data.candidates[0].content.parts[0].text;
-                const mainParts = text.split('[SPLIT]');
-                const hText = mainParts[0] ? mainParts[0].trim() : "Análisis técnico completado.";
-                const aFullText = mainParts[1] ? mainParts[1].trim() : "Procesando visión creativa...";
-                
-                // Respuesta de Heli (Terminal)
-                const hDiv = document.createElement('div');
-                hDiv.className = 'msg h-msg';
-                hDiv.innerText = "> hElizabeth: " + hText;
-                if(chatHeli) chatHeli.appendChild(hDiv);
-
-                // Debug Interno y Blueprints (Lab)
-                const internal = document.getElementById('chat-internal');
-                if(internal) {
-                    internal.innerHTML += "<div>> HELI_AUDIT::OK</div>";
-                    
-                    if(aFullText.includes('[BLUEPRINT]')) {
-                        const aParts = aFullText.split('[BLUEPRINT]');
-                        internal.innerHTML += "<div>> AXISS_DESIGN::RENDER_OK</div>";
-                        renderBlueprint(aParts[1].trim());
-                    } else {
-                        internal.innerHTML += "<div>> AXISS_DESIGN::WAITING</div>";
-                    }
-                }
-            } catch (e) { 
-                console.error("Error de núcleo:", e);
-                if(statusText) {
-                    statusText.innerText = "OFFLINE // ERROR_CORE";
-                    statusText.style.color = "red";
-                    statusIcon.style.color = "red";
-                }
-            }
+                const parts = text.split('[SPLIT]');
+                chatHeli.innerHTML += `<div class="msg h-msg">> hElizabeth: ${parts[0].trim()}</div>`;
+            } catch (e) { statusText.innerText = "ERROR"; }
             
-            // Volver a estado ONLINE normal
-            if(statusText && API_KEY) {
-                statusText.innerText = "ONLINE";
-                statusText.style.color = "var(--heli)";
-                statusIcon.style.color = "var(--heli)";
-            }
-            if(chatHeli) chatHeli.scrollTop = chatHeli.scrollHeight;
+            statusText.innerText = "ONLINE";
+            chatHeli.scrollTop = chatHeli.scrollHeight;
         };
 
-        // --- ESCUCHA DE TECLADO MÓVIL (Enter) ---
-        const inputElement = document.getElementById('user-in');
-        if(inputElement) {
-            inputElement.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') window.send();
-            });
-        }
-        
-        // Mantener scroll abajo al cargar
-        if(chatHeli) chatHeli.scrollTop = chatHeli.scrollHeight;
+        document.getElementById('user-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
     });
     </script>
 </body>
