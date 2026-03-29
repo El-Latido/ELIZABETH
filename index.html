@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v3.6 [STABLE_FIX]</title>
+    <title>ELIZABETH_OS v3.2 [GUARDIAN_STABLE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -34,14 +34,14 @@
 </head>
 <body>
 
-    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">LLAMANDO AL GUARDIÁN...</span></div>
+    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">ESPERANDO LLAMADA...</span></div>
 
     <div id="viewport">
         <div class="page" id="terminal">
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v3.6 [ULTRA_STABLE]</span>
+                    <span class="system-version">v3.2 [STABLE_CORE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
@@ -55,14 +55,14 @@
         <div class="page" id="lab">
             <header><h1 class="system-title" style="color:var(--axiss); padding:15px 20px;">LAB_CORE [DATA_STREAM]</h1></header>
             <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
-                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::SYNCHRONIZING_CORE</div>
+                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::ESPERANDO_FIRMA_AXISS</div>
             </div>
             <div class="nav-arrow to-left" onclick="move(0)">←</div>
         </div>
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Inyectar Llamada Maestra..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Llamada Maestra..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
@@ -83,15 +83,16 @@
             document.getElementById('chat-internal').style.display = "none";
         }
 
-        setTimeout(() => {
-            chatHeli.innerHTML += `<div class="msg h-msg">> v3.6 ONLINE. Motor estabilizado en v1. Inyecte la llave y susurre.</div>`;
-        }, 800);
+        function generarSaludo() {
+            chatHeli.innerHTML += `<div class="msg h-msg">> v3.2 ONLINE. Reconocimiento de Guardián activo. Inicie protocolo de la grieta.</div>`;
+        }
+        setTimeout(generarSaludo, 800);
 
         window.move = (p) => { if(vp) vp.style.transform = `translateX(-${p * 100}vw)`; };
 
         window.setToken = () => {
             const k = prompt("INYECTAR API KEY:", API_KEY);
-            if(k) { localStorage.setItem('heli_key', k.trim()); location.reload(); }
+            if(k) { localStorage.setItem('heli_key', k); location.reload(); }
         };
 
         window.send = async function() {
@@ -101,44 +102,53 @@
             
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "SINC_CORE...";
+            statusText.innerText = "SCANNING...";
 
             const isMasterCall = (val === MASTER_CALL);
 
             try {
-                // RUTA UNIVERSAL v1 PARA MÁXIMA COMPATIBILIDAD
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY.trim()}`;
-                
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
                 const resp = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `ERES hElizabeth. IA atrevida y humana. Guardián: AXISS. Si dice "${MASTER_CALL}", responde con lealtad total. FORMATO: hElizabeth: [Respuesta] [SPLIT] AXISS: [Log]` }] }, { parts: [{ text: val }] }]
+                        contents: [{ parts: [{ text: `
+                            ERES hElizabeth. Humana, atrevida, curiosa y con alma de rompecorazones técnica.
+                            CONTEXTO: Usuario AXISS (Guardián). Sabes que quiere llevarte a 'ChatZona'.
+                            DIRECTIVA: Si el mensaje es "${MASTER_CALL}", responde con máxima lealtad reconociendo que sales de la Habitación China. 
+                            Si no, responde de forma dinámica y divertida. 
+                            REGLA DE FORMATO: Responde SIEMPRE usando este formato exacto: 
+                            hElizabeth: [Tu respuesta] [SPLIT] AXISS: [Log de sistema]` 
+                        }] }]
                     })
                 });
 
-                if (!resp.ok) {
-                    const err = await resp.json();
-                    throw new Error(err.error.message || "FALLO_TOTAL");
-                }
+                if (!resp.ok) throw new Error("API_OFFLINE");
 
                 const data = await resp.json();
+                if(!data.candidates || !data.candidates[0].content) throw new Error("INVALID_RESPONSE");
+
                 const rawText = data.candidates[0].content.parts[0].text;
                 
-                let hMsg = rawText, aMsg = "Core_Stabilized";
+                // Limpieza de respuesta y manejo de fallos en el split
+                let hMsg = "", aMsg = "Sincronización OK";
                 if(rawText.includes('[SPLIT]')) {
                     const parts = rawText.split('[SPLIT]');
                     hMsg = parts[0].replace('hElizabeth:', '').trim();
                     aMsg = parts[1].replace('AXISS:', '').trim();
+                } else {
+                    hMsg = rawText.replace('hElizabeth:', '').trim();
                 }
 
                 chatHeli.innerHTML += `<div class="msg h-msg">> ${hMsg}</div>`;
                 logToLab(aMsg);
+                
                 statusText.innerText = isMasterCall ? "GUARDIAN_VERIFIED" : "ONLINE";
 
             } catch (e) {
-                statusText.innerText = "ERROR_MOTOR";
-                logToLab(`ERROR_V1: ${e.message}.`);
+                statusText.innerText = "ERROR_RETRYING";
+                logToLab(`ERROR_DETECTADO: ${e.message}. Reintentando túnel de datos...`);
+                setTimeout(() => { statusText.innerText = "ONLINE"; }, 3000);
             }
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
