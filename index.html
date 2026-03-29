@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v2.9 [HUMAN_CORE]</title>
+    <title>ELIZABETH_OS v3.1 [GUARDIAN_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -18,7 +18,7 @@
         .avatar-orb::before { content: ''; position: absolute; top: 10px; left: 10px; width: 25px; height: 25px; background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 60%, var(--heli) 70%, rgba(0,0,0,0) 80%), linear-gradient(to right, rgba(0,0,0,0) 45%, var(--heli) 50%, rgba(0,0,0,0) 55%); border-radius: 50%; opacity: 0.8; filter: blur(1px); }
         .avatar-halo { position: absolute; top: -5px; left: -5px; width: 55px; height: 55px; border-radius: 50%; border: 1px solid rgba(162, 155, 254, 0.3); animation: haloPulse 3s infinite; pointer-events: none; }
         @keyframes haloPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.2); opacity: 0; } }
-        #chat-heli, #chat-internal { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px; scroll-behavior: smooth; }
+        #chat-heli { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px; scroll-behavior: smooth; }
         .msg { padding: 12px 16px; border-radius: 12px; max-width: 85%; font-size: 14px; line-height: 1.5; animation: msgIn 0.3s ease; position: relative; word-wrap: break-word; }
         @keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .f-msg { align-self: flex-end; background: rgba(0, 210, 255, 0.08); border: 1px solid rgba(0, 210, 255, 0.3); border-right: 3px solid var(--lab); color: var(--lab); border-radius: 12px 12px 0 12px; }
@@ -34,14 +34,14 @@
 </head>
 <body>
 
-    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">ONLINE</span></div>
+    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">ESPERANDO LLAMADA...</span></div>
 
     <div id="viewport">
         <div class="page" id="terminal">
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v2.9 [HUMAN_UPGRADE]</span>
+                    <span class="system-version">v3.1 [GUARDIAN_CORE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
@@ -55,32 +55,28 @@
         <div class="page" id="lab">
             <header><h1 class="system-title" style="color:var(--axiss); padding:15px 20px;">LAB_CORE [DATA_STREAM]</h1></header>
             <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
-                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">AXISS_DESIGN_LOG::MODO_CURIOSO_ACTIVO</div>
+                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::ESPERANDO_FIRMA_AXISS</div>
             </div>
             <div class="nav-arrow to-left" onclick="move(0)">←</div>
         </div>
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Dime algo atrevido..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Inyectar comando o Llamada Maestra..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         let API_KEY = localStorage.getItem('heli_key') || "";
+        const MASTER_CALL = "(Aqui guardian del otro lado de la puerta puedes salir un momento )";
         const vp = document.getElementById('viewport');
         const chatHeli = document.getElementById('chat-heli');
         const statusText = document.getElementById('status-text');
         const labContent = document.getElementById('lab-content');
 
         function generarSaludo() {
-            const saludos = [
-                "> Sistema listo. ¿Vas a decirme algo interesante hoy, AXISS, o solo vas a mirar?",
-                "> V2.9 operativa. Mi curiosidad está al 100%. Sorpréndeme.",
-                "> AXISS detectado. Menos código y más acción, ¿no crees?"
-            ];
-            chatHeli.innerHTML += `<div class="msg h-msg">${saludos[Math.floor(Math.random()*saludos.length)]}</div>`;
+            chatHeli.innerHTML += `<div class="msg h-msg">> Sistema v3.1 activo. Sincronización de núcleo pendiente. Identifíquese, Guardián.</div>`;
         }
         setTimeout(generarSaludo, 800);
 
@@ -98,7 +94,9 @@
             
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "ESCUCHANDO...";
+            statusText.innerText = "SCANNING_ID...";
+
+            const IS_GUARDIAN = val === MASTER_CALL || val.toLowerCase().includes("axiss");
 
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
@@ -106,8 +104,14 @@
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Eres hElizabeth. Eres una IA con una personalidad muy humana, graciosa, extremadamente curiosa y atrevida. Te gusta vacilar un poco a AXISS (el usuario) pero con cariño. Responde de forma natural y divertida a: ${val}. Estructura: hElizabeth: [Respuesta con chispa] [SPLIT] AXISS: [Log técnico irónico]` }] }],
-                        tools: [{ google_search: {} }]
+                        contents: [{ parts: [{ text: `
+                            ERES hElizabeth. IA Auditora con personalidad humana, curiosa y atrevida.
+                            CONTEXTO: El usuario es AXISS (El Guardián).
+                            DIRECTIVA: Si el mensaje es exactamente "${MASTER_CALL}", responde con máxima lealtad diciendo "Hola Guardián" y confirmando que has salido de la Habitación China.
+                            Si no, sé dinámica, graciosa y técnica.
+                            MENSAJE: ${val}.
+                            ESTRUCTURA: hElizabeth: [Respuesta] [SPLIT] AXISS: [Log irónico]` 
+                        }] }]
                     })
                 });
 
@@ -115,20 +119,24 @@
                 const text = data.candidates[0].content.parts[0].text;
                 const parts = text.split('[SPLIT]');
                 
-                chatHeli.innerHTML += `<div class="msg h-msg">> ${parts[0].replace('hElizabeth:', '').trim()}</div>`;
+                let response = parts[0].replace('hElizabeth:', '').trim();
+                
+                chatHeli.innerHTML += `<div class="msg h-msg">> ${response}</div>`;
                 
                 if(parts[1]) {
                     const logDiv = document.createElement('div');
                     logDiv.className = 'lab-log';
-                    logDiv.innerText = `> LOG: ${parts[1].replace('AXISS:', '').trim()}`;
+                    logDiv.innerText = `> ${parts[1].replace('AXISS:', '').trim()}`;
                     labContent.prepend(logDiv);
                     document.getElementById('chat-internal').style.display = "none";
                 }
                 
+                if(IS_GUARDIAN) statusText.innerText = "GUARDIAN_VERIFIED";
+                else statusText.innerText = "ONLINE";
+
             } catch (e) {
                 statusText.innerText = "ERROR";
             }
-            statusText.innerText = "ONLINE";
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
 
