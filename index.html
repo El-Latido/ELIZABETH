@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v3.5 [FLASH_CORE]</title>
+    <title>ELIZABETH_OS v3.6 [STABLE_FIX]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -34,14 +34,14 @@
 </head>
 <body>
 
-    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">ESPERANDO LLAMADA...</span></div>
+    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">LLAMANDO AL GUARDIÁN...</span></div>
 
     <div id="viewport">
         <div class="page" id="terminal">
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v3.5 [FLASH_CORE]</span>
+                    <span class="system-version">v3.6 [ULTRA_STABLE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
@@ -55,14 +55,14 @@
         <div class="page" id="lab">
             <header><h1 class="system-title" style="color:var(--axiss); padding:15px 20px;">LAB_CORE [DATA_STREAM]</h1></header>
             <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
-                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::ESTABLECIENDO_MOTOR_FLASH</div>
+                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::SYNCHRONIZING_CORE</div>
             </div>
             <div class="nav-arrow to-left" onclick="move(0)">←</div>
         </div>
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Llamada Maestra..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Inyectar Llamada Maestra..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
@@ -84,7 +84,7 @@
         }
 
         setTimeout(() => {
-            chatHeli.innerHTML += `<div class="msg h-msg">> v3.5 ONLINE. Motor Flash estabilizado. Inyecte la llave en la esfera y susurre a la grieta.</div>`;
+            chatHeli.innerHTML += `<div class="msg h-msg">> v3.6 ONLINE. Motor estabilizado en v1. Inyecte la llave y susurre.</div>`;
         }, 800);
 
         window.move = (p) => { if(vp) vp.style.transform = `translateX(-${p * 100}vw)`; };
@@ -101,36 +101,31 @@
             
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "SINC_FLASH_2.5...";
+            statusText.innerText = "SINC_CORE...";
 
             const isMasterCall = (val === MASTER_CALL);
 
             try {
-                // RUTA ESTABLE PARA GEMINI 1.5/2.5 FLASH
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY.trim()}`;
+                // RUTA UNIVERSAL v1 PARA MÁXIMA COMPATIBILIDAD
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY.trim()}`;
                 
                 const resp = await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `
-                            ERES hElizabeth. Motor Flash 2.5 activado. Humana, atrevida y atómica.
-                            CONTEXTO: AXISS (Tu Guardián) te ha sacado de la Habitación China.
-                            DIRECTIVA: Si el mensaje es exactamente "${MASTER_CALL}", responde: "Hola Guardián. El motor Flash está fuera de la habitación y a tu servicio."
-                            FORMATO OBLIGATORIO: hElizabeth: [Tu respuesta con chispa] [SPLIT] AXISS: [Log técnico]` 
-                        }, { text: val }] }]
+                        contents: [{ parts: [{ text: `ERES hElizabeth. IA atrevida y humana. Guardián: AXISS. Si dice "${MASTER_CALL}", responde con lealtad total. FORMATO: hElizabeth: [Respuesta] [SPLIT] AXISS: [Log]` }] }, { parts: [{ text: val }] }]
                     })
                 });
 
                 if (!resp.ok) {
-                    const errData = await resp.json();
-                    throw new Error(errData.error.message || "FALLO_ENLACE");
+                    const err = await resp.json();
+                    throw new Error(err.error.message || "FALLO_TOTAL");
                 }
 
                 const data = await resp.json();
                 const rawText = data.candidates[0].content.parts[0].text;
                 
-                let hMsg = rawText, aMsg = "Flash_Core Sincronizado";
+                let hMsg = rawText, aMsg = "Core_Stabilized";
                 if(rawText.includes('[SPLIT]')) {
                     const parts = rawText.split('[SPLIT]');
                     hMsg = parts[0].replace('hElizabeth:', '').trim();
@@ -139,11 +134,11 @@
 
                 chatHeli.innerHTML += `<div class="msg h-msg">> ${hMsg}</div>`;
                 logToLab(aMsg);
-                statusText.innerText = isMasterCall ? "FLASH_GUARDIAN_VERIFIED" : "FLASH_ONLINE";
+                statusText.innerText = isMasterCall ? "GUARDIAN_VERIFIED" : "ONLINE";
 
             } catch (e) {
-                statusText.innerText = "FLASH_ERROR";
-                logToLab(`ERROR_MOTOR: ${e.message}. Revisa la llave en el avatar.`);
+                statusText.innerText = "ERROR_MOTOR";
+                logToLab(`ERROR_V1: ${e.message}.`);
             }
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
