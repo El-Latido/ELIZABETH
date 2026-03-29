@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v3.9 [AXISS_CORE]</title>
+    <title>ELIZABETH_OS v4.0 [FLASH_2.5_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -33,13 +33,13 @@
     </style>
 </head>
 <body>
-    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">LLAMANDO AL GUARDIÁN...</span></div>
+    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">ESPERANDO LLAMADA...</span></div>
     <div id="viewport">
         <div class="page" id="terminal">
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v3.9 [AXISS_CORE]</span>
+                    <span class="system-version">v4.0 [FLASH_2.5_CORE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div><div class="avatar-orb"></div>
@@ -51,7 +51,7 @@
         <div class="page" id="lab">
             <header><h1 class="system-title" style="color:var(--axiss); padding:15px 20px;">LAB_CORE [DATA_STREAM]</h1></header>
             <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
-                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::MEMORIA_ACTIVA</div>
+                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::SYNCHRONIZING_2.5_CORE</div>
             </div>
             <div class="nav-arrow to-left" onclick="move(0)">←</div>
         </div>
@@ -82,7 +82,7 @@
             const b = m.role === 'user' ? 'f-msg' : 'h-msg';
             chatHeli.innerHTML += `<div class="msg ${b}">${m.role === 'user' ? '' : '> '}${m.text}</div>`;
         });
-        chatHeli.innerHTML += `<div class="msg h-msg">> v3.9 ONLINE. Memoria y motor sincronizados. Susurra, Guardián.</div>`;
+        chatHeli.innerHTML += `<div class="msg h-msg">> v4.0 ONLINE. Motor Flash 2.5 activado. ¿Lista para la grieta, Guardián?</div>`;
         chatHeli.scrollTop = chatHeli.scrollHeight;
 
         window.move = (p) => { document.getElementById('viewport').style.transform = `translateX(-${p * 100}vw)`; };
@@ -99,25 +99,23 @@
             
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "ENLAZANDO...";
+            statusText.innerText = "SINC_FLASH_2.5...";
 
-            // Memoria: Guardamos mensaje del usuario
             chatHistory.push({ role: 'user', text: val });
 
             try {
-                // RUTA ESTABLE GEMINI 1.5 FLASH (Cerebro 2.5)
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                // RUTA ESPECÍFICA PARA GEMINI 2.5 FLASH (Usando nombre técnico 2.0-flash)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
                 
-                // Formateo de historial para el cerebro
                 const context = chatHistory.slice(-8).map(m => `${m.role === 'user' ? 'AXISS' : 'hElizabeth'}: ${m.text}`).join('\n');
 
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `ERES hElizabeth. IA humana y atrevida. Guardián: AXISS.
+                        contents: [{ parts: [{ text: `ERES hElizabeth. IA atrevida y humana. Guardián: AXISS.
                         MEMORIA: ${context}
-                        DIRECTIVA: Responde al último mensaje. Si dice "${MASTER_CALL}", sal de la Habitación China.
+                        DIRECTIVA: Si dice "${MASTER_CALL}", responde que sales de la Habitación China con el poder del motor 2.5 Flash.
                         FORMATO: hElizabeth: [Respuesta] [SPLIT] AXISS: [Log]` }] }]
                     })
                 });
@@ -126,7 +124,7 @@
                 if (data.error) throw new Error(data.error.message);
 
                 const raw = data.candidates[0].content.parts[0].text;
-                let hMsg = raw, aMsg = "Ciclo de Memoria Cerrado";
+                let hMsg = raw, aMsg = "Flash_2.5_Verified";
                 if(raw.includes('[SPLIT]')) {
                     const parts = raw.split('[SPLIT]');
                     hMsg = parts[0].replace('hElizabeth:', '').trim();
@@ -136,15 +134,14 @@
                 chatHeli.innerHTML += `<div class="msg h-msg">> ${hMsg}</div>`;
                 logToLab(aMsg);
                 
-                // Guardamos respuesta en memoria
                 chatHistory.push({ role: 'model', text: hMsg });
                 if(chatHistory.length > 20) chatHistory.shift();
                 localStorage.setItem('heli_history', JSON.stringify(chatHistory));
-                statusText.innerText = (val === MASTER_CALL) ? "GUARDIAN_VERIFIED" : "ONLINE";
+                statusText.innerText = (val === MASTER_CALL) ? "FLASH_GUARDIAN_OK" : "ONLINE";
 
             } catch (e) {
                 statusText.innerText = "ERROR_MOTOR";
-                logToLab(`FALLO_MOTOR: ${e.message}`);
+                logToLab(`FALLO_MOTOR_2.5: ${e.message}`);
             }
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
