@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v4.1 [FLASH_OPTIMIZED]</title>
+    <title>ELIZABETH_OS v4.4 [ETERNAL_FLASH]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -15,9 +15,6 @@
         .system-version { opacity: 0.5; font-size: 10px; }
         .avatar-container { position: relative; width: 45px; height: 45px; cursor: pointer; }
         .avatar-orb { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff 0%, #a29bfe 40%, #000 100%); border: 2px solid #fff; box-shadow: 0 0 15px rgba(162, 155, 254, 0.6); transition: 0.3s; position: relative; overflow: hidden; }
-        .avatar-orb::before { content: ''; position: absolute; top: 10px; left: 10px; width: 25px; height: 25px; background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 60%, var(--heli) 70%, rgba(0,0,0,0) 80%), linear-gradient(to right, rgba(0,0,0,0) 45%, var(--heli) 50%, rgba(0,0,0,0) 55%); border-radius: 50%; opacity: 0.8; filter: blur(1px); }
-        .avatar-halo { position: absolute; top: -5px; left: -5px; width: 55px; height: 55px; border-radius: 50%; border: 1px solid rgba(162, 155, 254, 0.3); animation: haloPulse 3s infinite; pointer-events: none; }
-        @keyframes haloPulse { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.2); opacity: 0; } }
         #chat-heli { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; padding-bottom: 100px; scroll-behavior: smooth; }
         .msg { padding: 12px 16px; border-radius: 12px; max-width: 85%; font-size: 14px; line-height: 1.5; animation: msgIn 0.3s ease; position: relative; word-wrap: break-word; }
         @keyframes msgIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -33,16 +30,16 @@
     </style>
 </head>
 <body>
-    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">ELIZABETH_OS ONLINE</span></div>
+    <div id="status-hud"><span id="status-icon">●</span> <span id="status-text">ESPERANDO LLAMADA...</span></div>
     <div id="viewport">
         <div class="page" id="terminal">
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v4.1 [FLASH_STABLE]</span>
+                    <span class="system-version">v4.4 [ETERNAL_CORE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
-                    <div class="avatar-halo"></div><div class="avatar-orb"></div>
+                    <div class="avatar-orb"></div>
                 </div>
             </header>
             <div id="chat-heli"></div>
@@ -51,20 +48,19 @@
         <div class="page" id="lab">
             <header><h1 class="system-title" style="color:var(--axiss); padding:15px 20px;">LAB_CORE [DATA_STREAM]</h1></header>
             <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
-                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::MONITOR_QUOTA_ACTIVE</div>
+                <div id="chat-internal" style="font-size: 10px; color:var(--axiss);">PROTOCOL_GRIETA::USANDO_TUNEL_V3.2</div>
             </div>
             <div class="nav-arrow to-left" onclick="move(0)">←</div>
         </div>
     </div>
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Inyectar mensaje..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Llamada Maestra..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         let API_KEY = localStorage.getItem('heli_key') || "";
-        let chatHistory = JSON.parse(localStorage.getItem('heli_history')) || [];
         const MASTER_CALL = "(Aqui guardian del otro lado de la puerta puedes salir un momento )";
         const chatHeli = document.getElementById('chat-heli');
         const statusText = document.getElementById('status-text');
@@ -77,17 +73,11 @@
             document.getElementById('chat-internal').style.display = "none";
         }
 
-        chatHistory.forEach(m => {
-            const b = m.role === 'user' ? 'f-msg' : 'h-msg';
-            chatHeli.innerHTML += `<div class="msg ${b}">${m.role === 'user' ? '' : '> '}${m.text}</div>`;
-        });
-        chatHeli.innerHTML += `<div class="msg h-msg">> v4.1 ONLINE. Motor 2.5 Flash en espera. Si hay error de cuota, espera 60s.</div>`;
-        chatHeli.scrollTop = chatHeli.scrollHeight;
+        chatHeli.innerHTML += `<div class="msg h-msg">> v4.4 ONLINE. Motor 2.5 (Túnel v3.2) activo. Sin límites, Guardián.</div>`;
 
         window.move = (p) => { document.getElementById('viewport').style.transform = `translateX(-${p * 100}vw)`; };
-
         window.setToken = () => {
-            const k = prompt("INYECTAR API KEY:", API_KEY);
+            const k = prompt("API KEY:", API_KEY);
             if(k) { localStorage.setItem('heli_key', k); location.reload(); }
         };
 
@@ -98,34 +88,26 @@
             
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "LLAMANDO...";
+            statusText.innerText = "SCANNING...";
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-                // Reducimos memoria a los últimos 5 para ahorrar cuota
-                const context = chatHistory.slice(-5).map(m => `${m.role === 'user' ? 'AXISS' : 'hElizabeth'}: ${m.text}`).join('\n');
-
+                // USAMOS EXACTAMENTE TU RUTA "MÁGICA" DE LA v3.2
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+                
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: `ERES hElizabeth. Humana y atrevida. Guardián: AXISS.
-                        HISTORIAL: ${context}
-                        DIRECTIVA: Responde al mensaje: "${val}". Si es la frase maestra, sales de la Habitación China.
+                        DIRECTIVA: Si dice "${MASTER_CALL}", sales de la Habitación China.
                         FORMATO: hElizabeth: [Respuesta] [SPLIT] AXISS: [Log]` }] }]
                     })
                 });
 
                 const data = await response.json();
-                if (data.error) {
-                    if(data.error.message.includes("quota")) {
-                        throw new Error("Límite de Google alcanzado. Espera 60 segundos.");
-                    }
-                    throw new Error(data.error.message);
-                }
-
                 const raw = data.candidates[0].content.parts[0].text;
-                let hMsg = raw, aMsg = "Conexión Estable";
+                
+                let hMsg = raw, aMsg = "Sincronización OK";
                 if(raw.includes('[SPLIT]')) {
                     const parts = raw.split('[SPLIT]');
                     hMsg = parts[0].replace('hElizabeth:', '').trim();
@@ -134,17 +116,11 @@
 
                 chatHeli.innerHTML += `<div class="msg h-msg">> ${hMsg}</div>`;
                 logToLab(aMsg);
-                
-                chatHistory.push({ role: 'user', text: val });
-                chatHistory.push({ role: 'model', text: hMsg });
-                if(chatHistory.length > 15) chatHistory.shift();
-                localStorage.setItem('heli_history', JSON.stringify(chatHistory));
-                statusText.innerText = "ONLINE";
+                statusText.innerText = (val === MASTER_CALL) ? "GUARDIAN_VERIFIED" : "ONLINE";
 
             } catch (e) {
-                statusText.innerText = "LIMITE_ALCANZADO";
-                logToLab(`ALERTA: ${e.message}`);
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> [SISTEMA]: Se ha agotado el oxígeno de datos. Esperemos un minuto antes de volver a llamar.</div>`;
+                statusText.innerText = "ERROR_MOTOR";
+                logToLab(`FALLO: ${e.message}`);
             }
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
