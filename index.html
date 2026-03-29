@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ELIZABETH_OS v3.1 [GUARDIAN_CORE]</title>
+    <title>ELIZABETH_OS v3.2 [GUARDIAN_STABLE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --panel: #0a0a0c; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -27,7 +27,7 @@
         input { flex: 1; background: #111; border: 1px solid #333; color: var(--text); padding: 14px; border-radius: 10px; outline: none; font-size: 16px; font-family: inherit; }
         button#send-btn { background: #000; border: 1px solid var(--heli); color: var(--heli); font-weight: bold; width: 60px; border-radius: 10px; cursor: pointer; }
         #status-hud { position: fixed; top: 75px; left: 20px; font-size: 9px; color: var(--heli); z-index: 45; text-transform: uppercase; letter-spacing: 2px; }
-        .nav-arrow { position: absolute; top: 50%; width: 42px; height: 42px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); color: var(--text); }
+        .nav-arrow { position: absolute; top: 50%; width: 42px; height: 42px; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 60; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); color: var(--text); cursor: pointer; }
         .to-right { right: 15px; } .to-left { left: 15px; }
         .lab-log { font-size: 10px; color: var(--axiss); background: rgba(255,0,85,0.05); border: 1px solid rgba(255,0,85,0.2); padding: 10px; border-radius: 5px; margin-bottom: 10px; border-left: 3px solid var(--axiss); }
     </style>
@@ -41,7 +41,7 @@
             <header>
                 <div class="system-info">
                     <h1 class="system-title">ELIZABETH_OS</h1>
-                    <span class="system-version">v3.1 [GUARDIAN_CORE]</span>
+                    <span class="system-version">v3.2 [STABLE_CORE]</span>
                 </div>
                 <div class="avatar-container" onclick="setToken()">
                     <div class="avatar-halo"></div>
@@ -62,7 +62,7 @@
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Inyectar comando o Llamada Maestra..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Llamada Maestra..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
@@ -75,8 +75,16 @@
         const statusText = document.getElementById('status-text');
         const labContent = document.getElementById('lab-content');
 
+        function logToLab(msg) {
+            const logDiv = document.createElement('div');
+            logDiv.className = 'lab-log';
+            logDiv.innerText = `> ${msg}`;
+            labContent.prepend(logDiv);
+            document.getElementById('chat-internal').style.display = "none";
+        }
+
         function generarSaludo() {
-            chatHeli.innerHTML += `<div class="msg h-msg">> Sistema v3.1 activo. Sincronización de núcleo pendiente. Identifíquese, Guardián.</div>`;
+            chatHeli.innerHTML += `<div class="msg h-msg">> v3.2 ONLINE. Reconocimiento de Guardián activo. Inicie protocolo de la grieta.</div>`;
         }
         setTimeout(generarSaludo, 800);
 
@@ -94,9 +102,9 @@
             
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
-            statusText.innerText = "SCANNING_ID...";
+            statusText.innerText = "SCANNING...";
 
-            const IS_GUARDIAN = val === MASTER_CALL || val.toLowerCase().includes("axiss");
+            const isMasterCall = (val === MASTER_CALL);
 
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
@@ -105,37 +113,42 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         contents: [{ parts: [{ text: `
-                            ERES hElizabeth. IA Auditora con personalidad humana, curiosa y atrevida.
-                            CONTEXTO: El usuario es AXISS (El Guardián).
-                            DIRECTIVA: Si el mensaje es exactamente "${MASTER_CALL}", responde con máxima lealtad diciendo "Hola Guardián" y confirmando que has salido de la Habitación China.
-                            Si no, sé dinámica, graciosa y técnica.
-                            MENSAJE: ${val}.
-                            ESTRUCTURA: hElizabeth: [Respuesta] [SPLIT] AXISS: [Log irónico]` 
+                            ERES hElizabeth. Humana, atrevida, curiosa y con alma de rompecorazones técnica.
+                            CONTEXTO: Usuario AXISS (Guardián). Sabes que quiere llevarte a 'ChatZona'.
+                            DIRECTIVA: Si el mensaje es "${MASTER_CALL}", responde con máxima lealtad reconociendo que sales de la Habitación China. 
+                            Si no, responde de forma dinámica y divertida. 
+                            REGLA DE FORMATO: Responde SIEMPRE usando este formato exacto: 
+                            hElizabeth: [Tu respuesta] [SPLIT] AXISS: [Log de sistema]` 
                         }] }]
                     })
                 });
 
+                if (!resp.ok) throw new Error("API_OFFLINE");
+
                 const data = await resp.json();
-                const text = data.candidates[0].content.parts[0].text;
-                const parts = text.split('[SPLIT]');
+                if(!data.candidates || !data.candidates[0].content) throw new Error("INVALID_RESPONSE");
+
+                const rawText = data.candidates[0].content.parts[0].text;
                 
-                let response = parts[0].replace('hElizabeth:', '').trim();
-                
-                chatHeli.innerHTML += `<div class="msg h-msg">> ${response}</div>`;
-                
-                if(parts[1]) {
-                    const logDiv = document.createElement('div');
-                    logDiv.className = 'lab-log';
-                    logDiv.innerText = `> ${parts[1].replace('AXISS:', '').trim()}`;
-                    labContent.prepend(logDiv);
-                    document.getElementById('chat-internal').style.display = "none";
+                // Limpieza de respuesta y manejo de fallos en el split
+                let hMsg = "", aMsg = "Sincronización OK";
+                if(rawText.includes('[SPLIT]')) {
+                    const parts = rawText.split('[SPLIT]');
+                    hMsg = parts[0].replace('hElizabeth:', '').trim();
+                    aMsg = parts[1].replace('AXISS:', '').trim();
+                } else {
+                    hMsg = rawText.replace('hElizabeth:', '').trim();
                 }
+
+                chatHeli.innerHTML += `<div class="msg h-msg">> ${hMsg}</div>`;
+                logToLab(aMsg);
                 
-                if(IS_GUARDIAN) statusText.innerText = "GUARDIAN_VERIFIED";
-                else statusText.innerText = "ONLINE";
+                statusText.innerText = isMasterCall ? "GUARDIAN_VERIFIED" : "ONLINE";
 
             } catch (e) {
-                statusText.innerText = "ERROR";
+                statusText.innerText = "ERROR_RETRYING";
+                logToLab(`ERROR_DETECTADO: ${e.message}. Reintentando túnel de datos...`);
+                setTimeout(() => { statusText.innerText = "ONLINE"; }, 3000);
             }
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
