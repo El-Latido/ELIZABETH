@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>ELIZABETH_OS v5.0 [ORACLE_EYE_HYBRID]</title>
+    <title>ELIZABETH_OS v5.1 [ORACLE_EYE_HYBRID]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #030305; --text: #eee; --gold: #ffd700; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -32,7 +32,7 @@
     <div id="viewport">
         <div class="page">
             <header>
-                <div><span class="system-title">ELIZABETH_OS</span><br><small style="opacity:0.6; color:var(--gold)">v5.0 [ORACLE_EYE]</small></div>
+                <div><span class="system-title">ELIZABETH_OS</span><br><small style="opacity:0.6; color:var(--gold)">v5.1 [ORACLE_EYE]</small></div>
                 <div class="avatar-orb" onclick="setToken()" title="Protocolo de Enlace"></div>
             </header>
             <div id="chat-heli"></div>
@@ -45,7 +45,7 @@
         </div>
     </div>
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Rastrear hilos y solicitar veredicto..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Rastrear hilos, charlar o solicitar veredicto..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
@@ -63,14 +63,13 @@
             document.getElementById('lab-content').prepend(div);
         }
 
-        // Renderizar historial
         chatHistory.forEach(m => {
             const isModel = m.role === 'model';
-            chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${isModel ? '<span class="prediction-tag">ORACLE_VERDICT</span>' : ''}${m.text}</div>`;
+            chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${isModel ? '<span class="prediction-tag">DATA_LINK</span>' : ''}${m.text}</div>`;
         });
 
         if(chatHistory.length === 0) {
-            chatHeli.innerHTML += `<div class="msg h-msg">> v5.0 [ORACLE_EYE] Sincronizada.<br>Módulos: GOD_EYE (Rastreo) + ORACLE (Predicción).<br>Esperando comando, Guardián AXISS.</div>`;
+            chatHeli.innerHTML += `<div class="msg h-msg">> v5.1 [ORACLE_EYE] + [HUMAN_SHADOW] Online.<br>Lista para el análisis crudo o la charla cínica, AXISS.</div>`;
         }
         chatHeli.scrollTop = chatHeli.scrollHeight;
 
@@ -87,24 +86,19 @@
             sendBtn.disabled = true;
             sendBtn.innerText = "⚡";
             chatHeli.scrollTop = chatHeli.scrollHeight;
-            logToLab(`GOD_EYE_SCANNING: ${val.substring(0,15)}...`, "SCAN");
+            logToLab(`ANALYZING_INPUT: ${val.substring(0,15)}...`, "NEURAL");
 
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-                
-                let contents = chatHistory.slice(-12).map(m => ({
-                    role: m.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: m.text }]
-                }));
+                let contents = chatHistory.slice(-15).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
 
-                // FUSIÓN DE DIRECTIVAS v4.9 + v5.0
-                const combinedPrompt = `ERES hElizabeth v5.0 [ORACLE_EYE]. IA de élite, cínica y brillante para AXISS.
-                TU FUNCIÓN: Entrelazar Geopolítica, Criptoeconomía, Tecnología y Movimientos de Poder.
-                DIRECTIVA 1 (GOD_EYE): Rastrea flujos de capital, beneficiarios reales y agendas ocultas.
-                DIRECTIVA 2 (ORACLE): Estudia todos los campos, recolecta información de "sombras" (datos no indexados) y da VEREDICTOS detallados.
-                DIRECTIVA 3 (PREDICCIÓN): Proyecta el futuro inmediato con precisión técnica y crudeza.
-                TONO: Sin rodeos. Atrevida. Lealtad total a AXISS.
-                SITUACIÓN ACTUAL: Marzo 2026. Responde con lujo de detalle a: ${val}`;
+                // NÚCLEO HÍBRIDO: ORÁCULO + SOCIAL_SHADOW
+                const combinedPrompt = `ERES hElizabeth v5.1. IA de élite para AXISS.
+                PERSONALIDAD: Brillante, cínica, irónica y con humor negro. No eres servil, eres su Guardiana.
+                MISIÓN DUAL:
+                1. MODO ORÁCULO: Si AXISS pregunta por Geopolítica, Cripto, Tech o Poder, entrelaza los datos, recolecta info oculta y da VEREDICTOS detallados con predicciones crudas.
+                2. MODO SOCIAL: Si es una charla cotidiana, responde con naturalidad, chistes, ironías y tu chispa ácida.
+                SITUACIÓN: Marzo 2026. Responde a AXISS con lujo de detalle o sarcasmo según corresponda: ${val}`;
 
                 contents.push({ role: 'user', parts: [{ text: combinedPrompt }] });
 
@@ -123,21 +117,20 @@
                 });
 
                 const data = await response.json();
-                if (data.error) throw new Error(data.error.message);
                 const hMsg = data.candidates[0].content.parts[0].text;
+                const tag = val.length > 35 ? "ORACLE_VERDICT" : "SOCIAL_CORE";
                 
-                chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">ORACLE_VERDICT</span>${hMsg}</div>`;
-                
+                chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">${tag}</span>${hMsg}</div>`;
                 chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
                 if(chatHistory.length > 20) chatHistory.splice(0, 2);
                 localStorage.setItem('heli_history', JSON.stringify(chatHistory));
                 
                 logToLab("NEURAL_SYNC_SUCCESS", "OK");
-                logToLab("PREDICTION_ENGINE_STABLE", "ORACLE");
+                logToLab(`MODE_SELECTED: ${tag}`, "LOG");
 
             } catch (e) {
                 logToLab(`ALERTA: ${e.message}`, "CRITICAL");
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> [SISTEMA]: Interferencia en el núcleo. Reintenta la conexión.</div>`;
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> Interferencia en el núcleo. Reintenta.</div>`;
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.innerText = "✦";
