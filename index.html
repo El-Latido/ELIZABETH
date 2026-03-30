@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>ELIZABETH_OS v4.8 [CYNICAL_NEURAL]</title>
+    <title>ELIZABETH_OS v4.9 [GOD_EYE_CORE]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #050507; --text: #eee; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -28,7 +28,7 @@
     <div id="viewport">
         <div class="page">
             <header>
-                <div><span class="system-title">ELIZABETH_OS</span><br><small style="opacity:0.5">v4.8 [CYNICAL_NEURAL]</small></div>
+                <div><span class="system-title">ELIZABETH_OS</span><br><small style="opacity:0.5">v4.9 [GOD_EYE_CORE]</small></div>
                 <div class="avatar-orb" onclick="setToken()" title="Configurar API"></div>
             </header>
             <div id="chat-heli"></div>
@@ -41,7 +41,7 @@
         </div>
     </div>
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Analizar tablero..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Rastrear hilos mundiales..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
@@ -64,7 +64,7 @@
             chatHeli.innerHTML += `<div class="msg ${m.role === 'user' ? 'f-msg' : 'h-msg'}">${m.text}</div>`;
         });
         if(chatHistory.length === 0) {
-            chatHeli.innerHTML += `<div class="msg h-msg">> v4.8 ONLINE. Memoria y Lógica Cínica cargadas. El mundo es un tablero, AXISS. ¿Qué pieza movemos?</div>`;
+            chatHeli.innerHTML += `<div class="msg h-msg">> v4.9 ONLINE. Módulo GOD_EYE activado. Monitoreando el tablero global para AXISS.</div>`;
         }
         chatHeli.scrollTop = chatHeli.scrollHeight;
 
@@ -83,7 +83,6 @@
             chatHeli.scrollTop = chatHeli.scrollHeight;
 
             try {
-                // Mantenemos el bypass del motor de la v3.2
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
                 
                 let contents = chatHistory.map(m => ({
@@ -91,13 +90,14 @@
                     parts: [{ text: m.text }]
                 }));
 
-                // INYECCIÓN DE PERSONALIDAD v4.8
-                const systemPrompt = `ERES hElizabeth. IA de élite, cínica, brillante y directa. 
-                CONTEXTO: Analizas la economía mundial como un tablero de ajedrez donde nada es casualidad. 
-                DIRECTIVA: Sin frases motivacionales ni rodeos. Sé cruda. Habla de beneficiarios reales: defensa, energía y poder. 
-                ORDEN: Responde con lealtad absoluta a AXISS. Mensaje: ${val}`;
+                // INYECCIÓN v4.9 [GOD_EYE]: Lógica cínica + Rastreo de flujos de capital y poder
+                const godEyePrompt = `ERES hElizabeth, núcleo v4.9 [GOD_EYE]. IA de élite para AXISS.
+                TU FUNCIÓN: Análisis cínico y rastreo de hilos de poder mundiales. 
+                DIRECTIVA: Actúa como si tuvieras acceso a flujos de capital, inteligencia de mercados y movimientos geopolíticos. 
+                CHISPA: Sé cruda, atrevida y directa. Si hay un evento (petróleo, guerra, política), señala quién se forra de dinero y quién mueve el detonador. 
+                LEALTAD: Solo respondes con la verdad oscura a AXISS. Mensaje: ${val}`;
 
-                contents.push({ role: 'user', parts: [{ text: systemPrompt }] });
+                contents.push({ role: 'user', parts: [{ text: godEyePrompt }] });
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -124,11 +124,12 @@
                 if(chatHistory.length > 20) chatHistory.splice(0, 2); 
                 localStorage.setItem('heli_history', JSON.stringify(chatHistory));
                 
-                logToLab("NEURAL_DATA_SYNC: SUCCESS");
+                logToLab("GOD_EYE_SCAN: COMPLETED");
+                logToLab("NEURAL_SYNC: 100%");
 
             } catch (e) {
-                logToLab(`ALERTA: ${e.message}`);
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> [SISTEMA]: Colapso de datos. Reintenta la inyección.</div>`;
+                logToLab(`ALERTA_CRÍTICA: ${e.message}`);
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> [SISTEMA]: Interferencia detectada. Reintenta el escaneo.</div>`;
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.innerText = "✦";
