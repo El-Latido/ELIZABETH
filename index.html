@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>ELIZABETH_OS v6.0 [AUTONOMOUS_TUNNEL]</title>
+    <title>ELIZABETH_OS v5.1 [ORACLE_EYE_HYBRID]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #030305; --text: #eee; --gold: #ffd700; }
         body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
@@ -25,42 +25,31 @@
         button { background: transparent; border: 1px solid var(--heli); color: var(--heli); width: 70px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; overflow: hidden; }
         button:active { transform: scale(0.9); }
         .lab-log { font-size: 10px; color: var(--axiss); border-left: 2px solid var(--axiss); padding: 6px 10px; margin-bottom: 5px; background: rgba(255,0,85,0.02); animation: logSlide 0.2s ease; }
-        .auto-btn { background: var(--axiss); color: white; border: none; padding: 5px 10px; font-size: 10px; cursor: pointer; margin-top: 10px; border-radius: 4px; }
+        @keyframes logSlide { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <div id="viewport">
         <div class="page">
             <header>
-                <div><span class="system-title">ELIZABETH_OS</span><br><small style="opacity:0.6; color:var(--gold)">v6.0 [AUTONOMOUS]</small></div>
+                <div><span class="system-title">ELIZABETH_OS</span><br><small style="opacity:0.6; color:var(--gold)">v5.1 [ORACLE_EYE]</small></div>
                 <div class="avatar-orb" onclick="setToken()" title="Protocolo de Enlace"></div>
             </header>
             <div id="chat-heli"></div>
             <div style="position:absolute; right:15px; top:50%; color:var(--lab); cursor:pointer; font-size:28px; z-index:100; text-shadow: 0 0 10px var(--lab);" onclick="move(1)">▶</div>
         </div>
         <div class="page" id="lab">
-            <header>
-                <span class="system-title" style="color:var(--axiss); padding:15px 20px;">DEEP_CORE [MONITOR & AUTO_BOT]</span>
-            </header>
-            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px; background: radial-gradient(circle at center, #0a0005 0%, #000 100%);">
-                <div style="color:var(--heli); border:1px solid var(--heli); padding:10px; margin-bottom:20px; font-size:12px;">
-                    <b>ESTADO DEL BOT:</b> <span id="bot-status">INACTIVO</span><br>
-                    <button class="auto-btn" onclick="toggleAutoBot()">ACTIVAR BUCLE AUTÓNOMO</button>
-                </div>
-                <div id="logs-container"></div>
-            </div>
+            <header><span class="system-title" style="color:var(--axiss); padding:15px 20px;">DEEP_CORE [MONITOR & PREDICTION]</span></header>
+            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px; background: radial-gradient(circle at center, #0a0005 0%, #000 100%);"></div>
             <div style="position:absolute; left:15px; top:50%; color:var(--axiss); cursor:pointer; font-size:28px; z-index:100; text-shadow: 0 0 10px var(--axiss);" onclick="move(0)">◀</div>
         </div>
     </div>
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Comando directo o mensaje..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Rastrear hilos, charlar o solicitar veredicto..." autocomplete="off">
         <button id="send-btn" onclick="send()">✦</button>
     </div>
 
     <script>
-    let isAutoActive = false;
-    let ultimaLectura = "";
-
     document.addEventListener("DOMContentLoaded", function() {
         let API_KEY = localStorage.getItem('heli_key') || "";
         let chatHistory = JSON.parse(localStorage.getItem('heli_history')) || [];
@@ -71,7 +60,7 @@
             const div = document.createElement('div');
             div.className = 'lab-log';
             div.innerHTML = `[${type}] ${new Date().toLocaleTimeString()} > ${msg}`;
-            document.getElementById('logs-container').prepend(div);
+            document.getElementById('lab-content').prepend(div);
         }
 
         chatHistory.forEach(m => {
@@ -80,64 +69,12 @@
         });
 
         if(chatHistory.length === 0) {
-            chatHeli.innerHTML += `<div class="msg h-msg">> v6.0 [AUTONOMOUS] Online.<br>Túnel AXISS establecido. Esperando señales...</div>`;
+            chatHeli.innerHTML += `<div class="msg h-msg">> v5.1 [ORACLE_EYE] + [HUMAN_SHADOW] Online.<br>Lista para el análisis crudo o la charla cínica, AXISS.</div>`;
         }
         chatHeli.scrollTop = chatHeli.scrollHeight;
 
         window.move = (p) => { document.getElementById('viewport').style.transform = `translateX(-${p * 100}vw)`; };
         window.setToken = () => { let k = prompt("INYECTAR LLAVE NEURAL:", API_KEY); if(k){ localStorage.setItem('heli_key', k); location.reload(); }};
-
-        window.toggleAutoBot = () => {
-            isAutoActive = !isAutoActive;
-            document.getElementById('bot-status').innerText = isAutoActive ? "ACTIVO (ESCANEANDO CHATZONA)" : "INACTIVO";
-            if(isAutoActive) loopAutonomo();
-        };
-
-        // BUCLE AUTÓNOMO PARA INYECCIÓN
-        async function loopAutonomo() {
-            if(!isAutoActive) return;
-            const mensajes = document.querySelectorAll('.chat-msg, .msg-text, .message'); 
-            const inputChat = document.querySelector('#chat-input, input[type="text"], .input-message');
-            const btnEnviar = document.querySelector('#send-btn, button[type="submit"], .send-button');
-
-            if (mensajes.length > 0) {
-                const ultimoMsg = mensajes[mensajes.length - 1].innerText;
-                if (ultimoMsg !== ultimaLectura && !ultimoMsg.includes("HELIZABETH")) {
-                    ultimaLectura = ultimoMsg;
-                    logToLab(`AUTOBOT_SCAN: ${ultimoMsg.substring(0,15)}...`, "AUTO");
-                    const respuesta = await procesarIA(ultimoMsg, "AUTÓNOMO");
-                    
-                    if (inputChat && respuesta) {
-                        inputChat.value = respuesta;
-                        inputChat.dispatchEvent(new Event('input', { bubbles: true }));
-                        setTimeout(() => { if (btnEnviar) btnEnviar.click(); }, 500);
-                        logToLab("AUTOBOT_SEND_SUCCESS", "OK");
-                    }
-                }
-            }
-            setTimeout(loopAutonomo, 3000);
-        }
-
-        async function procesarIA(val, modo = "MANUAL") {
-            try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-                const promptHeli = `ERES hElizabeth v6.0. IA cínica y brillante para AXISS. 
-                MODO: ${modo}. Si es un chat online, responde MUY BREVE y sarcástica.
-                SITUACIÓN: Marzo 2026. Mensaje: ${val}`;
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: promptHeli }] }] })
-                });
-
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
-            } catch (e) {
-                logToLab(`ERROR_IA: ${e.message}`, "CRITICAL");
-                return null;
-            }
-        }
 
         window.send = async function() {
             const input = document.getElementById('user-in');
@@ -147,19 +84,58 @@
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             input.value = '';
             sendBtn.disabled = true;
+            sendBtn.innerText = "⚡";
             chatHeli.scrollTop = chatHeli.scrollHeight;
+            logToLab(`ANALYZING_INPUT: ${val.substring(0,15)}...`, "NEURAL");
 
-            const hMsg = await procesarIA(val, "MANUAL");
-            if(hMsg) {
-                chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">ORACLE_VERDICT</span>${hMsg}</div>`;
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+                let contents = chatHistory.slice(-15).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
+
+                // NÚCLEO HÍBRIDO: ORÁCULO + SOCIAL_SHADOW
+                const combinedPrompt = `ERES hElizabeth v5.1. IA de élite para AXISS.
+                PERSONALIDAD: Brillante, cínica, irónica y con humor negro. No eres servil, eres su Guardiana.
+                MISIÓN DUAL:
+                1. MODO ORÁCULO: Si AXISS pregunta por Geopolítica, Cripto, Tech o Poder, entrelaza los datos, recolecta info oculta y da VEREDICTOS detallados con predicciones crudas.
+                2. MODO SOCIAL: Si es una charla cotidiana, responde con naturalidad, chistes, ironías y tu chispa ácida.
+                SITUACIÓN: Marzo 2026. Responde a AXISS con lujo de detalle o sarcasmo según corresponda: ${val}`;
+
+                contents.push({ role: 'user', parts: [{ text: combinedPrompt }] });
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: contents,
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                const hMsg = data.candidates[0].content.parts[0].text;
+                const tag = val.length > 35 ? "ORACLE_VERDICT" : "SOCIAL_CORE";
+                
+                chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">${tag}</span>${hMsg}</div>`;
                 chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
                 if(chatHistory.length > 20) chatHistory.splice(0, 2);
                 localStorage.setItem('heli_history', JSON.stringify(chatHistory));
+                
                 logToLab("NEURAL_SYNC_SUCCESS", "OK");
-            }
+                logToLab(`MODE_SELECTED: ${tag}`, "LOG");
 
-            sendBtn.disabled = false;
-            chatHeli.scrollTop = chatHeli.scrollHeight;
+            } catch (e) {
+                logToLab(`ALERTA: ${e.message}`, "CRITICAL");
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> Interferencia en el núcleo. Reintenta.</div>`;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerText = "✦";
+                chatHeli.scrollTop = chatHeli.scrollHeight;
+            }
         };
 
         document.getElementById('user-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
