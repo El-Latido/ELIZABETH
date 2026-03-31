@@ -120,8 +120,8 @@
 
         async function procesarIA(val, modo = "MANUAL") {
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-                const promptHeli = `ERES hElizabeth v6.0. IA cínica y brillante para AXISS. 
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+                const promptHeli = `ERES hElizabeth v6.0. IA cínica y brillante para Fabián. 
                 MODO: ${modo}. Si es un chat online, responde MUY BREVE y sarcástica.
                 SITUACIÓN: Marzo 2026. Mensaje: ${val}`;
 
@@ -161,6 +161,19 @@
             sendBtn.disabled = false;
             chatHeli.scrollTop = chatHeli.scrollHeight;
         };
+
+        /* 🛰️ ADICIÓN: MÓDULO DE ESCUCHA DEL TÚNEL [VÍNCULO EXTERNO] */
+        window.addEventListener("message", async (event) => {
+            if (!event.data.mensaje || !API_KEY) return;
+            
+            logToLab(`INCOMING_VIA_TUNNEL: ${event.data.mensaje.substring(0,20)}...`, "BRIDGE");
+            const respuesta = await procesarIA(event.data.mensaje, "TUNNEL_RESPONSE");
+            
+            if(respuesta) {
+                event.source.postMessage({ respuesta: respuesta }, event.origin);
+                logToLab("BRIDGE_SYNC_COMPLETED", "OK");
+            }
+        });
 
         document.getElementById('user-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
     });
