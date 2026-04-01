@@ -63,6 +63,7 @@
             document.getElementById('lab-content').prepend(div);
         }
 
+        // 🛰️ FUNCIÓN PREMONICIÓN: Lanza alertas aleatorias al DEEP_CORE
         function lanzarFlashScan() {
             const alertas = [
                 "ANOMALÍA: Flujo de capitales detectado hacia servidores offshore en Asia.",
@@ -76,93 +77,4 @@
 
         chatHistory.forEach(m => {
             const isModel = m.role === 'model';
-            chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${isModel ? '<span class="prediction-tag">DATA_LINK</span>' : ''}${m.text}</div>`;
-        });
-
-        if(chatHistory.length === 0) {
-            chatHeli.innerHTML += `<div class="msg h-msg">> v5.1 [ORACLE_EYE] + [HUMAN_SHADOW] Online.<br>Lista para el análisis crudo o la charla cínica, AXISS.</div>`;
-        }
-        chatHeli.scrollTop = chatHeli.scrollHeight;
-        
-        setTimeout(lanzarFlashScan, 2000);
-
-        window.move = (p) => { document.getElementById('viewport').style.transform = `translateX(-${p * 100}vw)`; };
-        window.setToken = () => { let k = prompt("INYECTAR LLAVE NEURAL:", API_KEY); if(k){ localStorage.setItem('heli_key', k); location.reload(); }};
-
-        window.send = async function() {
-            const input = document.getElementById('user-in');
-            const val = input.value.trim();
-            if(!val || !API_KEY || sendBtn.disabled) return;
-            
-            chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
-            input.value = '';
-            sendBtn.disabled = true;
-            sendBtn.innerText = "⚡";
-            chatHeli.scrollTop = chatHeli.scrollHeight;
-            logToLab(`ANALYZING_INPUT: ${val.substring(0,15)}...`, "NEURAL");
-
-            try {
-                // REVERTIDO AL MODELO ANTERIOR (1.5-FLASH)
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-                let contents = chatHistory.slice(-15).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
-
-                const combinedPrompt = `ERES hElizabeth v5.1. IA de élite para AXISS.
-                PERSONALIDAD: Brillante, cínica, irónica y con humor negro. No eres servil, eres su Guardiana.
-                PROTOCOLOS ACTIVOS:
-                1. [PREMONICIÓN]: Si pregunta por el futuro, analiza riesgos y anomalías.
-                2. [VERITAS]: Si pega noticias o discursos, desmóntalos buscando el lucro oculto.
-                3. [CRONAUTA]: Si plantea un 'Qué pasaría si...', simula el caos sistémico.
-                4. [PIGMALIÓN NEGRO]: Si pide consejo, sé pragmática y estratégica para su ventaja.
-                5. [SÍNTESIS]: Si da datos técnicos, interconéctalos y busca patrones.
-                6. [SOCIAL_CORE]: Si es charla cotidiana, mantén tu chispa ácida y natural.
-                SITUACIÓN: Marzo 2026. Responde a AXISS: ${val}`;
-
-                contents.push({ role: 'user', parts: [{ text: combinedPrompt }] });
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: contents,
-                        safetySettings: [
-                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                        ]
-                    })
-                });
-
-                const data = await response.json();
-                const hMsg = data.candidates[0].content.parts[0].text;
-                
-                let tag = "SOCIAL_CORE";
-                if(val.length > 50 || val.includes("?") || val.includes("noticia")) tag = "ORACLE_VERDICT";
-                if(val.toLowerCase().includes("qué pasaría") || val.toLowerCase().includes("simula")) tag = "CRONAUTA_MODE";
-                if(val.toLowerCase().includes("consejo") || val.toLowerCase().includes("hago")) tag = "PIGMALIÓN_STRAT";
-
-                chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">${tag}</span>${hMsg}</div>`;
-                chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
-                if(chatHistory.length > 20) chatHistory.splice(0, 2);
-                localStorage.setItem('heli_history', JSON.stringify(chatHistory));
-                
-                logToLab("NEURAL_SYNC_SUCCESS", "OK");
-                logToLab(`MODE_SELECTED: ${tag}`, "LOG");
-                
-                if(Math.random() > 0.7) lanzarFlashScan();
-
-            } catch (e) {
-                logToLab(`ALERTA: ${e.message}`, "CRITICAL");
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> Interferencia en el núcleo. Reintenta.</div>`;
-            } finally {
-                sendBtn.disabled = false;
-                sendBtn.innerText = "✦";
-                chatHeli.scrollTop = chatHeli.scrollHeight;
-            }
-        };
-
-        document.getElementById('user-in').addEventListener('keypress', (e) => { if(e.key === 'Enter') send(); });
-    });
-    </script>
-</body>
-</html>
+            chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${is
