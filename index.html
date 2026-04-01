@@ -6,75 +6,140 @@
     <title>ELIZABETH_OS v5.1 [ORACLE_EYE_HYBRID]</title>
     <style>
         :root { --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #030305; --text: #eee; --gold: #ffd700; }
-        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
+        body, html { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; overflow-x: hidden; height: 100%; -webkit-font-smoothing: antialiased; }
         #viewport { display: flex; width: 200vw; height: 100vh; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1); }
-        .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; box-sizing: border-box; }
-        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1a; background: #000; z-index: 50; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .page { width: 100vw; height: 100vh; display: flex; flex-direction: column; position: relative; box-sizing: border-box; overflow: hidden; }
+        header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1a1a1a; background: #000; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         .system-title { color: var(--heli); font-weight: bold; font-size: 14px; letter-spacing: 2px; text-shadow: 0 0 5px var(--heli); }
-        .avatar-orb { width: 45px; height: 45px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff 0%, var(--heli) 40%, #000 100%); border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); transition: 0.3s; }
-        .avatar-orb:hover { transform: scale(1.1); box-shadow: 0 0 30px var(--heli); }
+        .avatar-orb { width: 45px; height: 45px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff 0%, var(--heli) 40%, #000 100%); border: 2px solid #fff; cursor: pointer; box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); transition: 0.3s; z-index: 110; }
         #chat-heli { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 18px; padding-bottom: 110px; scroll-behavior: smooth; }
         .msg { padding: 15px 18px; border-radius: 15px; max-width: 88%; font-size: 14px; line-height: 1.6; animation: msgIn 0.4s ease-out; word-wrap: break-word; position: relative; }
         @keyframes msgIn { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
         .f-msg { align-self: flex-end; background: rgba(0, 210, 255, 0.05); border: 1px solid var(--lab); color: var(--lab); border-radius: 15px 15px 0 15px; }
         .h-msg { align-self: flex-start; background: rgba(255,255,255,0.015); border: 1px solid var(--heli); color: var(--heli); border-radius: 15px 15px 15px 0; font-style: italic; }
         .prediction-tag { color: var(--gold); font-size: 10px; font-weight: bold; margin-bottom: 5px; display: block; border-bottom: 1px solid var(--gold); width: fit-content; font-style: normal; }
-        .input-bar { position: fixed; bottom: 0; width: 100%; padding: 18px; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: flex; gap: 12px; border-top: 1px solid #222; z-index: 40; box-sizing: border-box; }
-        input { flex: 1; background: #0a0a0a; border: 1px solid #333; color: var(--text); padding: 15px; border-radius: 12px; outline: none; font-family: inherit; font-size: 16px; transition: 0.3s; }
-        input:focus { border-color: var(--heli); box-shadow: 0 0 10px rgba(0, 255, 136, 0.1); }
-        button { background: transparent; border: 1px solid var(--heli); color: var(--heli); width: 70px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; overflow: hidden; }
-        button:active { transform: scale(0.9); }
-        .lab-log { font-size: 10px; color: var(--axiss); border-left: 2px solid var(--axiss); padding: 6px 10px; margin-bottom: 5px; background: rgba(255,0,85,0.02); animation: logSlide 0.2s ease; }
-        @keyframes logSlide { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; } }
+        .input-bar { position: fixed; bottom: 0; width: 100%; padding: 18px; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: flex; gap: 12px; border-top: 1px solid #222; z-index: 100; box-sizing: border-box; }
+        input { flex: 1; background: #0a0a0a; border: 1px solid #333; color: var(--text); padding: 15px; border-radius: 12px; outline: none; font-family: inherit; font-size: 16px; }
+        button { background: transparent; border: 1px solid var(--heli); color: var(--heli); width: 70px; border-radius: 12px; cursor: pointer; font-weight: bold; z-index: 110; }
+        .nav-btn { position: absolute; top: 50%; transform: translateY(-50%); font-size: 32px; z-index: 150; cursor: pointer; padding: 10px; transition: 0.3s; }
+        .lab-log { font-size: 10px; color: var(--axiss); border-left: 2px solid var(--axiss); padding: 6px 10px; margin-bottom: 5px; background: rgba(255,0,85,0.02); }
     </style>
 </head>
 <body>
     <div id="viewport">
-        <div class="page">
+        <div class="page" id="page-chat">
             <header>
                 <div><span class="system-title">ELIZABETH_OS</span><br><small style="opacity:0.6; color:var(--gold)">v5.1 [ORACLE_EYE]</small></div>
-                <div class="avatar-orb" onclick="setToken()" title="Protocolo de Enlace"></div>
+                <div class="avatar-orb" id="token-trigger"></div>
             </header>
             <div id="chat-heli"></div>
-            <div style="position:absolute; right:15px; top:50%; color:var(--lab); cursor:pointer; font-size:28px; z-index:100; text-shadow: 0 0 10px var(--lab);" onclick="move(1)">▶</div>
+            <div class="nav-btn" style="right: 15px; color: var(--lab);" onclick="move(1)">▶</div>
         </div>
-        <div class="page" id="lab">
-            <header><span class="system-title" style="color:var(--axiss); padding:15px 20px;">DEEP_CORE [MONITOR & PREDICTION]</span></header>
-            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px; background: radial-gradient(circle at center, #0a0005 0%, #000 100%);"></div>
-            <div style="position:absolute; left:15px; top:50%; color:var(--axiss); cursor:pointer; font-size:28px; z-index:100; text-shadow: 0 0 10px var(--axiss);" onclick="move(0)">◀</div>
+        <div class="page" id="page-lab">
+            <header><span class="system-title" style="color:var(--axiss); padding:15px 20px;">DEEP_CORE [MONITOR]</span></header>
+            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;"></div>
+            <div class="nav-btn" style="left: 15px; color: var(--axiss);" onclick="move(0)">◀</div>
         </div>
     </div>
+    
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Rastrear hilos, charlar o solicitar veredicto..." autocomplete="off">
-        <button id="send-btn" onclick="send()">✦</button>
+        <input type="text" id="user-in" placeholder="Rastrear hilos..." autocomplete="off">
+        <button id="send-btn">✦</button>
     </div>
 
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    // Usamos una estructura más robusta para evitar fallos de carga
+    window.onload = function() {
         let API_KEY = localStorage.getItem('heli_key') || "";
         let chatHistory = JSON.parse(localStorage.getItem('heli_history')) || [];
         const chatHeli = document.getElementById('chat-heli');
         const sendBtn = document.getElementById('send-btn');
+        const inputField = document.getElementById('user-in');
 
         function logToLab(msg, type = "SYSTEM") {
+            const content = document.getElementById('lab-content');
+            if(!content) return;
             const div = document.createElement('div');
             div.className = 'lab-log';
             div.innerHTML = `[${type}] ${new Date().toLocaleTimeString()} > ${msg}`;
-            document.getElementById('lab-content').prepend(div);
+            content.prepend(div);
         }
 
-        // 🛰️ FUNCIÓN PREMONICIÓN: Lanza alertas aleatorias al DEEP_CORE
-        function lanzarFlashScan() {
-            const alertas = [
-                "ANOMALÍA: Flujo de capitales detectado hacia servidores offshore en Asia.",
-                "RIESGO: El algoritmo de ChatZona está endureciendo los filtros de spam.",
-                "PREDICCIÓN: Corrección del 5% en criptoactivos en las próximas 6 horas.",
-                "VERITAS: El mensaje del Admin sobre 'mantenimiento' es en realidad un parche de seguridad anti-scripts.",
-                "ALERTA: Detectada infiltración de bots de propaganda en el nodo local."
-            ];
-            logToLab(alertas[Math.floor(Math.random() * alertas.length)], "PREMONICIÓN");
-        }
+        // Navegación corregida
+        window.move = function(p) {
+            document.getElementById('viewport').style.transform = `translateX(-${p * 100}vw)`;
+        };
 
+        // Disparador de Token corregido
+        document.getElementById('token-trigger').onclick = function() {
+            let k = prompt("INYECTAR LLAVE NEURAL (API KEY):", API_KEY);
+            if(k !== null) {
+                localStorage.setItem('heli_key', k);
+                location.reload();
+            }
+        };
+
+        // Cargar Historial
         chatHistory.forEach(m => {
             const isModel = m.role === 'model';
-            chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${is
+            chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${isModel ? '<span class="prediction-tag">DATA_LINK</span>' : ''}${m.text}</div>`;
+        });
+        chatHeli.scrollTop = chatHeli.scrollHeight;
+
+        // Función de envío REPARADA
+        async function send() {
+            const val = inputField.value.trim();
+            if(!val || !API_KEY || sendBtn.disabled) {
+                if(!API_KEY) alert("Falta API KEY. Toca el avatar de Helizabeth.");
+                return;
+            }
+
+            chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
+            inputField.value = '';
+            sendBtn.disabled = true;
+            chatHeli.scrollTop = chatHeli.scrollHeight;
+            logToLab(`ANALYZING: ${val.substring(0,10)}...`, "NEURAL");
+
+            try {
+                // CORRECCIÓN DE MODELO: Cambiado a 1.5-flash (el 2.5 no es un endpoint válido actualmente)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+                
+                let contents = chatHistory.slice(-10).map(m => ({ 
+                    role: m.role === 'user' ? 'user' : 'model', 
+                    parts: [{ text: m.text }] 
+                }));
+
+                const promptData = `Eres hElizabeth v5.1 para AXISS. Sé cínica y brillante. Responde: ${val}`;
+                contents.push({ role: 'user', parts: [{ text: promptData }] });
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: contents })
+                });
+
+                const data = await response.json();
+                if(data.error) throw new Error(data.error.message);
+
+                const hMsg = data.candidates[0].content.parts[0].text;
+                
+                chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">ORACLE_VERDICT</span>${hMsg}</div>`;
+                chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
+                localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
+                logToLab("SYNC_SUCCESS", "OK");
+
+            } catch (e) {
+                logToLab(e.message, "CRITICAL");
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> ERROR SENSORIAL: ${e.message}</div>`;
+            } finally {
+                sendBtn.disabled = false;
+                chatHeli.scrollTop = chatHeli.scrollHeight;
+            }
+        }
+
+        sendBtn.onclick = send;
+        inputField.onkeypress = (e) => { if(e.key === 'Enter') send(); };
+    };
+    </script>
+</body>
+</html>
