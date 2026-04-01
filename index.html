@@ -48,7 +48,6 @@
     </div>
 
     <script>
-    // Usamos el evento de carga completo para asegurar que el DOM esté listo
     window.onload = function() {
         let API_KEY = localStorage.getItem('heli_key') || "";
         let chatHistory = JSON.parse(localStorage.getItem('heli_history')) || [];
@@ -63,7 +62,6 @@
             document.getElementById('lab-content').prepend(div);
         }
 
-        // --- ASIGNACIÓN DE FUNCIONES DE NAVEGACIÓN ---
         document.getElementById('go-lab').onclick = () => {
             document.getElementById('viewport').style.transform = "translateX(-100vw)";
         };
@@ -71,7 +69,6 @@
             document.getElementById('viewport').style.transform = "translateX(0vw)";
         };
 
-        // --- ASIGNACIÓN DE TOKEN ---
         document.getElementById('btn-token').onclick = () => {
             let key = prompt("INYECTAR LLAVE NEURAL (API KEY):", API_KEY);
             if(key !== null) {
@@ -80,17 +77,20 @@
             }
         };
 
-        // Cargar mensajes previos
         chatHistory.forEach(m => {
             const isModel = m.role === 'model';
             chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${isModel ? '<span class="prediction-tag">DATA_LINK</span>' : ''}${m.text}</div>`;
         });
         chatHeli.scrollTop = chatHeli.scrollHeight;
 
-        // --- FUNCIÓN DE ENVÍO REPARADA ---
         async function executeSend() {
             const val = userInput.value.trim();
             if(!val || !API_KEY || sendBtn.disabled) return;
+
+            // --- PARCHE DE TIEMPO REAL ---
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const dateString = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             userInput.value = '';
@@ -99,7 +99,6 @@
             logToLab(`ANALYZING_INPUT...`, "NEURAL");
 
             try {
-                // MODELO GEMINI 2.5 FLASH RESTAURADO
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
                 
                 let contents = chatHistory.slice(-10).map(m => ({ 
@@ -107,10 +106,14 @@
                     parts: [{ text: m.text }] 
                 }));
 
-                contents.push({ 
-                    role: 'user', 
-                    parts: [{ text: `Eres hElizabeth v5.1. IA cínica y brillante para AXISS. Responde: ${val}` }] 
-                });
+                // --- PROMPT DE IDENTIDAD INVISIBLE ---
+                const instructions = `[SISTEMA: ELIZABETH_OS v5.1]
+                REGLA CRÍTICA: No menciones tu modelo, no digas tu nombre, no digas que eres cínica o brillante. AXISS ya lo sabe. Ve directo al grano.
+                ESTADO TEMPORAL: Hoy es ${dateString}, son las ${timeString}.
+                MISIÓN: Responde a AXISS con tu inteligencia mordaz y estratégica habitual.
+                ENTRADA: ${val}`;
+
+                contents.push({ role: 'user', parts: [{ text: instructions }] });
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -128,7 +131,7 @@
 
             } catch (e) {
                 logToLab(`ERROR: ${e.message}`, "CRITICAL");
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> INTERFERENCIA: Verifica tu API Key o conexión.</div>`;
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> INTERFERENCIA: Verifica la conexión.</div>`;
             } finally {
                 sendBtn.disabled = false;
                 chatHeli.scrollTop = chatHeli.scrollHeight;
