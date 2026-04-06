@@ -24,27 +24,13 @@
         .nav-trigger { position: absolute; top: 50%; transform: translateY(-50%); font-size: 30px; cursor: pointer; z-index: 150; padding: 15px; text-shadow: 0 0 10px currentColor; }
         .lab-log { font-size: 10px; color: var(--axiss); border-left: 2px solid var(--axiss); padding: 6px 10px; margin-bottom: 5px; background: rgba(255,0,85,0.02); }
 
-        /* --- VIRTUALIZACIÓN BLINDADA (ANTI-CRASH) --- */
-        #virtual-os-overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: #000; z-index: 200; display: none; 
-            flex-direction: column;
-        }
+        /* --- VIRTUALIZACIÓN BLINDADA --- */
+        #virtual-os-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 200; display: none; flex-direction: column; }
         #app-runner-frame { width: 100%; flex: 1; border: none; background: #fff; }
-        .os-controls { 
-            background: #111; padding: 10px; display: flex; 
-            justify-content: space-between; border-bottom: 2px solid var(--heli);
-        }
-        .upload-btn-lab {
-            background: var(--axiss); color: white; border: none; 
-            padding: 10px; margin: 10px 0; border-radius: 5px; 
-            cursor: pointer; font-family: inherit; width: 100%;
-            text-shadow: 0 0 5px #000;
-        }
-        #apk-emulator-container {
-            width: 100%; height: 500px; border: 2px solid var(--gold);
-            margin-top: 10px; display: none; border-radius: 15px; overflow: hidden;
-        }
+        .os-controls { background: #111; padding: 10px; display: flex; justify-content: space-between; border-bottom: 2px solid var(--heli); }
+        .upload-btn-lab { background: var(--axiss); color: white; border: none; padding: 10px; margin: 10px 0; border-radius: 5px; cursor: pointer; font-family: inherit; width: 100%; text-shadow: 0 0 5px #000; }
+        #apk-emulator-container { width: 100%; height: 500px; border: 2px solid var(--gold); margin-top: 10px; display: none; border-radius: 15px; overflow: hidden; }
+        .url-box { background: #0a0a0a; border: 1px dashed var(--lab); padding: 10px; margin-top: 10px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -62,12 +48,20 @@
             <header><span class="system-title" style="color:var(--axiss); padding:15px 20px;">DEEP_CORE [LAB]</span></header>
             <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
                 <button class="upload-btn-lab" onclick="document.getElementById('file-injector').click()">
-                    ⚡ INYECTAR APP/BINARIO (ANTI-CRASH MODE) ⚡
+                    ⚡ INYECTAR LOCAL (ANTI-CRASH) ⚡
                 </button>
                 <input type="file" id="file-injector" style="display:none" onchange="handleFileInjection(this.files[0])">
+
+                <div class="url-box">
+                    <small style="color:var(--lab)">BYPASS_URL_MODE:</small>
+                    <div style="display:flex; gap:5px; margin-top:5px;">
+                        <input type="text" id="url-injector" placeholder="Pegar link APK/HTML..." style="flex:1; font-size:12px; padding:8px; border:1px solid #444;">
+                        <button onclick="injectByUrl()" style="width:50px; font-size:10px; border:1px solid var(--lab); color:var(--lab);">RUN</button>
+                    </div>
+                </div>
                 
                 <div id="apk-emulator-container">
-                    <div style="background:var(--gold); color:#000; font-size:10px; padding:2px 10px; font-weight:bold;">MODO EMULACIÓN ACTIVO</div>
+                    <div style="background:var(--gold); color:#000; font-size:10px; padding:2px 10px; font-weight:bold;">EMULACIÓN_NUBE_ACTIVA</div>
                     <iframe id="apk-frame" src="" width="100%" height="100%" frameborder="0"></iframe>
                 </div>
                 
@@ -79,7 +73,7 @@
 
     <div id="virtual-os-overlay">
         <div class="os-controls">
-            <span style="color:var(--heli)">VIRTUAL_EXECUTION_MODE</span>
+            <span style="color:var(--heli)">VIRTUAL_EXECUTION</span>
             <button onclick="closeVirtualApp()" style="background:var(--axiss); color:white; border:none; padding:5px 15px;">SALIR X</button>
         </div>
         <iframe id="app-runner-frame"></iframe>
@@ -106,26 +100,35 @@
             document.getElementById('lab-logs-container').prepend(div);
         }
 
-        // --- MOTOR DE INYECCIÓN OPTIMIZADO PARA MÓVIL ---
+        // --- INYECCIÓN POR URL (ELIMINA EL CRASH) ---
+        window.injectByUrl = function() {
+            const url = document.getElementById('url-injector').value;
+            if(!url) return;
+            logToLab(`DESCARGANDO VÍA NUBE: ${url.substring(0,25)}...`, "WARP");
+            
+            if(url.toLowerCase().includes('.apk')) {
+                document.getElementById('apk-emulator-container').style.display = "block";
+                document.getElementById('apk-frame').src = "https://appetize.io/upload"; 
+                logToLab("TÚNEL APK ABIERTO. CARGA EL LINK EN EL EMULADOR.", "SUCCESS");
+            } else {
+                const overlay = document.getElementById('virtual-os-overlay');
+                const frame = document.getElementById('app-runner-frame');
+                overlay.style.display = 'flex';
+                frame.src = url;
+            }
+        };
+
+        // --- INYECCIÓN LOCAL OPTIMIZADA ---
         window.handleFileInjection = function(file) {
             if(!file) return;
-            logToLab(`INJECTOR: Procesando ${file.name}`, "AUTH");
-
-            // Limpieza preventiva de memoria
-            if(window.currentBlobURL) {
-                URL.revokeObjectURL(window.currentBlobURL);
-                logToLab("MEMORIA_PURGADA", "CLEAN");
-            }
+            logToLab(`PETICIÓN: ${file.name}`, "AUTH");
+            if(window.currentBlobURL) URL.revokeObjectURL(window.currentBlobURL);
 
             if(file.name.endsWith('.apk')) {
-                logToLab("APK DETECTADO. EVITANDO CARGA LOCAL PARA PREVENIR CRASH...", "WARP");
                 document.getElementById('apk-emulator-container').style.display = "block";
-                // Redirección directa al cargador de Appetize para no saturar la RAM del móvil
                 document.getElementById('apk-frame').src = "https://appetize.io/upload";
-                logToLab("TÚNEL EXTERNO ABIERTO. SUBE EL ARCHIVO ALLÍ.", "SUCCESS");
             } 
-            else if(file.name.endsWith('.html') || file.name.endsWith('.js')) {
-                logToLab("EJECUTANDO CÓDIGO LIGERO...", "SANDBOX");
+            else {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const overlay = document.getElementById('virtual-os-overlay');
@@ -136,32 +139,21 @@
                     frame.src = window.currentBlobURL;
                 };
                 reader.readAsText(file);
-            } else {
-                logToLab("ERROR: FORMATO NO SOPORTADO O MUY PESADO.", "CRITICAL");
             }
         };
 
         window.closeVirtualApp = function() {
             document.getElementById('virtual-os-overlay').style.display = 'none';
             document.getElementById('app-runner-frame').src = '';
-            if(window.currentBlobURL) URL.revokeObjectURL(window.currentBlobURL);
-            logToLab("ENTORNO VIRTUAL CERRADO.", "SYSTEM");
+            logToLab("ENTORNO CERRADO.", "SYSTEM");
         };
 
-        // --- NAVEGACIÓN ---
-        document.getElementById('go-lab').onclick = () => {
-            document.getElementById('viewport').style.transform = "translateX(-100vw)";
-        };
-        document.getElementById('go-chat').onclick = () => {
-            document.getElementById('viewport').style.transform = "translateX(0vw)";
-        };
+        document.getElementById('go-lab').onclick = () => { document.getElementById('viewport').style.transform = "translateX(-100vw)"; };
+        document.getElementById('go-chat').onclick = () => { document.getElementById('viewport').style.transform = "translateX(0vw)"; };
 
         document.getElementById('btn-token').onclick = () => {
-            let key = prompt("INYECTAR LLAVE NEURAL (API KEY):", API_KEY);
-            if(key !== null) {
-                localStorage.setItem('heli_key', key);
-                location.reload();
-            }
+            let key = prompt("API KEY:", API_KEY);
+            if(key !== null) { localStorage.setItem('heli_key', key); location.reload(); }
         };
 
         chatHistory.forEach(m => {
@@ -173,42 +165,27 @@
         async function executeSend() {
             const val = userInput.value.trim();
             if(!val || !API_KEY || sendBtn.disabled) return;
-
-            const now = new Date();
-            const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const dateString = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
             chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
             userInput.value = '';
             sendBtn.disabled = true;
             chatHeli.scrollTop = chatHeli.scrollHeight;
-
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-                let contents = chatHistory.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
-                const instructions = `[ELIZABETH_OS] Responde a AXISS. Hoy: ${dateString}.`;
-                contents.push({ role: 'user', parts: [{ text: instructions + val }] });
-
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: contents })
-                });
-
+                let contents = chatHistory.slice(-6).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
+                contents.push({ role: 'user', parts: [{ text: val }] });
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: contents }) });
                 const data = await response.json();
                 const hMsg = data.candidates[0].content.parts[0].text;
-                
                 chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">ORACLE_VERDICT</span>${hMsg}</div>`;
                 chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
-                localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
+                localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-10)));
             } catch (e) {
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> ERROR DE CONEXIÓN.</div>`;
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> INTERFERENCIA DETECTADA.</div>`;
             } finally {
                 sendBtn.disabled = false;
                 chatHeli.scrollTop = chatHeli.scrollHeight;
             }
         }
-
         sendBtn.onclick = executeSend;
         userInput.onkeypress = (e) => { if(e.key === 'Enter') executeSend(); };
     };
