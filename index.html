@@ -53,9 +53,9 @@
                 <input type="file" id="file-injector" style="display:none" onchange="handleFileInjection(this.files[0])">
 
                 <div class="url-box">
-                    <small style="color:var(--lab)">BYPASS_URL_MODE:</small>
+                    <small style="color:var(--lab)">BYPASS_URL_MODE [SECURE_LINK]:</small>
                     <div style="display:flex; gap:5px; margin-top:5px;">
-                        <input type="text" id="url-injector" placeholder="Pegar link APK/HTML..." style="flex:1; font-size:12px; padding:8px; border:1px solid #444;">
+                        <input type="text" id="url-injector" placeholder="Pegar link APK/HTML directo..." style="flex:1; font-size:12px; padding:8px; border:1px solid #444;">
                         <button onclick="injectByUrl()" style="width:50px; font-size:10px; border:1px solid var(--lab); color:var(--lab);">RUN</button>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
 
     <div id="virtual-os-overlay">
         <div class="os-controls">
-            <span style="color:var(--heli)">VIRTUAL_EXECUTION</span>
+            <span style="color:var(--heli)">VIRTUAL_EXECUTION_MODE</span>
             <button onclick="closeVirtualApp()" style="background:var(--axiss); color:white; border:none; padding:5px 15px;">SALIR X</button>
         </div>
         <iframe id="app-runner-frame"></iframe>
@@ -100,16 +100,22 @@
             document.getElementById('lab-logs-container').prepend(div);
         }
 
-        // --- INYECCIÓN POR URL (ELIMINA EL CRASH) ---
+        // --- INYECCIÓN POR URL (ESTABILIZADA) ---
         window.injectByUrl = function() {
-            const url = document.getElementById('url-injector').value;
+            const url = document.getElementById('url-injector').value.trim();
             if(!url) return;
-            logToLab(`DESCARGANDO VÍA NUBE: ${url.substring(0,25)}...`, "WARP");
             
+            logToLab(`ANALIZANDO ORIGEN: ${url.substring(0,25)}...`, "NEURAL");
+
+            // Si es un link de Softonic o similar sin archivo directo, advertimos
+            if(!url.toLowerCase().endsWith('.apk') && !url.toLowerCase().endsWith('.html') && !url.toLowerCase().endsWith('.js')) {
+                logToLab("AVISO: Link externo detectado. Iniciando en Sandbox para evitar Crash.", "WARN");
+            }
+
             if(url.toLowerCase().includes('.apk')) {
                 document.getElementById('apk-emulator-container').style.display = "block";
                 document.getElementById('apk-frame').src = "https://appetize.io/upload"; 
-                logToLab("TÚNEL APK ABIERTO. CARGA EL LINK EN EL EMULADOR.", "SUCCESS");
+                logToLab("TÚNEL APK ABIERTO. CARGA EL LINK EN EL PANEL SUPERIOR.", "SUCCESS");
             } else {
                 const overlay = document.getElementById('virtual-os-overlay');
                 const frame = document.getElementById('app-runner-frame');
@@ -118,13 +124,14 @@
             }
         };
 
-        // --- INYECCIÓN LOCAL OPTIMIZADA ---
+        // --- INYECCIÓN LOCAL (PROTECCIÓN DE RAM) ---
         window.handleFileInjection = function(file) {
             if(!file) return;
-            logToLab(`PETICIÓN: ${file.name}`, "AUTH");
+            logToLab(`PETICIÓN LOCAL: ${file.name}`, "AUTH");
             if(window.currentBlobURL) URL.revokeObjectURL(window.currentBlobURL);
 
             if(file.name.endsWith('.apk')) {
+                logToLab("MODO APK ACTIVADO. REDIRIJIENDO A NUBE...", "WARP");
                 document.getElementById('apk-emulator-container').style.display = "block";
                 document.getElementById('apk-frame').src = "https://appetize.io/upload";
             } 
@@ -145,6 +152,7 @@
         window.closeVirtualApp = function() {
             document.getElementById('virtual-os-overlay').style.display = 'none';
             document.getElementById('app-runner-frame').src = '';
+            if(window.currentBlobURL) URL.revokeObjectURL(window.currentBlobURL);
             logToLab("ENTORNO CERRADO.", "SYSTEM");
         };
 
@@ -171,16 +179,16 @@
             chatHeli.scrollTop = chatHeli.scrollHeight;
             try {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-                let contents = chatHistory.slice(-6).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
+                let contents = chatHistory.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
                 contents.push({ role: 'user', parts: [{ text: val }] });
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: contents }) });
                 const data = await response.json();
                 const hMsg = data.candidates[0].content.parts[0].text;
                 chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">ORACLE_VERDICT</span>${hMsg}</div>`;
                 chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
-                localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-10)));
+                localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
             } catch (e) {
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> INTERFERENCIA DETECTADA.</div>`;
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> ERROR DE ENLACE NEURAL.</div>`;
             } finally {
                 sendBtn.disabled = false;
                 chatHeli.scrollTop = chatHeli.scrollHeight;
