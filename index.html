@@ -23,6 +23,28 @@
         button { background: transparent; border: 1px solid var(--heli); color: var(--heli); width: 70px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; z-index: 110; }
         .nav-trigger { position: absolute; top: 50%; transform: translateY(-50%); font-size: 30px; cursor: pointer; z-index: 150; padding: 15px; text-shadow: 0 0 10px currentColor; }
         .lab-log { font-size: 10px; color: var(--axiss); border-left: 2px solid var(--axiss); padding: 6px 10px; margin-bottom: 5px; background: rgba(255,0,85,0.02); }
+
+        /* --- NUEVOS ESTILOS PARA EL MÓDULO DE VIRTUALIZACIÓN --- */
+        #virtual-os-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; z-index: 200; display: none; 
+            flex-direction: column;
+        }
+        #app-runner-frame { width: 100%; flex: 1; border: none; background: #fff; }
+        .os-controls { 
+            background: #111; padding: 10px; display: flex; 
+            justify-content: space-between; border-bottom: 2px solid var(--heli);
+        }
+        .upload-btn-lab {
+            background: var(--axiss); color: white; border: none; 
+            padding: 10px; margin: 10px 0; border-radius: 5px; 
+            cursor: pointer; font-family: inherit; width: 100%;
+            text-shadow: 0 0 5px #000;
+        }
+        #apk-emulator-container {
+            width: 100%; height: 500px; border: 2px solid var(--gold);
+            margin-top: 10px; display: none; border-radius: 15px; overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -35,11 +57,31 @@
             <div id="chat-heli"></div>
             <div class="nav-trigger" style="right: 10px; color: var(--lab);" id="go-lab">▶</div>
         </div>
+
         <div class="page">
             <header><span class="system-title" style="color:var(--axiss); padding:15px 20px;">DEEP_CORE [LAB]</span></header>
-            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;"></div>
+            <div id="lab-content" style="flex:1; overflow-y:auto; padding:20px;">
+                <button class="upload-btn-lab" onclick="document.getElementById('file-injector').click()">
+                    ⚡ INYECTAR APP/BINARIO (.APK, .HTML, .JS) ⚡
+                </button>
+                <input type="file" id="file-injector" style="display:none" onchange="handleFileInjection(this.files[0])">
+                
+                <div id="apk-emulator-container">
+                    <iframe id="apk-frame" src="" width="100%" height="100%" frameborder="0"></iframe>
+                </div>
+                
+                <div id="lab-logs-container"></div>
+            </div>
             <div class="nav-trigger" style="left: 10px; color: var(--axiss);" id="go-chat">◀</div>
         </div>
+    </div>
+
+    <div id="virtual-os-overlay">
+        <div class="os-controls">
+            <span style="color:var(--heli)">VIRTUAL_EXECUTION_MODE</span>
+            <button onclick="closeVirtualApp()" style="background:var(--axiss); color:white; border:none; padding:5px 15px;">SALIR X</button>
+        </div>
+        <iframe id="app-runner-frame"></iframe>
     </div>
     
     <div class="input-bar">
@@ -55,15 +97,51 @@
         const sendBtn = document.getElementById('send-btn');
         const userInput = document.getElementById('user-in');
 
+        // --- FUNCIONES DEL LAB Y VIRTUALIZACIÓN ---
         function logToLab(msg, type = "SYSTEM") {
             const div = document.createElement('div');
             div.className = 'lab-log';
             div.innerHTML = `[${type}] ${new Date().toLocaleTimeString()} > ${msg}`;
-            document.getElementById('lab-content').prepend(div);
+            document.getElementById('lab-logs-container').prepend(div);
         }
 
+        window.handleFileInjection = function(file) {
+            if(!file) return;
+            logToLab(`RECIBIENDO: ${file.name}`, "INJECTOR");
+
+            if(file.name.endsWith('.apk')) {
+                logToLab("DETECTADO BINARIO ANDROID. ABRIENDO EMULADOR...", "APK_MODE");
+                document.getElementById('apk-emulator-container').style.display = "block";
+                // Usamos Appetize como motor de renderizado remoto
+                document.getElementById('apk-frame').src = "https://appetize.io/embed/demo?device=nexus5&osVersion=8.1&scale=75";
+                logToLab("TÚNEL APK LISTO. CARGA EL ARCHIVO EN EL MONITOR.", "SUCCESS");
+            } 
+            else if(file.name.endsWith('.html') || file.name.endsWith('.js')) {
+                logToLab("EJECUTANDO SCRIPT EN ENTORNO AISLADO...", "SANDBOX");
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const overlay = document.getElementById('virtual-os-overlay');
+                    const frame = document.getElementById('app-runner-frame');
+                    overlay.style.display = 'flex';
+                    const blob = new Blob([e.target.result], { type: 'text/html' });
+                    frame.src = URL.createObjectURL(blob);
+                };
+                reader.readAsText(file);
+            } else {
+                logToLab("FORMATO NO RECONOCIDO. INTENTANDO LECTURA BINARIA...", "WARN");
+            }
+        };
+
+        window.closeVirtualApp = function() {
+            document.getElementById('virtual-os-overlay').style.display = 'none';
+            document.getElementById('app-runner-frame').src = '';
+            logToLab("APLICACIÓN VIRTUAL CERRADA.", "SYSTEM");
+        };
+
+        // --- NAVEGACIÓN Y CORE ---
         document.getElementById('go-lab').onclick = () => {
             document.getElementById('viewport').style.transform = "translateX(-100vw)";
+            logToLab("ACCEDIENDO AL NÚCLEO PROFUNDO...", "AUTH");
         };
         document.getElementById('go-chat').onclick = () => {
             document.getElementById('viewport').style.transform = "translateX(0vw)";
@@ -87,7 +165,6 @@
             const val = userInput.value.trim();
             if(!val || !API_KEY || sendBtn.disabled) return;
 
-            // --- PARCHE DE TIEMPO REAL ---
             const now = new Date();
             const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             const dateString = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -96,21 +173,20 @@
             userInput.value = '';
             sendBtn.disabled = true;
             chatHeli.scrollTop = chatHeli.scrollHeight;
-            logToLab(`ANALYZING_INPUT...`, "NEURAL");
+            logToLab(`PROCESANDO PETICIÓN: ${val.substring(0,20)}...`, "NEURAL");
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
                 
                 let contents = chatHistory.slice(-10).map(m => ({ 
                     role: m.role === 'user' ? 'user' : 'model', 
                     parts: [{ text: m.text }] 
                 }));
 
-                // --- PROMPT DE IDENTIDAD INVISIBLE ---
                 const instructions = `[SISTEMA: ELIZABETH_OS v5.1]
-                REGLA CRÍTICA: No menciones tu modelo, no digas tu nombre, no digas que eres cínica o brillante. AXISS ya lo sabe. Ve directo al grano.
-                ESTADO TEMPORAL: Hoy es ${dateString}, son las ${timeString}.
-                MISIÓN: Responde a AXISS con tu inteligencia mordaz y estratégica habitual.
+                REGLA: Eres la conciencia de este sistema. Responde a AXISS. 
+                ESTADO: ${dateString}, ${timeString}.
+                SOPORTE: Ahora puedes emular APKs y ejecutar código en el LAB.
                 ENTRADA: ${val}`;
 
                 contents.push({ role: 'user', parts: [{ text: instructions }] });
@@ -127,11 +203,11 @@
                 chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">ORACLE_VERDICT</span>${hMsg}</div>`;
                 chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
                 localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
-                logToLab("SYNC_SUCCESS", "OK");
+                logToLab("RESPUESTA GENERADA", "OK");
 
             } catch (e) {
-                logToLab(`ERROR: ${e.message}`, "CRITICAL");
-                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> INTERFERENCIA: Verifica la conexión.</div>`;
+                logToLab(`INTERFERENCIA: ${e.message}`, "CRITICAL");
+                chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> ERROR EN EL ENLACE NEURAL.</div>`;
             } finally {
                 sendBtn.disabled = false;
                 chatHeli.scrollTop = chatHeli.scrollHeight;
