@@ -154,7 +154,7 @@
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Escribe comando, AXISS..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="AXISS, esperando entrada..." autocomplete="off">
         <button id="send-btn">✦</button>
     </div>
 
@@ -176,12 +176,11 @@
                 div.innerHTML = `<span style="color:${color}">[${type}]</span> <span style="opacity:0.4">${new Date().toLocaleTimeString()}</span> > ${msg}`;
                 logContainer.prepend(div);
                 
-                document.getElementById('thread-count').innerText = Math.floor(Math.random() * 100) + 50;
+                document.getElementById('thread-count').innerText = Math.floor(Math.random() * 80) + 40;
                 document.getElementById('mem-usage').innerText = (JSON.stringify(chatHistory).length / 1024).toFixed(2);
             }
 
             function appendMessage(role, text, tag = null) {
-                const fragment = document.createDocumentFragment();
                 const div = document.createElement('div');
                 div.className = `msg ${role === 'model' ? 'h-msg' : 'f-msg'}`;
                 
@@ -192,40 +191,41 @@
                     div.appendChild(tagSpan);
                 }
                 
-                const content = document.createElement('span');
-                content.textContent = text;
-                div.appendChild(content);
+                const contentSpan = document.createElement('span');
+                contentSpan.textContent = text;
+                div.appendChild(contentSpan);
                 
-                fragment.appendChild(div);
-                chatHeli.appendChild(fragment);
+                chatHeli.appendChild(div);
                 chatHeli.scrollTop = chatHeli.scrollHeight;
             }
 
-            async function executeSend() {
-                const val = userInput.value.trim();
-                if(!val || !API_KEY || sendBtn.disabled) return;
+            const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-                logToLab("PROCESANDO PETICIÓN...", "INPUT");
-                appendMessage('user', val);
-                
-                userInput.value = '';
+            async function executeSend(retryCount = 0) {
+                const val = userInput.value.trim();
+                if(!val && retryCount === 0) return;
+                if(!API_KEY) { alert("ERROR: Inyectar Llave Neural."); return; }
+
+                if (retryCount === 0) {
+                    logToLab("EJECUTANDO COMANDOS AXISS...", "INPUT");
+                    appendMessage('user', val);
+                    userInput.value = '';
+                }
+
                 sendBtn.disabled = true;
                 sendBtn.textContent = '...';
 
                 try {
+                    const startTime = Date.now();
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
                     
                     let formattedContents = chatHistory.slice(-10).map(m => ({
                         role: m.role === 'user' ? 'user' : 'model',
                         parts: [{ text: m.text }]
                     }));
+                    formattedContents.push({ role: 'user', parts: [{ text: `[ELIZABETH_OS_v5.3]\n${val}` }] });
 
-                    formattedContents.push({ 
-                        role: 'user', 
-                        parts: [{ text: `[SYSTEM_IDENT: ELIZABETH_OS v5.3 / USER: AXISS]\n\n${val}` }] 
-                    });
-
-                    logToLab("LLAMADA A NÚCLEO FLASH 2.5", "CORE");
+                    logToLab(`CONEXIÓN NÚCLEO 2.5 (INTENTO ${retryCount + 1})...`, "CORE");
 
                     const response = await fetch(url, {
                         method: 'POST',
@@ -233,39 +233,49 @@
                         body: JSON.stringify({ contents: formattedContents })
                     });
 
+                    // Manejo de Saturación / Alta Demanda
+                    if (response.status === 503 || response.status === 429) {
+                        if (retryCount < 2) {
+                            logToLab("INTERFERENCIA: ALTA DEMANDA. REINTENTANDO...", "WARN");
+                            await sleep(2500 * (retryCount + 1));
+                            return executeSend(retryCount + 1);
+                        }
+                    }
+
                     const data = await response.json();
                     if(data.error) throw new Error(data.error.message);
 
-                    if(data.candidates && data.candidates[0].content) {
-                        const hMsg = data.candidates[0].content.parts[0].text;
-                        logToLab("SINCRO EXITOSA.", "SYSTEM");
-
-                        appendMessage('model', hMsg, '2.5_VERDICT');
-                        
-                        chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
-                        localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
-                    }
+                    const hMsg = data.candidates[0].content.parts[0].text;
+                    const latency = Date.now() - startTime;
+                    
+                    logToLab(`SINCRO 2.5 EXITOSA (${latency}ms).`, "SYSTEM");
+                    appendMessage('model', hMsg, '2.5_VERDICT');
+                    
+                    chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
+                    localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
 
                 } catch (e) {
-                    logToLab(`ERROR: ${e.message}`, "WARN");
-                    appendMessage('model', `INTERFERENCIA: ${e.message}`);
+                    logToLab(`CRITICAL_FAIL: ${e.message}`, "WARN");
+                    appendMessage('model', `INTERFERENCIA EN 2.5: ${e.message}`);
                 } finally {
                     sendBtn.disabled = false;
                     sendBtn.textContent = '✦';
-                    logToLab("STANDBY.", "SYSTEM");
+                    chatHeli.scrollTop = chatHeli.scrollHeight;
                 }
             }
 
             return {
                 init: function() {
-                    logToLab("ELIZABETH_OS v5.3 ACTIVA.", "SYSTEM");
-                    
+                    logToLab("ELIZABETH_OS v5.3 [REILIENT] CARGADO.", "SYSTEM");
                     chatHistory.forEach(m => appendMessage(m.role, m.text, m.role === 'model' ? '2.5_ORACLE' : null));
-
-                    sendBtn.onclick = executeSend;
-                    userInput.onkeypress = (e) => { if(e.key === 'Enter') executeSend(); };
                     
-                    document.getElementById('go-lab').onclick = () => document.getElementById('viewport').style.transform = "translateX(-100vw)";
+                    sendBtn.onclick = () => executeSend(0);
+                    userInput.onkeypress = (e) => { if(e.key === 'Enter') executeSend(0); };
+                    
+                    document.getElementById('go-lab').onclick = () => {
+                        document.getElementById('viewport').style.transform = "translateX(-100vw)";
+                        logToLab("ACCESO A DEEP_CORE...", "SYSTEM");
+                    };
                     document.getElementById('go-chat').onclick = () => document.getElementById('viewport').style.transform = "translateX(0vw)";
                     
                     document.getElementById('btn-token').onclick = () => {
@@ -274,7 +284,7 @@
                     };
                 },
                 clearMemory: function() {
-                    if(confirm("¿Purgar memoria del historial?")) {
+                    if(confirm("¿Purgar todos los hilos de memoria?")) {
                         localStorage.removeItem('heli_history');
                         location.reload();
                     }
