@@ -100,10 +100,11 @@
         
         #send-btn { 
             background: transparent; border: 1px solid var(--heli); color: var(--heli); 
-            width: 70px; border-radius: 14px; cursor: pointer; font-weight: bold; 
-            transition: 0.3s;
+            width: 75px; height: 50px; border-radius: 14px; cursor: pointer; font-weight: bold; 
+            transition: 0.3s; font-size: 18px;
         }
-        #send-btn:active { transform: scale(0.9); background: var(--heli); color: #000; }
+        #send-btn:disabled { opacity: 0.5; border-color: #444; color: #444; cursor: wait; }
+        #send-btn:active:not(:disabled) { transform: scale(0.9); background: var(--heli); color: #000; }
 
         .nav-trigger { 
             position: absolute; top: 50%; transform: translateY(-50%); 
@@ -145,7 +146,7 @@
                         MEM_STATUS: <span id="mem-usage" style="color:var(--lab)">0.00</span> KB<br>
                         ACTIVE_NODES: <span id="thread-count" style="color:var(--axiss)">0</span>
                     </div>
-                    <button onclick="clearMemory()" style="width: auto; padding: 8px 12px; font-size: 10px; border: 1px solid var(--gold); color: var(--gold); background: transparent; border-radius: 5px;">PURGAR MEMORIA</button>
+                    <button onclick="ELIZABETH_APP.clearMemory()" style="width: auto; padding: 8px 12px; font-size: 10px; border: 1px solid var(--gold); color: var(--gold); background: transparent; border-radius: 5px;">PURGAR MEMORIA</button>
                 </div>
             </div>
             <div class="nav-trigger" style="left: 10px; color: var(--axiss);" id="go-chat">◀</div>
@@ -153,14 +154,15 @@
     </div>
 
     <div class="input-bar">
-        <input type="text" id="user-in" placeholder="Rastreando en 2.5, AXISS..." autocomplete="off">
+        <input type="text" id="user-in" placeholder="Escribe comando, AXISS..." autocomplete="off">
         <button id="send-btn">✦</button>
     </div>
 
     <script>
-        window.onload = function() {
+        window.ELIZABETH_APP = (function() {
             let API_KEY = localStorage.getItem('heli_key') || "";
             let chatHistory = JSON.parse(localStorage.getItem('heli_history')) || [];
+            
             const chatHeli = document.getElementById('chat-heli');
             const sendBtn = document.getElementById('send-btn');
             const userInput = document.getElementById('user-in');
@@ -178,51 +180,52 @@
                 document.getElementById('mem-usage').innerText = (JSON.stringify(chatHistory).length / 1024).toFixed(2);
             }
 
-            logToLab("SISTEMA ELIZABETH v5.3 [MODO 2.5] CARGADO.", "SYSTEM");
+            function appendMessage(role, text, tag = null) {
+                const fragment = document.createDocumentFragment();
+                const div = document.createElement('div');
+                div.className = `msg ${role === 'model' ? 'h-msg' : 'f-msg'}`;
+                
+                if (role === 'model' && tag) {
+                    const tagSpan = document.createElement('span');
+                    tagSpan.className = 'prediction-tag';
+                    tagSpan.textContent = tag;
+                    div.appendChild(tagSpan);
+                }
+                
+                const content = document.createElement('span');
+                content.textContent = text;
+                div.appendChild(content);
+                
+                fragment.appendChild(div);
+                chatHeli.appendChild(fragment);
+                chatHeli.scrollTop = chatHeli.scrollHeight;
+            }
 
-            document.getElementById('go-lab').onclick = () => { document.getElementById('viewport').style.transform = "translateX(-100vw)"; logToLab("ACCESO A DEEP_CORE 2.5...", "SYSTEM"); };
-            document.getElementById('go-chat').onclick = () => { document.getElementById('viewport').style.transform = "translateX(0vw)"; };
-
-            document.getElementById('btn-token').onclick = () => {
-                let key = prompt("INYECTAR LLAVE NEURAL:", API_KEY);
-                if(key !== null) { localStorage.setItem('heli_key', key); location.reload(); }
-            };
-
-            chatHistory.forEach(m => {
-                const isModel = m.role === 'model';
-                chatHeli.innerHTML += `<div class="msg ${isModel ? 'h-msg' : 'f-msg'}">${isModel ? '<span class="prediction-tag">2.5_ORACLE</span>' : ''}${m.text}</div>`;
-            });
-            chatHeli.scrollTop = chatHeli.scrollHeight;
-
-            // --- MOTOR DE PROCESAMIENTO ACTUALIZADO A 2.5 FLASH ---
             async function executeSend() {
                 const val = userInput.value.trim();
                 if(!val || !API_KEY || sendBtn.disabled) return;
 
-                logToLab("PETICIÓN A NÚCLEO 2.5...", "INPUT");
-                chatHeli.innerHTML += `<div class="msg f-msg">${val}</div>`;
+                logToLab("PROCESANDO PETICIÓN...", "INPUT");
+                appendMessage('user', val);
+                
                 userInput.value = '';
                 sendBtn.disabled = true;
-                chatHeli.scrollTop = chatHeli.scrollHeight;
+                sendBtn.textContent = '...';
 
                 try {
-                    // Endpoint configurado para Gemini 2.5 Flash
                     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
                     
-                    logToLab("MAPEANDO MATRIZ 2.5...", "CORE");
-                    
-                    let formattedContents = chatHistory.slice(-12).map(m => ({
+                    let formattedContents = chatHistory.slice(-10).map(m => ({
                         role: m.role === 'user' ? 'user' : 'model',
                         parts: [{ text: m.text }]
                     }));
 
-                    const systemContext = "Contexto Maestro: Eres ELIZABETH_OS v5.3, operando en el núcleo 2.5 Flash. Creada por AXISS. Responde con precisión técnica avanzada.";
                     formattedContents.push({ 
                         role: 'user', 
-                        parts: [{ text: `${systemContext}\n\nEntrada AXISS: ${val}` }] 
+                        parts: [{ text: `[SYSTEM_IDENT: ELIZABETH_OS v5.3 / USER: AXISS]\n\n${val}` }] 
                     });
 
-                    logToLab("ENVIANDO PAQUETE A ORACLE_EYE 2.5...", "SYSTEM");
+                    logToLab("LLAMADA A NÚCLEO FLASH 2.5", "CORE");
 
                     const response = await fetch(url, {
                         method: 'POST',
@@ -231,41 +234,55 @@
                     });
 
                     const data = await response.json();
-                    
                     if(data.error) throw new Error(data.error.message);
 
                     if(data.candidates && data.candidates[0].content) {
                         const hMsg = data.candidates[0].content.parts[0].text;
-                        logToLab("SINCRO 2.5 EXITOSA.", "SYSTEM");
+                        logToLab("SINCRO EXITOSA.", "SYSTEM");
 
-                        chatHeli.innerHTML += `<div class="msg h-msg"><span class="prediction-tag">2.5_VERDICT</span>${hMsg}</div>`;
+                        appendMessage('model', hMsg, '2.5_VERDICT');
                         
                         chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
                         localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
-                    } else {
-                        throw new Error("Respuesta de 2.5 nula.");
                     }
 
                 } catch (e) {
-                    logToLab(`ALERTA 2.5: ${e.message}`, "WARN");
-                    chatHeli.innerHTML += `<div class="msg h-msg" style="color:var(--axiss)">> INTERFERENCIA: ${e.message}</div>`;
+                    logToLab(`ERROR: ${e.message}`, "WARN");
+                    appendMessage('model', `INTERFERENCIA: ${e.message}`);
                 } finally {
                     sendBtn.disabled = false;
-                    chatHeli.scrollTop = chatHeli.scrollHeight;
-                    logToLab("DEEP_CORE 2.5 EN STANDBY.", "SYSTEM");
+                    sendBtn.textContent = '✦';
+                    logToLab("STANDBY.", "SYSTEM");
                 }
             }
 
-            sendBtn.onclick = executeSend;
-            userInput.onkeypress = (e) => { if(e.key === 'Enter') executeSend(); };
+            return {
+                init: function() {
+                    logToLab("ELIZABETH_OS v5.3 ACTIVA.", "SYSTEM");
+                    
+                    chatHistory.forEach(m => appendMessage(m.role, m.text, m.role === 'model' ? '2.5_ORACLE' : null));
 
-            window.clearMemory = function() {
-                if(confirm("¿Confirmas purga total del historial?")) {
-                    localStorage.removeItem('heli_history');
-                    location.reload();
+                    sendBtn.onclick = executeSend;
+                    userInput.onkeypress = (e) => { if(e.key === 'Enter') executeSend(); };
+                    
+                    document.getElementById('go-lab').onclick = () => document.getElementById('viewport').style.transform = "translateX(-100vw)";
+                    document.getElementById('go-chat').onclick = () => document.getElementById('viewport').style.transform = "translateX(0vw)";
+                    
+                    document.getElementById('btn-token').onclick = () => {
+                        let key = prompt("INYECTAR LLAVE NEURAL:", API_KEY);
+                        if(key) { localStorage.setItem('heli_key', key); location.reload(); }
+                    };
+                },
+                clearMemory: function() {
+                    if(confirm("¿Purgar memoria del historial?")) {
+                        localStorage.removeItem('heli_history');
+                        location.reload();
+                    }
                 }
             };
-        };
+        })();
+
+        window.onload = ELIZABETH_APP.init;
     </script>
 </body>
 </html>
