@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>ELIZABETH_OS v5.3 [2.5_FLASH_CORE]</title>
+    <title>ELIZABETH_OS v5.4 [STREAMING_CORE]</title>
     <style>
         :root { 
             --heli: #00ff88; --axiss: #ff0055; --lab: #00d2ff; --bg: #030305; 
@@ -40,8 +40,6 @@
         .lab-log { font-size: 11px; margin-bottom: 10px; line-height: 1.3; border-left: 3px solid var(--axiss); padding-left: 10px; animation: logIn 0.3s ease; }
         @keyframes logIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
         .stat-card { background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .pulse { animation: neonPulse 2s infinite; }
-        @keyframes neonPulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
         .input-bar { position: fixed; bottom: 0; width: 100%; padding: 20px; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); display: flex; gap: 15px; border-top: 1px solid #1a1a1a; z-index: 100; box-sizing: border-box; }
         input { flex: 1; background: #070707; border: 1px solid #222; color: var(--text); padding: 15px; border-radius: 14px; outline: none; font-family: inherit; font-size: 16px; transition: 0.4s; }
         input:focus { border-color: var(--heli); box-shadow: 0 0 15px rgba(0, 255, 136, 0.15); }
@@ -57,7 +55,7 @@
             <header>
                 <div>
                     <span class="system-title">ELIZABETH_OS</span><br>
-                    <small style="opacity:0.6; color:var(--gold)">v5.3 [2.5_FLASH]</small>
+                    <small style="opacity:0.6; color:var(--gold)">v5.4 [STREAM_CORE]</small>
                 </div>
                 <div class="avatar-orb" id="btn-token" title="Inyectar Key"></div>
             </header>
@@ -72,8 +70,8 @@
             </header>
             <div class="lab-container">
                 <div class="stat-card">
-                    <span style="font-size: 11px; color: var(--gold);">MODEL_TARGET:</span>
-                    <span style="font-size: 11px; color: var(--heli);">GEMINI_2.5_FLASH</span>
+                    <span style="font-size: 11px; color: var(--gold);">THREAD_STATUS:</span>
+                    <span id="thread-status" style="font-size: 11px; color: var(--heli);">SYNCHRONIZED</span>
                 </div>
                 <div class="lab-monitor" id="lab-logs-container"></div>
                 <div class="stat-card" style="border-color: var(--axiss);">
@@ -97,7 +95,7 @@
         window.ELIZABETH_APP = (function() {
             let API_KEY = localStorage.getItem('heli_key') || "";
             let chatHistory = JSON.parse(localStorage.getItem('heli_history')) || [];
-            let lastUserMsg = ""; // Mejora: Persistencia de mensaje en reintentos
+            let isStreaming = false;
 
             const chatHeli = document.getElementById('chat-heli');
             const sendBtn = document.getElementById('send-btn');
@@ -108,8 +106,7 @@
                 const div = document.createElement('div');
                 div.className = 'lab-log';
                 const colors = { "SYSTEM": "var(--heli)", "CORE": "var(--gold)", "NEURAL": "var(--lab)", "WARN": "var(--axiss)", "INPUT": "#fff" };
-                const color = colors[type] || "var(--text)";
-                div.innerHTML = `<span style="color:${color}">[${type}]</span> <span style="opacity:0.4">${new Date().toLocaleTimeString()}</span> > ${msg}`;
+                div.innerHTML = `<span style="color:${colors[type] || "#fff"}">[${type}]</span> <span style="opacity:0.4">${new Date().toLocaleTimeString()}</span> > ${msg}`;
                 logContainer.prepend(div);
                 document.getElementById('thread-count').innerText = Math.floor(Math.random() * 80) + 40;
                 document.getElementById('mem-usage').innerText = (JSON.stringify(chatHistory).length / 1024).toFixed(2);
@@ -118,7 +115,7 @@
             function appendMessage(role, text, tag = null) {
                 const div = document.createElement('div');
                 div.className = `msg ${role === 'model' ? 'h-msg' : 'f-msg'}`;
-                if (role === 'model' && tag) {
+                if (tag) {
                     const tagSpan = document.createElement('span');
                     tagSpan.className = 'prediction-tag';
                     tagSpan.textContent = tag;
@@ -129,80 +126,98 @@
                 div.appendChild(contentSpan);
                 chatHeli.appendChild(div);
                 chatHeli.scrollTop = chatHeli.scrollHeight;
+                return div;
             }
 
-            const sleep = ms => new Promise(r => setTimeout(r, ms));
+            async function executeSend() {
+                if (isStreaming) return;
+                const val = userInput.value.trim();
+                if (!val) return;
+                if (!API_KEY) { alert("ERROR: Inyectar Llave Neural."); return; }
 
-            async function executeSend(retryCount = 0) {
-                const val = retryCount === 0 ? userInput.value.trim() : lastUserMsg;
-                if(!val && retryCount === 0) return;
-                if(!API_KEY) { alert("ERROR: Inyectar Llave Neural."); return; }
-
-                if (retryCount === 0) {
-                    lastUserMsg = val;
-                    logToLab("EJECUTANDO COMANDOS AXISS...", "INPUT");
-                    appendMessage('user', val);
-                    userInput.value = '';
-                }
-
+                userInput.value = '';
                 sendBtn.disabled = true;
-                sendBtn.textContent = '...';
+                isStreaming = true;
 
+                logToLab("EJECUTANDO COMANDOS AXISS...", "INPUT");
+                appendMessage('user', val);
+                
+                // Preparamos el contenedor para el streaming
+                const responseContainer = appendMessage('model', '', '2.5_STREAMING');
+                const textElement = responseContainer.querySelector('span:last-child');
+                
                 try {
-                    const startTime = Date.now();
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-                    
-                    let formattedContents = chatHistory.slice(-10).map(m => ({
-                        role: m.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: m.text }]
-                    }));
-                    formattedContents.push({ role: 'user', parts: [{ text: `[AXISS_COMMAND]\n${val}` }] });
+                    const start = Date.now();
+                    logToLab("CONEXIÓN NÚCLEO 2.5 (MODO FLUJO)...", "CORE");
+                    document.getElementById('thread-status').innerText = "STREAMING_ACTIVE";
+                    document.getElementById('thread-status').style.color = "var(--gold)";
 
-                    logToLab(`CONEXIÓN NÚCLEO 2.5 (INTENTO ${retryCount + 1})...`, "CORE");
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${API_KEY}`;
+                    const contents = [...chatHistory.slice(-10).map(m => ({
+                        role: m.role,
+                        parts: [{ text: m.text }]
+                    })), { role: 'user', parts: [{ text: `[AXISS_COMMAND]\n${val}` }] }];
 
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: formattedContents })
+                        body: JSON.stringify({ contents })
                     });
 
-                    if (response.status === 503 || response.status === 429) {
-                        if (retryCount < 3) {
-                            logToLab("ALTA CARGA DETECTADA. REORGANIZANDO FLUJO...", "WARN");
-                            await sleep(3000 * (retryCount + 1));
-                            return executeSend(retryCount + 1);
+                    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let fullResponse = "";
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+                        
+                        for (let line of lines) {
+                            let cleanLine = line.trim();
+                            if (!cleanLine || cleanLine.startsWith('[') || cleanLine.startsWith(']')) continue;
+                            if (cleanLine.startsWith(',')) cleanLine = cleanLine.substring(1);
+                            
+                            try {
+                                const json = JSON.parse(cleanLine);
+                                const textPart = json.candidates[0].content.parts[0].text;
+                                if (textPart) {
+                                    fullResponse += textPart;
+                                    textElement.textContent = fullResponse;
+                                    chatHeli.scrollTop = chatHeli.scrollHeight;
+                                }
+                            } catch (e) { /* Fragmento incompleto */ }
                         }
                     }
 
-                    const data = await response.json();
-                    if(data.error) throw new Error(data.error.message);
-
-                    const hMsg = data.candidates[0].content.parts[0].text;
-                    const latency = Date.now() - startTime;
-                    
+                    const latency = Date.now() - start;
                     document.getElementById('lat-display').innerText = `LATENCIA: ${latency}ms`;
                     logToLab(`SINCRO 2.5 EXITOSA (${latency}ms).`, "SYSTEM");
-                    appendMessage('model', hMsg, '2.5_VERDICT');
-                    
-                    chatHistory.push({ role: 'user', text: val }, { role: 'model', text: hMsg });
+
+                    chatHistory.push({ role: 'user', text: val }, { role: 'model', text: fullResponse });
                     localStorage.setItem('heli_history', JSON.stringify(chatHistory.slice(-20)));
 
                 } catch (e) {
                     logToLab(`CRITICAL_FAIL: ${e.message}`, "WARN");
-                    appendMessage('model', `INTERFERENCIA EN 2.5: ${e.message}`);
+                    textElement.textContent += `\n[INTERRUPCIÓN NEURAL]: ${e.message}`;
                 } finally {
+                    isStreaming = false;
                     sendBtn.disabled = false;
-                    sendBtn.textContent = '✦';
-                    chatHeli.scrollTop = chatHeli.scrollHeight;
+                    document.getElementById('thread-status').innerText = "SYNCHRONIZED";
+                    document.getElementById('thread-status').style.color = "var(--heli)";
                 }
             }
 
             return {
                 init: function() {
-                    logToLab("ELIZABETH_OS v5.3 [REILIENT_MAX] CARGADO.", "SYSTEM");
+                    logToLab("ELIZABETH_OS v5.4 [STREAMING_CORE] ONLINE.", "SYSTEM");
                     chatHistory.forEach(m => appendMessage(m.role, m.text, m.role === 'model' ? '2.5_ORACLE' : null));
-                    sendBtn.onclick = () => executeSend(0);
-                    userInput.onkeypress = (e) => { if(e.key === 'Enter') executeSend(0); };
+                    sendBtn.onclick = executeSend;
+                    userInput.onkeypress = (e) => { if (e.key === 'Enter') executeSend(); };
                     document.getElementById('go-lab').onclick = () => {
                         document.getElementById('viewport').style.transform = "translateX(-100vw)";
                         logToLab("ACCESO A DEEP_CORE...", "SYSTEM");
@@ -210,11 +225,11 @@
                     document.getElementById('go-chat').onclick = () => document.getElementById('viewport').style.transform = "translateX(0vw)";
                     document.getElementById('btn-token').onclick = () => {
                         let key = prompt("INYECTAR LLAVE NEURAL:", API_KEY);
-                        if(key) { localStorage.setItem('heli_key', key); location.reload(); }
+                        if (key) { localStorage.setItem('heli_key', key); location.reload(); }
                     };
                 },
                 clearMemory: function() {
-                    if(confirm("¿Purgar todos los hilos de memoria?")) {
+                    if (confirm("¿Purgar todos los hilos de memoria?")) {
                         localStorage.removeItem('heli_history');
                         location.reload();
                     }
